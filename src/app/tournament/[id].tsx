@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -178,10 +179,6 @@ export default function TournamentDetailScreen() {
 
     return (
       <ScrollView showsVerticalScrollIndicator={false}>
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare} activeOpacity={0.85}>
-          <Text style={styles.shareBtnText}>📤 Share Standings</Text>
-        </TouchableOpacity>
-
         <View ref={standingsRef} style={styles.captureArea}>
           <View style={styles.tableCard}>
             <View style={styles.tableHeader}>
@@ -302,7 +299,7 @@ export default function TournamentDetailScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Text style={styles.backText}>← Back</Text>
@@ -310,7 +307,13 @@ export default function TournamentDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {tournament.name}
         </Text>
-        <View style={{ width: 60 }} />
+        {activeTab === 'standings' && standings.length > 0 ? (
+          <TouchableOpacity onPress={handleShare} activeOpacity={0.7} style={styles.headerAction}>
+            <Text style={styles.headerActionText}>📤</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 60 }} />
+        )}
       </View>
 
       <View style={styles.tabBar}>
@@ -364,7 +367,7 @@ export default function TournamentDetailScreen() {
           />
         );
       })()}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -487,19 +490,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textMuted,
   },
-  shareBtn: {
-    backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+  headerAction: {
+    width: 60,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
-  shareBtnText: {
-    fontFamily: Font.bold,
-    fontSize: 15,
-    color: Colors.text,
+  headerActionText: {
+    fontSize: 20,
   },
   captureArea: {
     backgroundColor: Colors.bg,

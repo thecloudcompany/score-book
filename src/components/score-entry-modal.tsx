@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 
@@ -80,7 +82,10 @@ export default function ScoreEntryModal({
 
   return (
     <Modal visible={true} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={s.overlay}>
+      <KeyboardAvoidingView
+        style={s.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <View style={s.sheet}>
           {/* Header */}
           <View style={s.header}>
@@ -171,7 +176,7 @@ export default function ScoreEntryModal({
             </View>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

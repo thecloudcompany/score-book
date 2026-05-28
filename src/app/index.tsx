@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
 import { Font, Colors, Radius, Spacing, statusColor } from '@/constants/theme';
@@ -94,7 +95,7 @@ export default function TournamentListScreen() {
   );
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root}>
       <View style={styles.header}>
         <Text style={styles.title}>ScoreBook</Text>
         <Text style={styles.subtitle}>
@@ -142,7 +143,7 @@ export default function TournamentListScreen() {
       <TouchableOpacity style={styles.fab} onPress={handleCreate} activeOpacity={0.85}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 

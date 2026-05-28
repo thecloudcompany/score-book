@@ -11,9 +11,14 @@ import {
 } from '@expo-google-fonts/figtree';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initDatabase } from '@/lib/database';
 
 SplashScreen.preventAutoHideAsync();
+SplashScreen.setOptions({
+  duration: 800,
+  fade: true,
+});
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -40,8 +45,10 @@ export default function RootLayout() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FAFBFC' }}>
-      <Stack screenOptions={{ headerShown: false }} />
-    </View>
+    <SafeAreaProvider>
+      <View style={{ flex: 1, backgroundColor: '#FAFBFC' }}>
+        <Stack screenOptions={{ headerShown: false }} />
+      </View>
+    </SafeAreaProvider>
   );
 }
