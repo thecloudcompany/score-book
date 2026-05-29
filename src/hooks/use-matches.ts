@@ -142,6 +142,15 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') 
         updateTournamentStatus(tournamentId, 'active');
       }
 
+      // Check if all matches are completed — if so, mark tournament as completed
+      const allMatchStatuses = matches.map((m) =>
+        m.id === matchId ? newStatus : m.status
+      );
+      const allCompleted = allMatchStatuses.every((s) => s === 'completed');
+      if (allCompleted && matches.length > 0) {
+        updateTournamentStatus(tournamentId, 'completed');
+      }
+
       refresh();
     },
     [matches, units, sport, tournamentId, refresh]

@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -17,6 +19,7 @@ import {
   getParticipants,
   updateParticipantName,
   updateTournamentName,
+  deleteTournament,
 } from '@/lib/db-operations';
 import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
@@ -88,6 +91,25 @@ export default function TournamentDetailScreen() {
     refreshMatches();
   }, [refreshMatches]);
 
+  const handleDeleteTournament = useCallback(() => {
+    if (!tournament) return;
+    Alert.alert(
+      'Delete Tournament',
+      `Are you sure you want to delete "${tournament.name}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteTournament(tournament.id);
+            router.back();
+          },
+        },
+      ]
+    );
+  }, [tournament, router]);
+
   const getMatchScorePreview = useCallback(
     (matchId: number) => {
       const matchUnits = units[matchId] || [];
@@ -111,11 +133,39 @@ export default function TournamentDetailScreen() {
   const handleShare = useCallback(async () => {
     if (!standingsRef.current) return;
     try {
-      const uri = await captureRef(standingsRef, { format: 'png', quality: 1, result: 'tmpfile' });
-      await Sharing.shareAsync(uri, {
-        dialogTitle: `${tournament?.name ?? 'Tournament'} Standings`,
-        mimeType: 'image/png',
+      const uri = await captureRef(standingsRef, {
+        format: 'png',
+        quality: 1,
+        result: Platform.OS === 'web' ? 'data-uri' : 'tmpfile',
       });
+
+      if (Platform.OS === 'web') {
+        // On web, convert data URI to blob and use Web Share API or download
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const file = new File([blob], `${tournament?.name ?? 'tournament'}-standings.png`, {
+          type: 'image/png',
+        });
+
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `${tournament?.name ?? 'Tournament'} Standings`,
+          });
+        } else {
+          // Fallback: download the image
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `${tournament?.name ?? 'tournament'}-standings.png`;
+          link.click();
+          URL.revokeObjectURL(link.href);
+        }
+      } else {
+        await Sharing.shareAsync(uri, {
+          dialogTitle: `${tournament?.name ?? 'Tournament'} Standings`,
+          mimeType: 'image/png',
+        });
+      }
     } catch (err) {
       console.error('Share failed:', err);
     }
@@ -286,6 +336,10 @@ export default function TournamentDetailScreen() {
             </View>
           )}
         </View>
+
+        <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteTournament} activeOpacity={0.8}>
+          <Text style={styles.deleteBtnText}>Delete Tournament</Text>
+        </TouchableOpacity>
       </ScrollView>
     );
   };
@@ -587,5 +641,18 @@ const styles = StyleSheet.create({
   settingsDivider: {
     height: 1,
     backgroundColor: Colors.borderLight,
+  },
+  deleteBtn: {
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.xxl,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: Radius.sm,
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+  },
+  deleteBtnText: {
+    fontFamily: Font.semibold,
+    fontSize: 15,
+    color: Colors.danger,
   },
 });

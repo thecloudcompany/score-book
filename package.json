@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "sharp": "^0.34.5",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -43,7 +44,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "web:serve": "node scripts/serve-web.js",
-    "web:export": "npx expo export --platform web"
+    "web:export": "npx expo export --platform web",
+    "generate:android-icon": "node scripts/generate-android-icon.js"
   },
   "private": true
 }
