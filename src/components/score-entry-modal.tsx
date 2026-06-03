@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -34,23 +34,16 @@ export default function ScoreEntryModal({
   onSave,
   onClose,
 }: ScoreEntryModalProps) {
-  const [scoreA, setScoreA] = useState('');
-  const [scoreB, setScoreB] = useState('');
+  const firstUnit = units.find((u) => u.scoreA === null || u.scoreB === null) ?? units[0];
+  const [scoreA, setScoreA] = useState(firstUnit?.scoreA != null ? String(firstUnit.scoreA) : '');
+  const [scoreB, setScoreB] = useState(firstUnit?.scoreB != null ? String(firstUnit.scoreB) : '');
   const [error, setError] = useState('');
   const [editingUnitNumber, setEditingUnitNumber] = useState<number | null>(null);
 
   // Find first empty unit, or editing unit, or first unit if all filled
   const currentUnit = editingUnitNumber != null
     ? units.find((u) => u.unitNumber === editingUnitNumber)
-    : units.find((u) => u.scoreA === null || u.scoreB === null) ?? units[0];
-
-  // Pre-fill inputs when current unit changes (initial mount or user selection)
-  useEffect(() => {
-    if (currentUnit) {
-      setScoreA(currentUnit.scoreA != null ? String(currentUnit.scoreA) : '');
-      setScoreB(currentUnit.scoreB != null ? String(currentUnit.scoreB) : '');
-    }
-  }, [currentUnit?.unitNumber]);
+    : firstUnit;
 
   const handleSelectUnit = useCallback((unit: ScoreUnit) => {
     setEditingUnitNumber(unit.unitNumber);

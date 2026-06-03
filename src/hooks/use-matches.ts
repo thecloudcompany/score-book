@@ -53,14 +53,6 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') 
         updateTennisSet(matchId, unitNumber, scoreA, scoreB);
       }
 
-      // Check if match should auto-complete
-      const matchUnits = units[matchId] || [];
-      const scoringUnits = matchUnits.map((u: any) => ({
-        unitNumber: u.gameNumber || u.setNumber,
-        scoreA: u.scoreA ?? u.gamesA,
-        scoreB: u.scoreB ?? u.gamesB,
-      }));
-
       // Update the local unit first
       const updatedUnits = { ...units };
       const unitList = [...(updatedUnits[matchId] || [])];
@@ -116,19 +108,16 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') 
         ? sportModule.determineWinner(scoringUnitsForCheck, matchFormat)
         : null;
 
-      let newStatus: MatchStatus = currentMatch.status;
+      let newStatus: MatchStatus = 'upcoming';
       if (isComplete) {
         newStatus = 'completed';
-      } else if (hasAnyScore && currentMatch.status === 'upcoming') {
+      } else if (hasAnyScore) {
         newStatus = 'in_progress';
       }
 
-      // If match was already completed but edit makes it invalid, keep old winner
       let winnerId: number | null = null;
       if (isComplete) {
         winnerId = winner === 'a' ? currentMatch.participantAId : winner === 'b' ? currentMatch.participantBId : null;
-      } else if (currentMatch.status === 'completed') {
-        winnerId = currentMatch.winnerId;
       }
 
       if (sport === 'badminton') {
@@ -138,7 +127,7 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') 
       }
 
       // Update tournament status if needed
-      if (currentMatch.status === 'upcoming' && newStatus !== 'upcoming') {
+      if (newStatus !== 'upcoming') {
         updateTournamentStatus(tournamentId, 'active');
       }
 

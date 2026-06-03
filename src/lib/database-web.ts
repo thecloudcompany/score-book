@@ -72,8 +72,6 @@ class WebDatabase {
 
   // ─── runSync ──────────────────────────────────────────────────────────
   runSync(source: string, ...params: any[]): RunResult {
-    const upper = source.toUpperCase().trim();
-
     // INSERT INTO table (cols) VALUES (?...)
     const insertMatch = source.match(
       /INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i
@@ -233,7 +231,6 @@ class WebDatabase {
     const colDefs = colSpec.split(',').map((c) => c.trim());
     return rows.map((row) => {
       const mapped: any = {};
-      let paramIdx = 0;
       for (const def of colDefs) {
         const aliasMatch = def.match(/(.+?)\s+as\s+(\w+)/i);
         if (aliasMatch) {

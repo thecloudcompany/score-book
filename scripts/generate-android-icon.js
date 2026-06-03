@@ -2,29 +2,28 @@
 
 /**
  * Android Adaptive Icon Generator
- * 
+ *
  * Takes your app icon and creates a properly sized adaptive icon
  * with the logo centered in the safe zone (61% of canvas).
- * 
+ *
  * Android adaptive icons:
- * - Canvas: 108dp (324px at 3x density)
- * - Safe zone: center 66dp (198px at 3x density) = 61% of canvas
+ * - Canvas: 108dp → 1080px (at 10x density, covers xxxhdpi)
+ * - Safe zone: center 66dp → 660px = 61% of canvas
  * - Outer 39% can be masked by device manufacturers
  */
 
-const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs');
+const sharp = require("sharp");
+const fs = require("fs");
 
-const INPUT_ICON = './assets/images/icon.png';
-const OUTPUT_ICON = './assets/images/android-adaptive-icon.png';
-const CANVAS_SIZE = 324; // 108dp at 3x
-const SAFE_ZONE = 198;   // 66dp at 3x (61% of canvas)
-const BACKGROUND_COLOR = '#FFFFFF';
+const INPUT_ICON = "./assets/images/icon.png";
+const OUTPUT_ICON = "./assets/images/android-adaptive-icon.png";
+const CANVAS_SIZE = 1080; // 108dp at 10x (covers xxxhdpi)
+const SAFE_ZONE = 660; // 66dp at 10x (61% of canvas)
+const BACKGROUND_COLOR = "#FFFFFF";
 
 async function generateAdaptiveIcon() {
-  console.log('🎨 Generating Android adaptive icon...');
-  
+  console.log("🎨 Generating Android adaptive icon...");
+
   // Check if input exists
   if (!fs.existsSync(INPUT_ICON)) {
     console.error(`❌ Input icon not found: ${INPUT_ICON}`);
@@ -34,8 +33,8 @@ async function generateAdaptiveIcon() {
   // Resize the icon to fit within the safe zone
   const resizedIcon = await sharp(INPUT_ICON)
     .resize(SAFE_ZONE, SAFE_ZONE, {
-      fit: 'inside',
-      withoutEnlargement: true,
+      fit: "inside",
+      withoutEnlargement: false,
     })
     .toBuffer();
 
@@ -54,7 +53,7 @@ async function generateAdaptiveIcon() {
     .composite([
       {
         input: resizedIcon,
-        gravity: 'center',
+        gravity: "center",
       },
     ])
     .png()
@@ -66,6 +65,6 @@ async function generateAdaptiveIcon() {
 }
 
 generateAdaptiveIcon().catch((err) => {
-  console.error('❌ Error generating adaptive icon:', err);
+  console.error("❌ Error generating adaptive icon:", err);
   process.exit(1);
 });

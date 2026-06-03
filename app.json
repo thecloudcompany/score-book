@@ -1,22 +1,26 @@
 {
   "expo": {
-    "name": "Scorebook",
+    "name": "ScoreBook",
     "slug": "scorebook",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
+    "description": "Track badminton and tennis tournament scores with round-robin scheduling, live standings, and easy sharing.",
     "ios": {
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icon-1024.png",
+      "bundleIdentifier": "com.moneshms.scorebook"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-adaptive-icon.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png",
         "backgroundColor": "#FFFFFF"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.moneshms.scorebook"
+      "package": "com.moneshms.scorebook",
+      "permissions": []
     },
     "web": {
       "output": "static",
@@ -38,7 +42,15 @@
           "backgroundColor": "#FFFFFF",
           "imageWidth": 200,
           "android": {
-            "image": "./assets/images/splash-icon.png"
+            "image": "./assets/images/splash-icon-square.png"
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "targetSdkVersion": 35
           }
         }
       ],

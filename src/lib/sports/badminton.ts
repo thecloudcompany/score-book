@@ -1,5 +1,4 @@
-import type { ValidationResult, ScoringUnit, MatchFormat } from '@/types';
-import type { Sport } from '@/types';
+import type { ValidationResult, ScoringUnit, MatchFormat, Sport } from '@/types';
 
 export const badmintonSport: Sport = {
   id: 'badminton',

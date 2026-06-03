@@ -4,15 +4,13 @@ import {
   createTournament as dbCreateTournament,
   deleteTournament as dbDeleteTournament,
   updateTournamentName,
-} from '@/lib/db-operations';
-import { getParticipants, createParticipant } from '@/lib/db-operations';
-import { generateRoundRobin } from '@/lib/scheduler';
-import { badmintonSport } from '@/lib/sports/badminton';
-import { tennisSport } from '@/lib/sports/tennis';
-import {
+  createParticipant,
   createBadmintonMatch,
   createTennisMatch,
 } from '@/lib/db-operations';
+import { generateRoundRobin } from '@/lib/scheduler';
+import { badmintonSport } from '@/lib/sports/badminton';
+import { tennisSport } from '@/lib/sports/tennis';
 import type { Tournament, SportType } from '@/types';
 
 export function useTournaments() {

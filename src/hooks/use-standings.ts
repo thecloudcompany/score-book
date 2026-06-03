@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react';
-import { getParticipants } from '@/lib/db-operations';
-import { getBadmintonMatches, getBadmintonGames, getTennisMatches, getTennisSets } from '@/lib/db-operations';
+import {
+  getParticipants,
+  getBadmintonMatches,
+  getBadmintonGames,
+  getTennisMatches,
+  getTennisSets,
+} from '@/lib/db-operations';
 import { calculateBadmintonLeaderboard, calculateTennisLeaderboard } from '@/lib/leaderboard';
 import type { LeaderboardEntry } from '@/types';
 

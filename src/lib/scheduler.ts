@@ -1,5 +1,3 @@
-import type { Participant } from '@/types';
-
 export function generateRoundRobin(participantIds: number[]): [number, number][] {
   const ids = [...participantIds];
 

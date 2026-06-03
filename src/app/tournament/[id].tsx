@@ -16,7 +16,6 @@ import * as Sharing from 'expo-sharing';
 import ScoreEntryModal from '@/components/score-entry-modal';
 import {
   getTournament,
-  getParticipants,
   updateParticipantName,
   updateTournamentName,
   deleteTournament,
@@ -38,11 +37,12 @@ export default function TournamentDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const tournamentId = Number(id);
+  const initialTournament = getTournament(tournamentId);
 
-  const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [tournament, setTournament] = useState<Tournament | null>(initialTournament);
   const [activeTab, setActiveTab] = useState<TabType>('matches');
   const [editingName, setEditingName] = useState(false);
-  const [nameValue, setNameValue] = useState('');
+  const [nameValue, setNameValue] = useState(initialTournament?.name ?? '');
   const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
   const [participantName, setParticipantName] = useState('');
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
@@ -57,14 +57,6 @@ export default function TournamentDetailScreen() {
     tournamentId,
     tournament?.sport ?? 'badminton'
   );
-
-  useEffect(() => {
-    const t = getTournament(tournamentId);
-    if (t) {
-      setTournament(t);
-      setNameValue(t.name);
-    }
-  }, [tournamentId]);
 
   useEffect(() => {
     if (tournament) {
@@ -130,6 +122,8 @@ export default function TournamentDetailScreen() {
     [units, tournament?.sport]
   );
 
+  const tournamentName = tournament?.name ?? 'tournament';
+
   const handleShare = useCallback(async () => {
     if (!standingsRef.current) return;
     try {
@@ -143,33 +137,33 @@ export default function TournamentDetailScreen() {
         // On web, convert data URI to blob and use Web Share API or download
         const response = await fetch(uri);
         const blob = await response.blob();
-        const file = new File([blob], `${tournament?.name ?? 'tournament'}-standings.png`, {
+        const file = new File([blob], `${tournamentName}-standings.png`, {
           type: 'image/png',
         });
 
         if (navigator.share && navigator.canShare?.({ files: [file] })) {
           await navigator.share({
             files: [file],
-            title: `${tournament?.name ?? 'Tournament'} Standings`,
+            title: `${tournamentName} Standings`,
           });
         } else {
           // Fallback: download the image
           const link = document.createElement('a');
           link.href = URL.createObjectURL(blob);
-          link.download = `${tournament?.name ?? 'tournament'}-standings.png`;
+          link.download = `${tournamentName}-standings.png`;
           link.click();
           URL.revokeObjectURL(link.href);
         }
       } else {
         await Sharing.shareAsync(uri, {
-          dialogTitle: `${tournament?.name ?? 'Tournament'} Standings`,
+          dialogTitle: `${tournamentName} Standings`,
           mimeType: 'image/png',
         });
       }
     } catch (err) {
       console.error('Share failed:', err);
     }
-  }, [tournament?.name]);
+  }, [tournamentName]);
 
   const renderMatchesTab = () => {
     const upcoming = matches.filter((m) => m.status === 'upcoming');
