@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,12 +24,8 @@ export function ParticipantsSection({
   onAdd,
   onRemove,
 }: ParticipantsSectionProps) {
-  const [pastNames, setPastNames] = useState<{ name: string; lastUsedAt: number }[]>([]);
+  const [pastNames] = useState<{ name: string; lastUsedAt: number }[]>(() => getAllParticipantNames());
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    setPastNames(getAllParticipantNames());
-  }, []);
 
   const suggestionsFor = useCallback(
     (index: number): { name: string; lastUsedAt: number }[] => {

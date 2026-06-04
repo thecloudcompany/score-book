@@ -50,7 +50,7 @@ export function ByeSection({
           activeOpacity={0.8}
         >
           <Text style={[styles.byeMethodText, byeMethod === 'manual' && styles.byeMethodTextActive]}>
-            I'll choose
+            I&apos;ll choose
           </Text>
         </TouchableOpacity>
       </View>

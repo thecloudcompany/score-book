@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -37,7 +37,7 @@ export default function TournamentDetailScreen() {
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [fullParticipants, setFullParticipants] = useState(getParticipants(tournamentId));
+  const [participantsVersion, setParticipantsVersion] = useState(0);
   const standingsRef = useRef<View | null>(null);
 
   const { matches, units, participants, refresh: refreshMatches, updateScore } = useMatches(
@@ -50,11 +50,16 @@ export default function TournamentDetailScreen() {
     tournament?.sport ?? 'badminton'
   );
 
+  const fullParticipants = useMemo(
+    () => getParticipants(tournamentId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tournamentId, participantsVersion]
+  );
+
   useEffect(() => {
     if (tournament) {
       refreshMatches();
       refreshStandings();
-      setFullParticipants(getParticipants(tournamentId));
     }
   }, [tournament, refreshMatches, refreshStandings]);
 
@@ -84,6 +89,7 @@ export default function TournamentDetailScreen() {
     (pid: number, newName: string) => {
       updateParticipantName(pid, newName);
       refreshMatches();
+      setParticipantsVersion((v) => v + 1);
     },
     [refreshMatches]
   );
