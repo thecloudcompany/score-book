@@ -1,5 +1,7 @@
 export type SportType = 'badminton' | 'tennis';
 
+export type TournamentType = 'round_robin' | 'knockout';
+
 export type TournamentStatus = 'upcoming' | 'active' | 'completed';
 
 export type MatchStatus = 'upcoming' | 'in_progress' | 'completed';
@@ -8,6 +10,7 @@ export interface Tournament {
   id: number;
   name: string;
   sport: SportType;
+  type: TournamentType;
   status: TournamentStatus;
   createdAt: number;
   updatedAt: number;
@@ -24,10 +27,15 @@ export interface BaseMatch {
   id: number;
   tournamentId: number;
   participantAId: number;
-  participantBId: number;
+  participantBId: number | null; // null for bye matches
   status: MatchStatus;
   winnerId: number | null;
   createdAt: number;
+  // Knockout bracket fields
+  round?: number;
+  bracketPosition?: number;
+  feedsIntoMatchId?: number | null;
+  feedsIntoSlot?: 'A' | 'B' | null;
 }
 
 export interface BadmintonMatch extends BaseMatch {
@@ -73,6 +81,17 @@ export interface LeaderboardEntry {
   gameDiff: number;
   rank: number;
   tiedWith: number[];
+}
+
+export interface KnockoutStandings {
+  champion: number | null;
+  stillCompeting: Participant[];
+  eliminatedByRound: Map<number, Participant[]>;
+}
+
+export interface ByeConfig {
+  method: 'random' | 'manual';
+  manualIds?: number[];
 }
 
 export interface ValidationResult {

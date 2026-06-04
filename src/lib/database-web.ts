@@ -51,6 +51,7 @@ class WebDatabase {
     for (const stmt of stmts) {
       const upper = stmt.toUpperCase();
       if (upper.startsWith('PRAGMA')) continue;
+      if (upper.startsWith('CREATE INDEX')) continue;
 
       // CREATE TABLE IF NOT EXISTS table_name (...)
       const createMatch = stmt.match(

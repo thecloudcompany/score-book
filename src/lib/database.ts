@@ -33,6 +33,7 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       sport TEXT NOT NULL CHECK(sport IN ('badminton', 'tennis')),
+      type TEXT NOT NULL DEFAULT 'round_robin' CHECK(type IN ('round_robin', 'knockout')),
       status TEXT NOT NULL DEFAULT 'upcoming' CHECK(status IN ('upcoming', 'active', 'completed')),
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
       updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
@@ -51,12 +52,16 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       tournament_id INTEGER NOT NULL,
       participant_a_id INTEGER NOT NULL,
-      participant_b_id INTEGER NOT NULL,
+      participant_b_id INTEGER,
       game_point INTEGER NOT NULL DEFAULT 21,
       best_of_games INTEGER NOT NULL DEFAULT 3,
       status TEXT NOT NULL DEFAULT 'upcoming' CHECK(status IN ('upcoming', 'in_progress', 'completed')),
       winner_id INTEGER,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      round INTEGER NOT NULL DEFAULT 1,
+      bracket_position INTEGER NOT NULL DEFAULT 1,
+      feeds_into_match_id INTEGER,
+      feeds_into_slot TEXT CHECK(feeds_into_slot IN ('A', 'B')),
       FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
       FOREIGN KEY (participant_a_id) REFERENCES participants(id),
       FOREIGN KEY (participant_b_id) REFERENCES participants(id),
@@ -77,12 +82,16 @@ export function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       tournament_id INTEGER NOT NULL,
       participant_a_id INTEGER NOT NULL,
-      participant_b_id INTEGER NOT NULL,
+      participant_b_id INTEGER,
       sets_to_win INTEGER NOT NULL DEFAULT 2,
       games_to_win_per_set INTEGER NOT NULL DEFAULT 6,
       status TEXT NOT NULL DEFAULT 'upcoming' CHECK(status IN ('upcoming', 'in_progress', 'completed')),
       winner_id INTEGER,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      round INTEGER NOT NULL DEFAULT 1,
+      bracket_position INTEGER NOT NULL DEFAULT 1,
+      feeds_into_match_id INTEGER,
+      feeds_into_slot TEXT CHECK(feeds_into_slot IN ('A', 'B')),
       FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
       FOREIGN KEY (participant_a_id) REFERENCES participants(id),
       FOREIGN KEY (participant_b_id) REFERENCES participants(id),
@@ -98,5 +107,48 @@ export function initDatabase() {
       FOREIGN KEY (match_id) REFERENCES tennis_matches(id) ON DELETE CASCADE,
       UNIQUE(match_id, set_number)
     );
+
+    CREATE INDEX IF NOT EXISTS idx_badminton_matches_bracket 
+      ON badminton_matches(tournament_id, round, bracket_position);
+
+    CREATE INDEX IF NOT EXISTS idx_tennis_matches_bracket 
+      ON tennis_matches(tournament_id, round, bracket_position);
   `);
+
+  // Migration: Add tournament_type column if it doesn't exist
+  try {
+    database.execSync(`
+      ALTER TABLE tournaments ADD COLUMN type TEXT NOT NULL DEFAULT 'round_robin' CHECK(type IN ('round_robin', 'knockout'));
+    `);
+  } catch (e) {
+    // Column already exists, ignore
+  }
+
+  // Migration: Add bracket columns to badminton_matches if they don't exist
+  try {
+    database.execSync(`ALTER TABLE badminton_matches ADD COLUMN round INTEGER NOT NULL DEFAULT 1;`);
+  } catch (e) {}
+  try {
+    database.execSync(`ALTER TABLE badminton_matches ADD COLUMN bracket_position INTEGER NOT NULL DEFAULT 1;`);
+  } catch (e) {}
+  try {
+    database.execSync(`ALTER TABLE badminton_matches ADD COLUMN feeds_into_match_id INTEGER;`);
+  } catch (e) {}
+  try {
+    database.execSync(`ALTER TABLE badminton_matches ADD COLUMN feeds_into_slot TEXT CHECK(feeds_into_slot IN ('A', 'B'));`);
+  } catch (e) {}
+
+  // Migration: Add bracket columns to tennis_matches if they don't exist
+  try {
+    database.execSync(`ALTER TABLE tennis_matches ADD COLUMN round INTEGER NOT NULL DEFAULT 1;`);
+  } catch (e) {}
+  try {
+    database.execSync(`ALTER TABLE tennis_matches ADD COLUMN bracket_position INTEGER NOT NULL DEFAULT 1;`);
+  } catch (e) {}
+  try {
+    database.execSync(`ALTER TABLE tennis_matches ADD COLUMN feeds_into_match_id INTEGER;`);
+  } catch (e) {}
+  try {
+    database.execSync(`ALTER TABLE tennis_matches ADD COLUMN feeds_into_slot TEXT CHECK(feeds_into_slot IN ('A', 'B'));`);
+  } catch (e) {}
 }

@@ -23,6 +23,9 @@ function calculateStats(
     const b = match.participantBId;
     const winner = match.winnerId;
 
+    // Skip bye matches (where b is null)
+    if (b === null) continue;
+
     if (winner === a) {
       stats[a].wins++;
       stats[b].losses++;

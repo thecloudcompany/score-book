@@ -1,0 +1,166 @@
+import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { Colors } from '@/constants/theme';
+import { styles } from './tournament-details-section.styles';
+import type { SportType, TournamentType } from '@/types';
+
+interface TournamentDetailsSectionProps {
+  name: string;
+  sport: SportType;
+  tournamentType: TournamentType;
+  format: Record<string, number>;
+  errors: Record<string, string>;
+  onNameChange: (name: string) => void;
+  onSportChange: (sport: SportType) => void;
+  onTournamentTypeChange: (type: TournamentType) => void;
+  onFormatChange: (format: Record<string, number>) => void;
+}
+
+export function TournamentDetailsSection({
+  name,
+  sport,
+  tournamentType,
+  format,
+  errors,
+  onNameChange,
+  onSportChange,
+  onTournamentTypeChange,
+  onFormatChange,
+}: TournamentDetailsSectionProps) {
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const formatOptions = [1, 3, 5];
+  const formatKey = sport === 'badminton' ? 'bestOfGames' : 'setsToWin';
+  const currentFormat = format[formatKey] ?? (sport === 'badminton' ? 3 : 2);
+
+  return (
+    <>
+      <View style={styles.section}>
+        <Text style={styles.label}>Name</Text>
+        <TextInput
+          style={[styles.input, errors.name && styles.inputError]}
+          value={name}
+          onChangeText={onNameChange}
+          placeholder="Weekend Smash"
+          placeholderTextColor={Colors.textMuted}
+        />
+        {errors.name && <Text style={styles.error}>{errors.name}</Text>}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Sport</Text>
+        <View style={styles.sportRow}>
+          <TouchableOpacity
+            style={[styles.sportBtn, sport === 'badminton' && styles.sportBtnActive]}
+            onPress={() => onSportChange('badminton')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.sportEmoji}>🏸</Text>
+            <Text style={[styles.sportText, sport === 'badminton' && styles.sportTextActive]}>
+              Badminton
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sportBtn, sport === 'tennis' && styles.sportBtnActive]}
+            onPress={() => onSportChange('tennis')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.sportEmoji}>🎾</Text>
+            <Text style={[styles.sportText, sport === 'tennis' && styles.sportTextActive]}>
+              Tennis
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>Tournament Type</Text>
+        <View style={styles.typeRow}>
+          <TouchableOpacity
+            style={[styles.typeBtn, tournamentType === 'round_robin' && styles.typeBtnActive]}
+            onPress={() => onTournamentTypeChange('round_robin')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.typeText, tournamentType === 'round_robin' && styles.typeTextActive]}>
+              Round-Robin
+            </Text>
+            <Text style={styles.typeDescription}>Everyone plays everyone</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.typeBtn, tournamentType === 'knockout' && styles.typeBtnActive]}
+            onPress={() => onTournamentTypeChange('knockout')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.typeText, tournamentType === 'knockout' && styles.typeTextActive]}>
+              Knockout
+            </Text>
+            <Text style={styles.typeDescription}>Single elimination</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.label}>{sport === 'badminton' ? 'Games to win' : 'Sets to win'}</Text>
+        <View style={styles.formatRow}>
+          {formatOptions.map((num) => (
+            <TouchableOpacity
+              key={num}
+              style={[styles.formatBtn, currentFormat === num && styles.formatBtnActive]}
+              onPress={() => onFormatChange({ ...format, [formatKey]: num })}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.formatBtnText,
+                  currentFormat === num && styles.formatBtnTextActive,
+                ]}
+              >
+                {num === 1 ? 'Single' : `Best of ${num}`}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={styles.advancedToggle}
+        onPress={() => setShowAdvanced(!showAdvanced)}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.advancedText}>
+          {showAdvanced ? 'Hide Advanced' : 'Advanced Options'}
+        </Text>
+        <Text style={styles.advancedArrow}>{showAdvanced ? '▼' : '▶'}</Text>
+      </TouchableOpacity>
+
+      {showAdvanced && (
+        <View style={styles.section}>
+          {sport === 'badminton' ? (
+            <View style={styles.advancedRow}>
+              <Text style={styles.advancedLabel}>Points to win</Text>
+              <TextInput
+                style={styles.advancedInput}
+                value={String(format.gamePoint ?? 21)}
+                onChangeText={(v) =>
+                  onFormatChange({ ...format, gamePoint: parseInt(v) || 21 })
+                }
+                keyboardType="number-pad"
+              />
+            </View>
+          ) : (
+            <View style={styles.advancedRow}>
+              <Text style={styles.advancedLabel}>Games per set</Text>
+              <TextInput
+                style={styles.advancedInput}
+                value={String(format.gamesToWinPerSet ?? 6)}
+                onChangeText={(v) =>
+                  onFormatChange({ ...format, gamesToWinPerSet: parseInt(v) || 6 })
+                }
+                keyboardType="number-pad"
+              />
+            </View>
+          )}
+        </View>
+      )}
+    </>
+  );
+}

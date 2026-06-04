@@ -4,12 +4,13 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Modal,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Font, Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors } from '@/constants/theme';
+import { s } from './score-entry-modal.styles';
+import type { Sport, MatchFormat } from '@/types';
 
 interface ScoreUnit {
   unitNumber: number;
@@ -22,6 +23,8 @@ interface ScoreEntryModalProps {
   playerB: string;
   unitLabel: string;
   units: ScoreUnit[];
+  sport: Sport;
+  format: MatchFormat;
   onSave: (unitNumber: number, scoreA: number, scoreB: number) => void;
   onClose: () => void;
 }
@@ -31,6 +34,8 @@ export default function ScoreEntryModal({
   playerB,
   unitLabel,
   units,
+  sport,
+  format,
   onSave,
   onClose,
 }: ScoreEntryModalProps) {
@@ -40,7 +45,6 @@ export default function ScoreEntryModal({
   const [error, setError] = useState('');
   const [editingUnitNumber, setEditingUnitNumber] = useState<number | null>(null);
 
-  // Find first empty unit, or editing unit, or first unit if all filled
   const currentUnit = editingUnitNumber != null
     ? units.find((u) => u.unitNumber === editingUnitNumber)
     : firstUnit;
@@ -60,18 +64,15 @@ export default function ScoreEntryModal({
       setError('Enter valid scores');
       return;
     }
-    if (a < 0 || b < 0) {
-      setError('Scores must be positive');
-      return;
-    }
-    if (a === b) {
-      setError('Scores cannot tie');
+    const validation = sport.validateUnitScore(a, b, format);
+    if (!validation.valid) {
+      setError(validation.error ?? 'Invalid score');
       return;
     }
     setError('');
     onSave(currentUnit.unitNumber, a, b);
     onClose();
-  }, [scoreA, scoreB, currentUnit, onSave, onClose]);
+  }, [scoreA, scoreB, currentUnit, onSave, onClose, sport, format]);
 
   return (
     <Modal visible={true} animationType="slide" transparent onRequestClose={onClose}>
@@ -173,157 +174,3 @@ export default function ScoreEntryModal({
     </Modal>
   );
 }
-
-const s = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: Colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Colors.bgElevated,
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
-    paddingHorizontal: Spacing.xxl,
-    paddingTop: Spacing.lg,
-    paddingBottom: 48,
-    maxHeight: '88%',
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xl,
-  },
-  closeText: {
-    fontFamily: Font.semibold,
-    fontSize: 14,
-    color: Colors.textMuted,
-  },
-  headerTitle: {
-    fontFamily: Font.bold,
-    fontSize: 17,
-    color: Colors.text,
-  },
-  playersRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.lg,
-    marginBottom: Spacing.xl,
-  },
-  playerName: {
-    fontFamily: Font.bold,
-    fontSize: 18,
-    color: Colors.text,
-  },
-  vsText: {
-    fontFamily: Font.medium,
-    fontSize: 13,
-    color: Colors.textMuted,
-  },
-  completedBox: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.sm,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
-  unitRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    borderRadius: Radius.sm,
-  },
-  unitRowActive: {
-    backgroundColor: Colors.primaryMuted,
-    borderColor: Colors.primary,
-    borderWidth: 1,
-    borderBottomWidth: 1,
-  },
-  unitRowCompleted: {
-    opacity: 0.7,
-  },
-  unitLabel: {
-    fontFamily: Font.medium,
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  unitScore: {
-    fontFamily: Font.bold,
-    fontSize: 15,
-    color: Colors.text,
-  },
-  unitScoreActive: {
-    color: Colors.primary,
-  },
-  inputBox: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.sm,
-    padding: Spacing.xxl,
-    marginBottom: Spacing.md,
-  },
-  inputLabel: {
-    fontFamily: Font.semibold,
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginBottom: Spacing.lg,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  inputsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: Spacing.lg,
-  },
-  scoreInput: {
-    fontFamily: Font.extrabold,
-    fontSize: 36,
-    color: Colors.text,
-    backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
-    width: 96,
-    height: 80,
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  scoreInputError: {
-    borderColor: Colors.warning,
-  },
-  dashText: {
-    fontFamily: Font.medium,
-    fontSize: 20,
-    color: Colors.textMuted,
-  },
-  errorText: {
-    fontFamily: Font.medium,
-    fontSize: 13,
-    color: Colors.warning,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
-  },
-  saveBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.sm,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  saveBtnDisabled: {
-    backgroundColor: Colors.textMuted,
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    fontFamily: Font.bold,
-    fontSize: 16,
-    color: Colors.textInverse,
-  },
-});

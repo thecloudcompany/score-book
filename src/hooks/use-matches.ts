@@ -10,12 +10,14 @@ import {
   updateTennisMatchStatus,
   getParticipants,
   updateTournamentStatus,
+  updateBadmintonMatchParticipant,
+  updateTennisMatchParticipant,
 } from '@/lib/db-operations';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
-import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, MatchStatus } from '@/types';
+import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, MatchStatus, TournamentType } from '@/types';
 
-export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') {
+export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', tournamentType: TournamentType = 'round_robin') {
   const [matches, setMatches] = useState<(BadmintonMatch | TennisMatch)[]>([]);
   const [units, setUnits] = useState<Record<number, BadmintonGame[] | TennisSet[]>>({});
   const [participants, setParticipants] = useState<{ id: number; name: string }[]>([]);
@@ -126,6 +128,21 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') 
         updateTennisMatchStatus(matchId, newStatus, winnerId);
       }
 
+      // Handle knockout progression
+      if (tournamentType === 'knockout' && isComplete && winnerId !== null) {
+        const feedsIntoMatchId = currentMatch.feedsIntoMatchId;
+        const feedsIntoSlot = currentMatch.feedsIntoSlot;
+        
+        if (feedsIntoMatchId && feedsIntoSlot) {
+          // Advance winner to next match
+          if (sport === 'badminton') {
+            updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+          } else {
+            updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+          }
+        }
+      }
+
       // Update tournament status if needed
       if (newStatus !== 'upcoming') {
         updateTournamentStatus(tournamentId, 'active');
@@ -142,7 +159,7 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis') 
 
       refresh();
     },
-    [matches, units, sport, tournamentId, refresh]
+    [matches, units, sport, tournamentId, tournamentType, refresh]
   );
 
   return { matches, units, participants, refresh, updateScore };
