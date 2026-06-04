@@ -30,7 +30,11 @@ export function TournamentDetailsSection({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const formatOptions = [1, 3, 5];
   const formatKey = sport === 'badminton' ? 'bestOfGames' : 'setsToWin';
-  const currentFormat = format[formatKey] ?? (sport === 'badminton' ? 3 : 2);
+  const currentFormat = format[formatKey] ?? (sport === 'badminton' ? 3 : 3);
+  const formatLabel = (num: number) => {
+    if (num === 1) return 'Single';
+    return `Best of ${num}`;
+  };
 
   return (
     <>
@@ -114,7 +118,7 @@ export function TournamentDetailsSection({
                   currentFormat === num && styles.formatBtnTextActive,
                 ]}
               >
-                {num === 1 ? 'Single' : `Best of ${num}`}
+                {formatLabel(num)}
               </Text>
             </TouchableOpacity>
           ))}

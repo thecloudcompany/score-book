@@ -66,11 +66,13 @@ export function useTournaments() {
               format.bestOfGames ?? badmintonSport.defaultFormat.bestOfGames
             );
           } else {
+            // form.setsToWin is "best of N" (1, 3, 5); storage is "first to N wins"
+            const setsToWin = Math.ceil((format.setsToWin ?? 3) / 2);
             createTennisMatch(
               tournament.id,
               aId,
               bId,
-              format.setsToWin ?? tennisSport.defaultFormat.setsToWin,
+              setsToWin,
               format.gamesToWinPerSet ?? tennisSport.defaultFormat.gamesToWinPerSet
             );
           }
@@ -108,11 +110,12 @@ export function useTournaments() {
             );
             matchId = match.id;
           } else {
+            const setsToWin = Math.ceil((format.setsToWin ?? 3) / 2);
             const match = createTennisMatch(
               tournament.id,
               bracketMatch.participantAId!,
               bracketMatch.participantBId,
-              format.setsToWin ?? tennisSport.defaultFormat.setsToWin,
+              setsToWin,
               format.gamesToWinPerSet ?? tennisSport.defaultFormat.gamesToWinPerSet,
               {
                 round: bracketMatch.round,

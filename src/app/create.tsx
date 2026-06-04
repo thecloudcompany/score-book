@@ -44,7 +44,7 @@ export default function CreateTournamentScreen() {
       });
     } else {
       setFormat({
-        setsToWin: tennisSport.defaultFormat.setsToWin,
+        setsToWin: 3,
         gamesToWinPerSet: tennisSport.defaultFormat.gamesToWinPerSet,
       });
     }

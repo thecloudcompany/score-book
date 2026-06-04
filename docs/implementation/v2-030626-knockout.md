@@ -374,7 +374,126 @@ if (!match.feedsIntoMatchId && match.status === 'completed') {
 - Display completion banner on tournament detail
 - Disable further score entry (all matches completed)
 
-## Database Schema Changes
+## Implementation Notes & Bug Fixes
+
+A handful of issues surfaced during the first end-to-end knockout tests (3-player bracket with a random bye, followed by score entry). Each is documented below with the root cause and the fix that landed.
+
+### Fix 1: TBD vs BYE display
+
+**Symptom:** The Final match rendered as `test-2 vs BYE` when test-2 had already advanced and the other finalist (test-1, who had a Round-1 bye) was not yet rendered as a participant.
+
+**Root cause:** The match row in `tournament/[id].tsx` showed `'BYE'` for **any** match with a null `participantBId`. But a null participant can mean two different things:
+- **BYE** — Round 1 only, the participant was given a free pass; match is auto-completed.
+- **TBD** — a later-round match whose slot is waiting for the winner of a previous match.
+
+**Fix:** `src/lib/knockout-standings.ts` now exposes `isByeMatch(match)` and `getParticipantPlaceholder(match, slot)`. The UI uses these to differentiate:
+
+- `isByeMatch`: `round === 1 && participantBId === null && status === 'completed'`
+- `getParticipantPlaceholder`: returns `'BYE'` for actual bye matches, `'TBD'` for everything else (later-round matches waiting on a winner).
+
+The match row now renders `test-2 vs TBD` for the Final until both semi-finals are completed, then `test-1 vs test-2` once test-1's bye winner is filled in.
+
+### Fix 2: Bye matches must auto-advance winners
+
+**Symptom:** With 3 players (test-1, test-2, test-3) and one random bye, the bye was assigned to test-1. test-1's match was correctly auto-completed, but **the Final stayed as `test-2 vs TBD`** even after test-2 won their semi. Expected: `test-1 vs test-2` (bye winner advances to the Final just like a real match winner).
+
+**Root cause:** Bye matches were being auto-completed **before** the bracket links (`feeds_into_match_id`, `feeds_into_slot`) were set. The code looked like:
+
+```typescript
+// 1. Create all matches (bracket links still null)
+for (const bracketMatch of bracketMatches) {
+  const matchId = createMatch(bracketMatch);
+  // ❌ Bye auto-completed here — but feedsIntoMatchId is still null
+  if (bracketMatch.participantBId === null) {
+    updateMatchStatus(matchId, 'completed', bracketMatch.participantAId);
+  }
+}
+
+// 2. THEN set bracket links
+for (const bracketMatch of bracketMatches) {
+  updateBracketLink(...);
+}
+```
+
+**Fix:** In `src/hooks/use-tournaments.ts`, the bye auto-completion was moved into a third pass **after** bracket links are set. The bye match is still auto-completed, but the winner is also advanced to `feedsIntoMatchId` at `feedsIntoSlot`:
+
+```typescript
+// 1. Create all matches
+// 2. Set all bracket links
+// 3. NOW auto-complete byes AND advance winners
+for (const bracketMatch of bracketMatches) {
+  if (bracketMatch.participantBId === null && bracketMatch.participantAId !== null) {
+    const matchId = createdMatchIds[i];
+    const winnerId = bracketMatch.participantAId;
+    updateMatchStatus(matchId, 'completed', winnerId);
+    if (bracketMatch.feedsIntoMatchId !== null) {
+      updateMatchParticipant(createdMatchIds[bracketMatch.feedsIntoMatchId], bracketMatch.feedsIntoSlot, winnerId);
+    }
+  }
+}
+```
+
+**Existing tournaments:** The fix only runs at tournament creation. Old tournaments with broken state need to be deleted and recreated.
+
+### Fix 3: Tennis "Best of N" — form/storage semantics mismatch
+
+**Symptom:** User picked "Best of 3" for tennis, but the score entry modal showed 5 sets (Set 1, Set 2, Set 3, Set 4, Set 5).
+
+**Root cause:** The form exposed values 1, 3, 5 labelled "Single" / "Best of 3" / "Best of 5". The tennis sport module, however, interprets `setsToWin` as **"first to N wins"** (a *wins needed* field, not a *best-of total*). So `setsToWin: 3` actually meant "first player to win 3 sets" = best-of-5. The form was passing "best of N" semantics, the storage was expecting "first to N wins" — they were off by one factor of 2.
+
+**Fix:** Align the form and storage on the same semantics. The cleanest path was to use **"best of N" everywhere** (matches the standard tennis terminology, matches what the form already showed, matches how badminton was already working). At storage time we convert:
+
+```typescript
+// In use-tournaments.ts, before calling createTennisMatch:
+const setsToWin = Math.ceil((format.setsToWin ?? 3) / 2);
+```
+
+| User picks | Form value | Stored `setsToWin` | Total sets |
+|---|---|---|---|
+| Single | 1 | 1 | 1 |
+| Best of 3 | 3 | 2 | 3 |
+| Best of 5 | 5 | 3 | 5 |
+
+The tennis `defaultFormat.setsToWin = 2` ("first to 2 wins" = best-of-3) is still correct. `getUnitCount(format)` in `src/lib/sports/tennis.ts` continues to compute `setsToWin * 2 - 1` and now matches the user-visible intent.
+
+Badminton was always consistent (`bestOfGames: 3` = best-of-3, first to 2 wins via `Math.ceil(3/2)`), so no change was needed there.
+
+**Default value:** `src/app/create.tsx` was initialising the tennis format to `setsToWin: 2` (which now means "best of 4" — nonsensical). Changed to `setsToWin: 3` to default to "Best of 3".
+
+**Existing tennis tournaments:** A tournament created before this fix stored `setsToWin: 3` (= best-of-5 under both old and new code, so the user's set count is unchanged for that tournament). To get the new "Best of 3 = 3 sets" behavior, the tournament must be deleted and recreated. There is no in-place migration for already-created matches because doing so would invalidate any sets the user has already entered.
+
+### Fix 4: Score entry did not enforce sport-specific thresholds
+
+**Symptom:** Even with the validate-by-sport logic in place, the score modal let users save badminton scores like 5-3 (winner didn't reach 21) and tennis scores like 5-4 (winner didn't reach 6). The modals are tied to whatever the user configured, but they were using a hardcoded check that ignored that config.
+
+**Root cause:** `src/components/score-entry-modal.tsx` had its own inline validation (`a === b`, `a < 0`, etc.) that completely bypassed `sport.validateUnitScore`. The threshold values (21 for badminton, 6 for tennis) were hardcoded in the sport modules but never actually consulted.
+
+**Fix:** The score modal now takes `sport: Sport` and `format: MatchFormat` as props and delegates to `sport.validateUnitScore(a, b, format)`. The caller (`tournament/[id].tsx`) constructs the format from the match's stored values (`gamePoint`/`bestOfGames` for badminton, `setsToWin`/`gamesToWinPerSet` for tennis). This means the modal enforces **whatever the user configured** in the tournament creation's advanced options, not a hardcoded default.
+
+The error message shown in the modal is also now sport-specific ("Winner must reach at least 21 points" / "Winner must reach at least 6 games") and reflects the actual configured value.
+
+### Fix 5: Cross-platform delete confirmation
+
+**Symptom:** Tapping "Delete Tournament" in the Settings tab silently did nothing on web.
+
+**Root cause:** React Native's `Alert.alert` is **not implemented on web** — it's a no-op. The same code path worked correctly on iOS and Android because they use the native dialog.
+
+**Fix:** Replaced the two `Alert.alert` call sites (Settings tab delete, Index long-press delete) with a new cross-platform `ConfirmDialog` component (`src/components/confirm-dialog.tsx`). On native it uses `Modal`; on web it renders an absolute-positioned overlay (using `position: fixed` so it covers the viewport even when scrolled). Both paths use the same teal/destructive styling as the rest of the app.
+
+### Refactor: `tournament/[id].tsx` split
+
+The detail screen had grown to ~830 lines with three tab render functions, a header, a tab bar, the score modal, the confirm dialog, and ~270 lines of styles. Split into:
+
+- `tournament/[id].tsx` — orchestrator: state, hooks, header, tab bar, modal mounting
+- `components/matches-tab.tsx` — both knockout (grouped by round) and round-robin (grouped by status) views
+- `components/standings-tab.tsx` — both knockout (elimination status) and round-robin (table) views
+- `components/settings-tab.tsx` — name, sport, players, delete
+- `components/match-row.tsx` — shared row used by both knockout and round-robin
+- `components/[id].styles.ts` — extracted styles
+
+Each file stays under 300 lines. The orchestrator passes shared data (matches, units, participants, sport, format) down via props, which is the same shape the hooks already return.
+
+
 
 ### tournaments Table
 
