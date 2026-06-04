@@ -1,56 +1,69 @@
-# Welcome to your Expo app 👋
+# ScoreBook
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A clean, offline-first tournament manager for casual racket sports. Track round-robin and knockout tournaments for badminton and tennis, with live standings and easy sharing — all on-device, no account, no internet.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Tournament types:** Round-robin and single-elimination knockout
+- **Sports:** Badminton and tennis (more coming)
+- **Configurable scoring:** Game points, best-of-N games, sets-to-win, games-per-set
+- **Live standings:** Auto-computed leaderboard with tiebreakers
+- **Knockout bracket:** Random or manual bye assignment, automatic winner advancement
+- **Share standings:** Export the leaderboard as an image via your device's share sheet
+- **Participant autocomplete:** Re-use past player names when creating new tournaments
+- **100% offline:** All data lives in a local SQLite database. Nothing leaves your device.
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Quick Start
 
 ```bash
-npm run reset-project
+npm install
+npx expo start          # Metro bundler
+npm run web             # open in browser
+npm run android         # build & run on Android emulator/device
+npm run ios             # build & run on iOS simulator
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Project Structure
 
-### Other setup steps
+```
+src/
+  app/                    Expo Router file-based routes
+    tournament/[id].tsx   Tournament detail screen (orchestrator)
+    create.tsx            Tournament creation form
+    index.tsx             Tournament list
+  components/             UI components, one per file
+  hooks/                  React hooks wrapping data layer
+  lib/
+    database.ts           Platform-aware SQLite init
+    database-web.ts       localStorage-backed emulator for web
+    db-operations.ts      Typed CRUD
+    bracket-generator.ts  Knockout bracket creation
+    leaderboard.ts        Standings calculation
+    sports/               Sport modules (badminton, tennis)
+  constants/theme.ts      Shared design tokens
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+docs/
+  project.md              Project vision & scope
+  application.md          Architecture & technical decisions
+  privacy.html            Privacy policy (host this for Play Store)
+  implementation/         Per-release implementation notes
+```
 
-## Learn more
+## Design Principles
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Local-first** — all data on-device via SQLite. No cloud, no telemetry, no accounts.
+- **Light theme only** — sharp corners, thin borders, Figtree typography.
+- **300-line limit** — components are split and styles extracted to sibling files when they grow.
+- **Sport modules own validation** — `validateUnitScore(a, b, format)` is the single source of truth for score rules.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Tech Stack
 
-## Join the community
+- **Expo SDK 56** / **React Native 0.85** / **React 19**
+- **expo-router** for file-based navigation
+- **expo-sqlite** for native storage, custom emulator for web
+- **TypeScript** strict
+- **Figtree** (Google Fonts) — 6 weights
 
-Join our community of developers creating universal apps.
+## License
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+MIT
