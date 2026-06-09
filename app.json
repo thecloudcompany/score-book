@@ -20,6 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.moneshms.scorebook",
+      "versionCode": 2,
       "permissions": []
     },
     "web": {
