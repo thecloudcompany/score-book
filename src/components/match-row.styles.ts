@@ -8,10 +8,11 @@ export const s = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: Colors.bgElevated,
     borderRadius: Radius.sm,
-    padding: Spacing.lg,
-    marginBottom: 8,
+    paddingVertical: 15,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: 7,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.border,
   },
   rowBye: {
     opacity: 0.6,
@@ -23,7 +24,7 @@ export const s = StyleSheet.create({
   },
   players: {
     fontFamily: Font.semibold,
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.text,
     marginBottom: 2,
   },
@@ -47,11 +48,11 @@ export const s = StyleSheet.create({
   preview: {
     fontFamily: Font.medium,
     fontSize: 13,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });

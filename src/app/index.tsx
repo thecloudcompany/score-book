@@ -44,8 +44,11 @@ function TournamentCard({
     >
       <View style={styles.cardTop}>
         <View style={styles.sportRow}>
-          <Text style={styles.sportEmoji}>{isBadminton ? '🏸' : '🎾'}</Text>
           <Text style={styles.sportLabel}>{isBadminton ? 'Badminton' : 'Tennis'}</Text>
+          <View style={styles.sportDivider} />
+          <Text style={styles.typeLabel}>
+            {tournament.type === 'knockout' ? 'Knockout' : 'Round robin'}
+          </Text>
         </View>
         <View style={styles.statusRow}>
           <StatusDot status={tournament.status} />
@@ -154,16 +157,16 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   title: {
     fontFamily: Font.black,
-    fontSize: 26,
+    fontSize: 28,
     color: Colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: 0,
     marginBottom: 2,
   },
   subtitle: {
@@ -182,14 +185,15 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
-    padding: Spacing.lg,
+    borderRadius: Radius.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 18,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: '#000',
+    borderColor: Colors.border,
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
     elevation: 1,
   },
   cardTop: {
@@ -203,15 +207,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  sportEmoji: {
-    fontSize: 14,
-  },
   sportLabel: {
     fontFamily: Font.semibold,
     fontSize: 12,
     color: Colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+  },
+  sportDivider: {
+    width: 1,
+    height: 10,
+    backgroundColor: Colors.border,
+    marginHorizontal: 2,
+  },
+  typeLabel: {
+    fontFamily: Font.medium,
+    fontSize: 12,
+    color: Colors.textMuted,
   },
   statusRow: {
     flexDirection: 'row',
@@ -230,9 +242,9 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontFamily: Font.bold,
-    fontSize: 17,
+    fontSize: 18,
     color: Colors.text,
-    letterSpacing: -0.2,
+    letterSpacing: 0,
   },
   emptyState: {
     alignItems: 'center',
@@ -241,8 +253,8 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   emptyEmoji: {
-    fontSize: 48,
-    opacity: 0.4,
+    fontSize: 42,
+    opacity: 0.35,
   },
   emptyTitle: {
     fontFamily: Font.bold,
@@ -262,7 +274,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.xxl,
     paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
   },
   emptyCtaText: {
     fontFamily: Font.bold,
@@ -275,11 +287,11 @@ const styles = StyleSheet.create({
     right: Spacing.xl,
     width: 52,
     height: 52,
-    borderRadius: Radius.md,
+    borderRadius: Radius.sm,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 6,

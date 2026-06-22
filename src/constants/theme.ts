@@ -11,27 +11,27 @@ export const Font = {
 
 export const Colors = {
   // Backgrounds
-  bg: '#FAFBFC',           // Page background — very subtle off-white
+  bg: '#F8FAFB',           // Page background — very subtle off-white
   bgElevated: '#FFFFFF',   // Cards, sheets
-  surface: '#F5F6F7',      // Subtle elevated surfaces, inputs
-  surfaceHover: '#EFF1F3', // Hover states
+  surface: '#F3F5F6',      // Subtle elevated surfaces, inputs
+  surfaceHover: '#ECEFF1', // Hover states
 
   // Borders (thin, minimal)
-  border: '#E8EAED',       // 1px dividers
-  borderLight: '#F0F1F3',  // Very subtle separators
+  border: '#DDE3E7',       // 1px dividers
+  borderLight: '#EBEFF2',  // Very subtle separators
 
   // Text
-  text: '#1A1D23',         // Primary — near black
-  textSecondary: '#5A6270', // Labels, secondary
-  textMuted: '#8B95A5',    // Disabled, hints
+  text: '#14181F',         // Primary — near black
+  textSecondary: '#56616D', // Labels, secondary
+  textMuted: '#8792A0',    // Disabled, hints
   textInverse: '#FFFFFF',  // On dark/colored bg
 
   // Accents — refined teal/slate
-  primary: '#0D9488',      // Teal — primary action
-  primaryMuted: 'rgba(13, 148, 136, 0.08)',
-  primaryDark: '#0F766E',
+  primary: '#0B8F86',      // Teal — primary action
+  primaryMuted: 'rgba(11, 143, 134, 0.09)',
+  primaryDark: '#0A6F69',
 
-  accent: '#0D9488',       // Alias
+  accent: '#0B8F86',       // Alias
 
   // Status — refined, desaturated
   success: '#059669',      // Completed

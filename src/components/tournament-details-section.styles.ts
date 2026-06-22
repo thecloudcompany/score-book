@@ -3,15 +3,15 @@ import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   section: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   label: {
     fontFamily: Font.semibold,
     fontSize: 12,
     color: Colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    letterSpacing: 1,
+    marginBottom: 10,
   },
   input: {
     fontFamily: Font.regular,
@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.bgElevated,
     borderRadius: Radius.sm,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -35,12 +35,12 @@ export const styles = StyleSheet.create({
   },
   sportRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   sportBtn: {
     flex: 1,
     borderRadius: Radius.sm,
-    paddingVertical: 16,
+    paddingVertical: 15,
     alignItems: 'center',
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   sportEmoji: {
-    fontSize: 24,
+    fontSize: 22,
     marginBottom: 6,
   },
   sportText: {
@@ -68,7 +68,7 @@ export const styles = StyleSheet.create({
   },
   formatBtn: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderRadius: Radius.sm,
     backgroundColor: Colors.bgElevated,
     alignItems: 'center',
@@ -133,7 +133,7 @@ export const styles = StyleSheet.create({
   typeBtn: {
     flex: 1,
     borderRadius: Radius.sm,
-    paddingVertical: 14,
+    paddingVertical: 15,
     paddingHorizontal: 12,
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
@@ -156,5 +156,6 @@ export const styles = StyleSheet.create({
     fontFamily: Font.regular,
     fontSize: 12,
     color: Colors.textMuted,
+    lineHeight: 16,
   },
 });

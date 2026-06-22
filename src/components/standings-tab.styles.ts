@@ -22,12 +22,12 @@ export const s = StyleSheet.create({
     borderRadius: Radius.sm,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.border,
   },
   tableHeader: {
     flexDirection: 'row',
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -40,7 +40,7 @@ export const s = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
     alignItems: 'center',
@@ -67,7 +67,7 @@ export const s = StyleSheet.create({
     padding: Spacing.md,
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: Colors.border,
   },
   knockoutParticipantCardEliminated: {
     opacity: 0.6,

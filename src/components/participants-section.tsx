@@ -105,15 +105,15 @@ export function ParticipantsSection({
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   label: {
     fontFamily: Font.semibold,
     fontSize: 12,
     color: Colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+    letterSpacing: 1,
+    marginBottom: 10,
   },
   error: {
     fontFamily: Font.medium,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgElevated,
     borderRadius: Radius.sm,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   removeBtn: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
     borderRadius: Radius.sm,
     backgroundColor: 'rgba(220, 38, 38, 0.08)',
     justifyContent: 'center',
@@ -154,9 +154,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   addBtn: {
-    marginTop: 4,
-    paddingVertical: 10,
+    marginTop: 2,
+    paddingVertical: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.bgElevated,
   },
   addBtnText: {
     fontFamily: Font.semibold,

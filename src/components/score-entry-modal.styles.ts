@@ -9,8 +9,8 @@ export const s = StyleSheet.create({
   },
   sheet: {
     backgroundColor: Colors.bgElevated,
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
+    borderTopLeftRadius: Radius.md,
+    borderTopRightRadius: Radius.md,
     paddingHorizontal: Spacing.xxl,
     paddingTop: Spacing.lg,
     paddingBottom: 48,
@@ -56,6 +56,8 @@ export const s = StyleSheet.create({
     borderRadius: Radius.sm,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   unitRow: {
     flexDirection: 'row',
@@ -94,6 +96,8 @@ export const s = StyleSheet.create({
     borderRadius: Radius.sm,
     padding: Spacing.xxl,
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
   },
   inputLabel: {
     fontFamily: Font.semibold,
@@ -102,7 +106,7 @@ export const s = StyleSheet.create({
     marginBottom: Spacing.lg,
     textAlign: 'center',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   inputsRow: {
     flexDirection: 'row',

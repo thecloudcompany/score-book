@@ -11,7 +11,7 @@ export const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.xl,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -43,6 +43,7 @@ export const s = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
+    backgroundColor: Colors.bgElevated,
   },
   tab: {
     flex: 1,
@@ -52,8 +53,10 @@ export const s = StyleSheet.create({
   },
   tabText: {
     fontFamily: Font.semibold,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   tabTextActive: {
     color: Colors.text,
