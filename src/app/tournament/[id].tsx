@@ -242,7 +242,6 @@ export default function TournamentDetailScreen() {
             format={format}
             onSave={(unitNumber, scoreA, scoreB) => {
               updateScore(selectedMatchId, unitNumber, scoreA, scoreB);
-              refreshMatches();
               refreshStandings();
             }}
             onClose={closeScoreModal}

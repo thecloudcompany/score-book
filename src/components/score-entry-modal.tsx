@@ -78,7 +78,7 @@ export default function ScoreEntryModal({
     <Modal visible={true} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={s.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={s.sheet}>
           {/* Header */}
