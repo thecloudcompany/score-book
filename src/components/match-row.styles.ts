@@ -18,6 +18,15 @@ export const s = StyleSheet.create({
     opacity: 0.6,
     backgroundColor: Colors.surface,
   },
+  rowLocked: {
+    opacity: 0.55,
+  },
+  lockedNote: {
+    fontFamily: Font.medium,
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginBottom: 2,
+  },
   left: {
     flex: 1,
     marginRight: 12,

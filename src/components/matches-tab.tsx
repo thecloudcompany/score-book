@@ -1,8 +1,10 @@
+import { useMemo, useCallback } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { MatchRow } from './match-row';
 import { getRoundName } from '@/lib/bracket-generator';
+import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
 import { s } from './matches-tab.styles';
-import type { BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TournamentType } from '@/types';
+import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TournamentType } from '@/types';
 
 interface MatchesTabProps {
   tournamentType: TournamentType;
@@ -38,6 +40,33 @@ export function MatchesTab({
       .join('  ·  ');
   };
 
+  // Build feeder map once: who feeds into each consumer match.
+  // Multiple feeders (the final has 2) → slot stays "TBD".
+  const feederByConsumer = useMemo(() => {
+    const map = new Map<number, Match[]>();
+    for (const match of matches) {
+      if (match.feedsIntoMatchId != null) {
+        const list = map.get(match.feedsIntoMatchId) ?? [];
+        list.push(match);
+        map.set(match.feedsIntoMatchId, list);
+      }
+    }
+    return map;
+  }, [matches]);
+
+  const getSlotLabel = useCallback(
+    (match: Match, slot: 'A' | 'B'): string => {
+      const id = slot === 'A' ? match.participantAId : match.participantBId;
+      if (id !== null) return getParticipantName(id);
+      if (tournamentType !== 'knockout') return 'TBD';
+      if (slot === 'B' && isByeMatch(match)) return 'BYE';
+      const feeders = feederByConsumer.get(match.id) ?? [];
+      if (feeders.length === 1) return `Winner of Match ${feeders[0].bracketPosition}`;
+      return 'TBD';
+    },
+    [tournamentType, getParticipantName, feederByConsumer]
+  );
+
   if (tournamentType === 'knockout') {
     const rounds = new Map<number, typeof matches>();
     for (const match of matches) {
@@ -58,8 +87,10 @@ export function MatchesTab({
                 <MatchRow
                   key={match.id}
                   match={match}
-                  tournamentType="knockout"
-                  getParticipantName={getParticipantName}
+                  playerADisplay={getSlotLabel(match, 'A')}
+                  playerBDisplay={getSlotLabel(match, 'B')}
+                  isBye={isByeMatch(match)}
+                  isLocked={!canEditMatch(match, matches)}
                   preview={getPreview(match.id)}
                   onPress={onMatchPress}
                 />
@@ -83,8 +114,10 @@ export function MatchesTab({
           <MatchRow
             key={match.id}
             match={match}
-            tournamentType="round_robin"
-            getParticipantName={getParticipantName}
+            playerADisplay={getParticipantName(match.participantAId)}
+            playerBDisplay={getSlotLabel(match, 'B')}
+            isBye={false}
+            isLocked={false}
             preview={getPreview(match.id)}
             onPress={onMatchPress}
           />

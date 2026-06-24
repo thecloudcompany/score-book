@@ -1,15 +1,15 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Font, Colors, Radius, Spacing, statusColor } from '@/constants/theme';
 import type { Tournament } from '@/types';
 
@@ -68,6 +68,7 @@ function TournamentCard({
 export default function TournamentListScreen() {
   const router = useRouter();
   const { tournaments, refresh, deleteTournament } = useTournaments();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -79,23 +80,11 @@ export default function TournamentListScreen() {
     router.push('/create');
   }, [router]);
 
-  const handleDelete = useCallback(
-    (id: number, name: string) => {
-      Alert.alert(
-        'Delete Tournament',
-        `Permanently delete "${name}"?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: () => deleteTournament(id),
-          },
-        ]
-      );
-    },
-    [deleteTournament]
-  );
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteTournament(deleteTarget.id);
+    setDeleteTarget(null);
+  }, [deleteTarget, deleteTournament]);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -128,16 +117,7 @@ export default function TournamentListScreen() {
               key={t.id}
               tournament={t}
               onPress={() => router.push(`/tournament/${t.id}`)}
-              onLongPress={() =>
-                Alert.alert(t.name, undefined, [
-                  {
-                    text: 'Delete',
-                    style: 'destructive',
-                    onPress: () => handleDelete(t.id, t.name),
-                  },
-                  { text: 'Cancel', style: 'cancel' },
-                ])
-              }
+              onLongPress={() => setDeleteTarget({ id: t.id, name: t.name })}
             />
           ))
         )}
@@ -146,6 +126,17 @@ export default function TournamentListScreen() {
       <TouchableOpacity style={styles.fab} onPress={handleCreate} activeOpacity={0.85}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
+
+      <ConfirmDialog
+        visible={deleteTarget !== null}
+        title="Delete Tournament"
+        message={deleteTarget ? `Permanently delete "${deleteTarget.name}"?` : ''}
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </SafeAreaView>
   );
 }

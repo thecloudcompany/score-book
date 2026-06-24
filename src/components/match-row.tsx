@@ -1,13 +1,14 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { statusColor } from '@/constants/theme';
-import { isByeMatch, getParticipantPlaceholder } from '@/lib/knockout-standings';
 import { s } from './match-row.styles';
-import type { Match, MatchStatus, TournamentType } from '@/types';
+import type { Match, MatchStatus } from '@/types';
 
 interface MatchRowProps {
   match: Match;
-  tournamentType: TournamentType;
-  getParticipantName: (id: number) => string;
+  playerADisplay: string;
+  playerBDisplay: string;
+  isBye: boolean;
+  isLocked: boolean;
   preview: string | null;
   onPress: (matchId: number) => void;
 }
@@ -18,32 +19,29 @@ function StatusDot({ status }: { status: MatchStatus }) {
 
 export function MatchRow({
   match,
-  tournamentType,
-  getParticipantName,
+  playerADisplay,
+  playerBDisplay,
+  isBye,
+  isLocked,
   preview,
   onPress,
 }: MatchRowProps) {
-  const isBye = tournamentType === 'knockout' && isByeMatch(match);
-  const playerBDisplay =
-    match.participantBId !== null
-      ? getParticipantName(match.participantBId)
-      : tournamentType === 'knockout'
-        ? getParticipantPlaceholder(match)
-        : 'TBD';
+  const isNonInteractive = isBye || isLocked;
 
   return (
     <TouchableOpacity
-      style={[s.row, isBye && s.rowBye]}
-      onPress={() => !isBye && onPress(match.id)}
-      activeOpacity={isBye ? 1 : 0.8}
-      disabled={isBye}
+      style={[s.row, isBye && s.rowBye, isLocked && s.rowLocked]}
+      onPress={() => !isNonInteractive && onPress(match.id)}
+      activeOpacity={isNonInteractive ? 1 : 0.8}
+      disabled={isNonInteractive}
     >
       <View style={s.left}>
         <Text style={s.players}>
-          {getParticipantName(match.participantAId)}
+          {playerADisplay}
           <Text style={s.vs}> vs </Text>
           <Text style={isBye ? s.byeText : s.tbdText}>{playerBDisplay}</Text>
         </Text>
+        {isLocked && <Text style={s.lockedNote}>Winner already advanced — locked</Text>}
         {preview && <Text style={s.preview}>{preview}</Text>}
       </View>
       <StatusDot status={match.status} />
