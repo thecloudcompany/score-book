@@ -6,7 +6,7 @@ Knockout tournaments (single elimination) are the second tournament format to be
 
 ## Implementation Status
 
-🚧 **Planned** - Design complete, implementation pending.
+✅ **Complete** - Knockout tournaments (single elimination) are fully functional for both badminton and tennis, including bracket generation, bye handling, automatic winner advancement, and elimination-based standings. All five bug fixes from initial end-to-end testing are landed in code; see "Implementation Notes & Bug Fixes" below.
 
 ## Core Features
 

@@ -74,8 +74,8 @@ Professional tournament software assumes organizers have training. ScoreBook ass
 - [x] Round-robin tournaments for badminton and tennis
 - [x] Automatic standings calculation with tiebreakers
 - [x] Match score entry and editing
-- [ ] Knockout tournaments (single elimination)
-- [ ] Share standings as images
+- [x] Knockout tournaments (single elimination)
+- [x] Share standings as images
 
 ### Medium-term (v2)
 - [ ] Additional sports (table tennis, squash, pickleball)
