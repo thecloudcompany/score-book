@@ -44,14 +44,6 @@ export const tennisSport: Sport = {
   },
 
   isMatchComplete(units: ScoringUnit[], format: MatchFormat): boolean {
-    const winner = this.determineWinner(units, format);
-    return winner !== null;
+    return this.determineWinner(units, format) !== null;
   },
-
-  getUnitCount(format: MatchFormat): number {
-    // Max possible sets: (setsToWin * 2) - 1
-    return (format.setsToWin ?? 2) * 2 - 1;
-  },
-
-  tieBreakers: ['wins', 'setDiff', 'gameDiff'],
 };

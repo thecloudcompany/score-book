@@ -28,7 +28,7 @@ export function MatchRow({
     match.participantBId !== null
       ? getParticipantName(match.participantBId)
       : tournamentType === 'knockout'
-        ? getParticipantPlaceholder(match, 'B')
+        ? getParticipantPlaceholder(match)
         : 'TBD';
 
   return (

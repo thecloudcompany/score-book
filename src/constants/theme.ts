@@ -31,8 +31,6 @@ export const Colors = {
   primaryMuted: 'rgba(11, 143, 134, 0.09)',
   primaryDark: '#0A6F69',
 
-  accent: '#0B8F86',       // Alias
-
   // Status — refined, desaturated
   success: '#059669',      // Completed
   successMuted: 'rgba(5, 150, 105, 0.08)',
@@ -69,21 +67,16 @@ export const Spacing = {
   xxxl: 32,
 };
 
-// Status color mapping — returns { dot: string, bg: string, text: string }
-export function statusStyle(status: string): { dot: string; text: string; bg: string } {
+export function statusColor(status: string): string {
   switch (status) {
     case 'completed':
-      return { dot: Colors.success, text: Colors.success, bg: Colors.successMuted };
+      return Colors.success;
     case 'in_progress':
-      return { dot: Colors.warning, text: Colors.warning, bg: Colors.warningMuted };
+      return Colors.warning;
     case 'active':
-      return { dot: Colors.primary, text: Colors.primary, bg: Colors.primaryMuted };
+      return Colors.primary;
     case 'upcoming':
     default:
-      return { dot: Colors.info, text: Colors.info, bg: Colors.infoMuted };
+      return Colors.info;
   }
-}
-
-export function statusColor(status: string): string {
-  return statusStyle(status).dot;
 }

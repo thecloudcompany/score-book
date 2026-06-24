@@ -110,6 +110,4 @@ export interface Sport {
   validateUnitScore(scoreA: number, scoreB: number, format: MatchFormat): ValidationResult;
   determineWinner(units: ScoringUnit[], format: MatchFormat): 'a' | 'b' | null;
   isMatchComplete(units: ScoringUnit[], format: MatchFormat): boolean;
-  getUnitCount(format: MatchFormat): number;
-  tieBreakers: string[];
 }

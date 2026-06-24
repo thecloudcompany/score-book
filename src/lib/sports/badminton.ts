@@ -44,13 +44,6 @@ export const badmintonSport: Sport = {
   },
 
   isMatchComplete(units: ScoringUnit[], format: MatchFormat): boolean {
-    const winner = this.determineWinner(units, format);
-    return winner !== null;
+    return this.determineWinner(units, format) !== null;
   },
-
-  getUnitCount(format: MatchFormat): number {
-    return format.bestOfGames ?? 3;
-  },
-
-  tieBreakers: ['wins', 'pointDiff', 'gameDiff'],
 };

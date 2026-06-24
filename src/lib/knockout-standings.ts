@@ -61,42 +61,12 @@ export function calculateKnockoutStandings(
 }
 
 /**
- * Check if a match can be edited (no downstream effects)
- */
-export function canEditMatch(match: Match, matches: Match[]): boolean {
-  // If this match doesn't feed into another match, it can be edited
-  if (!match.feedsIntoMatchId) {
-    return true;
-  }
-
-  // Find the next match
-  const nextMatch = matches.find(m => m.id === match.feedsIntoMatchId);
-  if (!nextMatch) {
-    return true;
-  }
-
-  // If the next match already has both participants, it's locked
-  if (nextMatch.participantAId !== null && nextMatch.participantBId !== null) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Check if a match is playable (both participants known)
- */
-export function isMatchPlayable(match: Match): boolean {
-  return match.participantAId !== null && match.participantBId !== null;
-}
-
-/**
  * Check if a match is a bye match
  * Bye matches are only in Round 1 where one participant gets a free pass
  */
 export function isByeMatch(match: Match): boolean {
-  return match.round === 1 
-    && match.participantBId === null 
+  return match.round === 1
+    && match.participantBId === null
     && match.status === 'completed';
 }
 
@@ -105,7 +75,7 @@ export function isByeMatch(match: Match): boolean {
  * - Round 1: "BYE" (auto-completed bye match)
  * - Later rounds: "TBD" (waiting for winner from previous match)
  */
-export function getParticipantPlaceholder(match: Match, slot: 'A' | 'B'): string {
+export function getParticipantPlaceholder(match: Match): string {
   if (match.round === 1 && match.status === 'completed') {
     return 'BYE';
   }
