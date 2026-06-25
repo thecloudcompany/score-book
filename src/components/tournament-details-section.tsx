@@ -29,8 +29,8 @@ export function TournamentDetailsSection({
 }: TournamentDetailsSectionProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const formatOptions = [1, 3, 5];
-  const formatKey = sport === 'badminton' ? 'bestOfGames' : 'setsToWin';
-  const currentFormat = format[formatKey] ?? (sport === 'badminton' ? 3 : 3);
+  const formatKey = sport === 'tennis' ? 'setsToWin' : 'bestOfGames';
+  const currentFormat = format[formatKey] ?? 3;
   const formatLabel = (num: number) => {
     if (num === 1) return 'Single';
     return `Best of ${num}`;
@@ -73,6 +73,16 @@ export function TournamentDetailsSection({
               Tennis
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sportBtn, sport === 'table_tennis' && styles.sportBtnActive]}
+            onPress={() => onSportChange('table_tennis')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.sportEmoji}>🏓</Text>
+            <Text style={[styles.sportText, sport === 'table_tennis' && styles.sportTextActive]}>
+              Table Tennis
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -103,7 +113,7 @@ export function TournamentDetailsSection({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>{sport === 'badminton' ? 'Games to win' : 'Sets to win'}</Text>
+        <Text style={styles.label}>{sport === 'tennis' ? 'Sets to win' : 'Games to win'}</Text>
         <View style={styles.formatRow}>
           {formatOptions.map((num) => (
             <TouchableOpacity
@@ -138,19 +148,7 @@ export function TournamentDetailsSection({
 
       {showAdvanced && (
         <View style={styles.section}>
-          {sport === 'badminton' ? (
-            <View style={styles.advancedRow}>
-              <Text style={styles.advancedLabel}>Points to win</Text>
-              <TextInput
-                style={styles.advancedInput}
-                value={String(format.gamePoint ?? 21)}
-                onChangeText={(v) =>
-                  onFormatChange({ ...format, gamePoint: parseInt(v) || 21 })
-                }
-                keyboardType="number-pad"
-              />
-            </View>
-          ) : (
+          {sport === 'tennis' ? (
             <View style={styles.advancedRow}>
               <Text style={styles.advancedLabel}>Games per set</Text>
               <TextInput
@@ -158,6 +156,18 @@ export function TournamentDetailsSection({
                 value={String(format.gamesToWinPerSet ?? 6)}
                 onChangeText={(v) =>
                   onFormatChange({ ...format, gamesToWinPerSet: parseInt(v) || 6 })
+                }
+                keyboardType="number-pad"
+              />
+            </View>
+          ) : (
+            <View style={styles.advancedRow}>
+              <Text style={styles.advancedLabel}>Points to win</Text>
+              <TextInput
+                style={styles.advancedInput}
+                value={String(format.gamePoint ?? (sport === 'table_tennis' ? 11 : 21))}
+                onChangeText={(v) =>
+                  onFormatChange({ ...format, gamePoint: parseInt(v) || (sport === 'table_tennis' ? 11 : 21) })
                 }
                 keyboardType="number-pad"
               />

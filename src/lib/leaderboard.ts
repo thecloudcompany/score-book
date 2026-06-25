@@ -1,4 +1,4 @@
-import type { LeaderboardEntry, Participant, BadmintonMatch, BadmintonGame, TennisMatch, TennisSet } from '@/types';
+import type { LeaderboardEntry, Participant, BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame } from '@/types';
 
 interface MatchWithUnits {
   match: BadmintonMatch | TennisMatch;
@@ -7,8 +7,7 @@ interface MatchWithUnits {
 
 function calculateStats(
   matches: MatchWithUnits[],
-  participants: Participant[],
-  sport: 'badminton' | 'tennis'
+  participants: Participant[]
 ): LeaderboardEntry[] {
   const stats: Record<number, { wins: number; losses: number; pointDiff: number; gameDiff: number }> = {};
 
@@ -101,7 +100,7 @@ export function calculateBadmintonLeaderboard(
       .map((g) => ({ scoreA: g.scoreA, scoreB: g.scoreB })),
   }));
 
-  return calculateStats(matchUnits, participants, 'badminton');
+  return calculateStats(matchUnits, participants);
 }
 
 export function calculateTennisLeaderboard(
@@ -117,5 +116,21 @@ export function calculateTennisLeaderboard(
       .map((s) => ({ scoreA: s.gamesA, scoreB: s.gamesB })),
   }));
 
-  return calculateStats(matchUnits, participants, 'tennis');
+  return calculateStats(matchUnits, participants);
+}
+
+export function calculateTableTennisLeaderboard(
+  matches: TableTennisMatch[],
+  games: TableTennisGame[],
+  participants: Participant[]
+): LeaderboardEntry[] {
+  const matchUnits = matches.map((match) => ({
+    match,
+    units: games
+      .filter((g) => g.matchId === match.id)
+      .sort((a, b) => a.gameNumber - b.gameNumber)
+      .map((g) => ({ scoreA: g.scoreA, scoreB: g.scoreB })),
+  }));
+
+  return calculateStats(matchUnits, participants);
 }

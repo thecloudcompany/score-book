@@ -4,13 +4,13 @@ import { MatchRow } from './match-row';
 import { getRoundName } from '@/lib/bracket-generator';
 import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
 import { s } from './matches-tab.styles';
-import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TournamentType } from '@/types';
+import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, TournamentType } from '@/types';
 
 interface MatchesTabProps {
   tournamentType: TournamentType;
-  matches: (BadmintonMatch | TennisMatch)[];
-  units: Record<number, BadmintonGame[] | TennisSet[]>;
-  sport: 'badminton' | 'tennis';
+  matches: (BadmintonMatch | TennisMatch | TableTennisMatch)[];
+  units: Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[]>;
+  sport: 'badminton' | 'tennis' | 'table_tennis';
   getParticipantName: (id: number) => string;
   onMatchPress: (matchId: number) => void;
 }
@@ -23,18 +23,20 @@ export function MatchesTab({
   getParticipantName,
   onMatchPress,
 }: MatchesTabProps) {
+  const isScoreSport = sport === 'badminton' || sport === 'table_tennis';
+
   const getPreview = (matchId: number): string | null => {
     const matchUnits = units[matchId] || [];
     const filled = matchUnits.filter((u: any) => {
-      const a = sport === 'badminton' ? u.scoreA : u.gamesA;
-      const b = sport === 'badminton' ? u.scoreB : u.gamesB;
+      const a = isScoreSport ? u.scoreA : u.gamesA;
+      const b = isScoreSport ? u.scoreB : u.gamesB;
       return a !== null && b !== null;
     });
     if (filled.length === 0) return null;
     return filled
       .map((u: any) => {
-        const a = sport === 'badminton' ? u.scoreA : u.gamesA;
-        const b = sport === 'badminton' ? u.scoreB : u.gamesB;
+        const a = isScoreSport ? u.scoreA : u.gamesA;
+        const b = isScoreSport ? u.scoreB : u.gamesB;
         return `${a}-${b}`;
       })
       .join('  ·  ');

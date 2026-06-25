@@ -95,7 +95,11 @@ export function SettingsTab({
             ]}
           />
           <Text style={s.metaText}>
-            {tournament.sport === 'badminton' ? 'Badminton' : 'Tennis'}
+            {tournament.sport === 'badminton'
+              ? 'Badminton'
+              : tournament.sport === 'table_tennis'
+                ? 'Table Tennis'
+                : 'Tennis'}
           </Text>
         </View>
         <View style={s.metaDivider} />

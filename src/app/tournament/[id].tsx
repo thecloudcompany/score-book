@@ -21,6 +21,7 @@ import { useStandings } from '@/hooks/use-standings';
 import { Colors } from '@/constants/theme';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
+import { tableTennisSport } from '@/lib/sports/table-tennis';
 import { s } from './[id].styles';
 import type { Tournament, Sport, MatchFormat } from '@/types';
 
@@ -223,12 +224,17 @@ export default function TournamentDetailScreen() {
         const pA = getParticipantName(match.participantAId);
         const pB = match.participantBId !== null ? getParticipantName(match.participantBId) : 'Player B';
         const matchUnits = units[selectedMatchId] || [];
+        const isScoreSport = tournament.sport === 'badminton' || tournament.sport === 'table_tennis';
         const modalUnits = matchUnits.map((u: any) => ({
           unitNumber: u.gameNumber ?? u.setNumber,
-          scoreA: tournament.sport === 'badminton' ? u.scoreA : u.gamesA,
-          scoreB: tournament.sport === 'badminton' ? u.scoreB : u.gamesB,
+          scoreA: isScoreSport ? u.scoreA : u.gamesA,
+          scoreB: isScoreSport ? u.scoreB : u.gamesB,
         }));
-        const sport: Sport = tournament.sport === 'badminton' ? badmintonSport : tennisSport;
+        const sport: Sport = tournament.sport === 'badminton'
+          ? badmintonSport
+          : tournament.sport === 'table_tennis'
+            ? tableTennisSport
+            : tennisSport;
         const format: MatchFormat = 'gamePoint' in match
           ? { gamePoint: match.gamePoint, bestOfGames: match.bestOfGames }
           : { setsToWin: match.setsToWin, gamesToWinPerSet: match.gamesToWinPerSet };
@@ -236,7 +242,7 @@ export default function TournamentDetailScreen() {
           <ScoreEntryModal
             playerA={pA}
             playerB={pB}
-            unitLabel={tournament.sport === 'badminton' ? 'Game' : 'Set'}
+            unitLabel={tournament.sport === 'tennis' ? 'Set' : 'Game'}
             units={modalUnits}
             sport={sport}
             format={format}

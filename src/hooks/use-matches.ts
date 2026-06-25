@@ -8,18 +8,24 @@ import {
   getTennisSets,
   updateTennisSet,
   updateTennisMatchStatus,
+  getTableTennisMatches,
+  getTableTennisGames,
+  updateTableTennisGame,
+  updateTableTennisMatchStatus,
   getParticipants,
   updateTournamentStatus,
   updateBadmintonMatchParticipant,
   updateTennisMatchParticipant,
+  updateTableTennisMatchParticipant,
 } from '@/lib/db-operations';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
-import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, MatchStatus, TournamentType } from '@/types';
+import { tableTennisSport } from '@/lib/sports/table-tennis';
+import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame, MatchStatus, TournamentType } from '@/types';
 
-export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', tournamentType: TournamentType = 'round_robin') {
-  const [matches, setMatches] = useState<(BadmintonMatch | TennisMatch)[]>([]);
-  const [units, setUnits] = useState<Record<number, BadmintonGame[] | TennisSet[]>>({});
+export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' | 'table_tennis', tournamentType: TournamentType = 'round_robin') {
+  const [matches, setMatches] = useState<(BadmintonMatch | TennisMatch | TableTennisMatch)[]>([]);
+  const [units, setUnits] = useState<Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[]>>({});
   const [participants, setParticipants] = useState<{ id: number; name: string }[]>([]);
 
   const refresh = useCallback(() => {
@@ -35,13 +41,22 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', 
         unitsMap[match.id] = getBadmintonGames(match.id);
       }
       setUnits(unitsMap);
-    } else {
+    } else if (sport === 'tennis') {
       const matchList = getTennisMatches(tournamentId);
       setMatches(matchList);
 
       const unitsMap: Record<number, TennisSet[]> = {};
       for (const match of matchList) {
         unitsMap[match.id] = getTennisSets(match.id);
+      }
+      setUnits(unitsMap);
+    } else {
+      const matchList = getTableTennisMatches(tournamentId);
+      setMatches(matchList);
+
+      const unitsMap: Record<number, TableTennisGame[]> = {};
+      for (const match of matchList) {
+        unitsMap[match.id] = getTableTennisGames(match.id);
       }
       setUnits(unitsMap);
     }
@@ -51,8 +66,10 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', 
     (matchId: number, unitNumber: number, scoreA: number | null, scoreB: number | null) => {
       if (sport === 'badminton') {
         updateBadmintonGame(matchId, unitNumber, scoreA, scoreB);
-      } else {
+      } else if (sport === 'tennis') {
         updateTennisSet(matchId, unitNumber, scoreA, scoreB);
+      } else {
+        updateTableTennisGame(matchId, unitNumber, scoreA, scoreB);
       }
 
       // Update the local unit first
@@ -66,6 +83,9 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', 
         if (sport === 'badminton') {
           (updatedUnit as BadmintonGame).scoreA = scoreA;
           (updatedUnit as BadmintonGame).scoreB = scoreB;
+        } else if (sport === 'table_tennis') {
+          (updatedUnit as TableTennisGame).scoreA = scoreA;
+          (updatedUnit as TableTennisGame).scoreB = scoreB;
         } else {
           (updatedUnit as TennisSet).gamesA = scoreA;
           (updatedUnit as TennisSet).gamesB = scoreB;
@@ -81,30 +101,38 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', 
 
       const currentUnits = updatedUnits[matchId] || [];
       const filledUnits = currentUnits.filter((u: any) => {
-        const a = sport === 'badminton' ? u.scoreA : u.gamesA;
-        const b = sport === 'badminton' ? u.scoreB : u.gamesB;
+        const a = sport === 'badminton' || sport === 'table_tennis' ? u.scoreA : u.gamesA;
+        const b = sport === 'badminton' || sport === 'table_tennis' ? u.scoreB : u.gamesB;
         return a !== null && b !== null;
       });
 
       const hasAnyScore = filledUnits.length > 0;
-      const matchFormat: Record<string, number> =
-        sport === 'badminton'
-          ? {
-              gamePoint: (currentMatch as BadmintonMatch).gamePoint,
-              bestOfGames: (currentMatch as BadmintonMatch).bestOfGames,
-            }
-          : {
-              setsToWin: (currentMatch as TennisMatch).setsToWin,
-              gamesToWinPerSet: (currentMatch as TennisMatch).gamesToWinPerSet,
-            };
+      let matchFormat: Record<string, number>;
+      if (sport === 'badminton') {
+        matchFormat = {
+          gamePoint: (currentMatch as BadmintonMatch).gamePoint,
+          bestOfGames: (currentMatch as BadmintonMatch).bestOfGames,
+        };
+      } else if (sport === 'table_tennis') {
+        matchFormat = {
+          gamePoint: (currentMatch as TableTennisMatch).gamePoint,
+          bestOfGames: (currentMatch as TableTennisMatch).bestOfGames,
+        };
+      } else {
+        matchFormat = {
+          setsToWin: (currentMatch as TennisMatch).setsToWin,
+          gamesToWinPerSet: (currentMatch as TennisMatch).gamesToWinPerSet,
+        };
+      }
 
       const scoringUnitsForCheck = filledUnits.map((u: any) => ({
         unitNumber: u.gameNumber || u.setNumber,
-        scoreA: sport === 'badminton' ? u.scoreA : u.gamesA,
-        scoreB: sport === 'badminton' ? u.scoreB : u.gamesB,
+        scoreA: sport === 'badminton' || sport === 'table_tennis' ? u.scoreA : u.gamesA,
+        scoreB: sport === 'badminton' || sport === 'table_tennis' ? u.scoreB : u.gamesB,
       }));
 
-      const sportModule = sport === 'badminton' ? badmintonSport : tennisSport;
+      const sportModule =
+        sport === 'badminton' ? badmintonSport : sport === 'tennis' ? tennisSport : tableTennisSport;
       const isComplete = sportModule.isMatchComplete(scoringUnitsForCheck, matchFormat);
       const winner = isComplete
         ? sportModule.determineWinner(scoringUnitsForCheck, matchFormat)
@@ -124,8 +152,10 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', 
 
       if (sport === 'badminton') {
         updateBadmintonMatchStatus(matchId, newStatus, winnerId);
-      } else {
+      } else if (sport === 'tennis') {
         updateTennisMatchStatus(matchId, newStatus, winnerId);
+      } else {
+        updateTableTennisMatchStatus(matchId, newStatus, winnerId);
       }
 
       // Handle knockout progression
@@ -137,8 +167,10 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis', 
           // Advance winner to next match
           if (sport === 'badminton') {
             updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
-          } else {
+          } else if (sport === 'tennis') {
             updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+          } else {
+            updateTableTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
           }
         }
       }

@@ -24,6 +24,12 @@ function StatusDot({ status }: { status: Tournament['status'] }) {
   );
 }
 
+const SPORT_LABELS: Record<Tournament['sport'], string> = {
+  badminton: 'Badminton',
+  tennis: 'Tennis',
+  table_tennis: 'Table Tennis',
+};
+
 function TournamentCard({
   tournament,
   onPress,
@@ -33,8 +39,6 @@ function TournamentCard({
   onPress: () => void;
   onLongPress: () => void;
 }) {
-  const isBadminton = tournament.sport === 'badminton';
-
   return (
     <TouchableOpacity
       style={styles.card}
@@ -44,7 +48,7 @@ function TournamentCard({
     >
       <View style={styles.cardTop}>
         <View style={styles.sportRow}>
-          <Text style={styles.sportLabel}>{isBadminton ? 'Badminton' : 'Tennis'}</Text>
+          <Text style={styles.sportLabel}>{SPORT_LABELS[tournament.sport]}</Text>
           <View style={styles.sportDivider} />
           <Text style={styles.typeLabel}>
             {tournament.type === 'knockout' ? 'Knockout' : 'Round robin'}

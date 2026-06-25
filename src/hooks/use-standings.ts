@@ -5,11 +5,13 @@ import {
   getBadmintonGames,
   getTennisMatches,
   getTennisSets,
+  getTableTennisMatches,
+  getTableTennisGames,
 } from '@/lib/db-operations';
-import { calculateBadmintonLeaderboard, calculateTennisLeaderboard } from '@/lib/leaderboard';
+import { calculateBadmintonLeaderboard, calculateTennisLeaderboard, calculateTableTennisLeaderboard } from '@/lib/leaderboard';
 import type { LeaderboardEntry } from '@/types';
 
-export function useStandings(tournamentId: number, sport: 'badminton' | 'tennis') {
+export function useStandings(tournamentId: number, sport: 'badminton' | 'tennis' | 'table_tennis') {
   const [standings, setStandings] = useState<LeaderboardEntry[]>([]);
 
   const refresh = useCallback(() => {
@@ -23,13 +25,21 @@ export function useStandings(tournamentId: number, sport: 'badminton' | 'tennis'
       }
       const result = calculateBadmintonLeaderboard(matches, allGames, participants);
       setStandings(result);
-    } else {
+    } else if (sport === 'tennis') {
       const matches = getTennisMatches(tournamentId);
       const allSets: any[] = [];
       for (const match of matches) {
         allSets.push(...getTennisSets(match.id));
       }
       const result = calculateTennisLeaderboard(matches, allSets, participants);
+      setStandings(result);
+    } else {
+      const matches = getTableTennisMatches(tournamentId);
+      const allGames: any[] = [];
+      for (const match of matches) {
+        allGames.push(...getTableTennisGames(match.id));
+      }
+      const result = calculateTableTennisLeaderboard(matches, allGames, participants);
       setStandings(result);
     }
   }, [tournamentId, sport]);

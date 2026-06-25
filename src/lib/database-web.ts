@@ -160,6 +160,9 @@ class WebDatabase {
         this.tables['tennis_matches'] = (this.tables['tennis_matches'] || []).filter(
           (r) => r.tournament_id !== tid
         );
+        this.tables['table_tennis_matches'] = (this.tables['table_tennis_matches'] || []).filter(
+          (r) => r.tournament_id !== tid
+        );
       }
       if (table === 'badminton_matches') {
         const mid = params[0] as number;
@@ -170,6 +173,12 @@ class WebDatabase {
       if (table === 'tennis_matches') {
         const mid = params[0] as number;
         this.tables['tennis_match_sets'] = (this.tables['tennis_match_sets'] || []).filter(
+          (r) => r.match_id !== mid
+        );
+      }
+      if (table === 'table_tennis_matches') {
+        const mid = params[0] as number;
+        this.tables['table_tennis_match_games'] = (this.tables['table_tennis_match_games'] || []).filter(
           (r) => r.match_id !== mid
         );
       }

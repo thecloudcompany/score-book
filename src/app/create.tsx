@@ -16,6 +16,7 @@ import { ByeSection } from '@/components/bye-section';
 import { TournamentDetailsSection } from '@/components/tournament-details-section';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
+import { tableTennisSport } from '@/lib/sports/table-tennis';
 import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 import type { SportType, TournamentType, ByeConfig } from '@/types';
 
@@ -41,6 +42,11 @@ export default function CreateTournamentScreen() {
       setFormat({
         gamePoint: badmintonSport.defaultFormat.gamePoint,
         bestOfGames: badmintonSport.defaultFormat.bestOfGames,
+      });
+    } else if (newSport === 'table_tennis') {
+      setFormat({
+        gamePoint: tableTennisSport.defaultFormat.gamePoint,
+        bestOfGames: tableTennisSport.defaultFormat.bestOfGames,
       });
     } else {
       setFormat({
@@ -79,7 +85,12 @@ export default function CreateTournamentScreen() {
   const handleCreate = useCallback(() => {
     if (!validate()) return;
     const validParticipants = participants.map((p) => p.trim()).filter((p) => p.length > 0);
-    const defaultFormat = sport === 'badminton' ? badmintonSport.defaultFormat : tennisSport.defaultFormat;
+    const defaultFormat =
+      sport === 'badminton'
+        ? badmintonSport.defaultFormat
+        : sport === 'table_tennis'
+          ? tableTennisSport.defaultFormat
+          : tennisSport.defaultFormat;
 
     let byeConfig: ByeConfig | undefined;
     if (tournamentType === 'knockout') {

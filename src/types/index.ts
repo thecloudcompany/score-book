@@ -1,4 +1,4 @@
-export type SportType = 'badminton' | 'tennis';
+export type SportType = 'badminton' | 'tennis' | 'table_tennis';
 
 export type TournamentType = 'round_robin' | 'knockout';
 
@@ -64,7 +64,20 @@ export interface TennisSet {
   gamesB: number | null;
 }
 
-export type Match = BadmintonMatch | TennisMatch;
+export interface TableTennisMatch extends BaseMatch {
+  gamePoint: number;
+  bestOfGames: number;
+}
+
+export interface TableTennisGame {
+  id: number;
+  matchId: number;
+  gameNumber: number;
+  scoreA: number | null;
+  scoreB: number | null;
+}
+
+export type Match = BadmintonMatch | TennisMatch | TableTennisMatch;
 
 export interface ScoringUnit {
   unitNumber: number;

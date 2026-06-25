@@ -8,7 +8,7 @@ Scope for v3 is deliberately narrow per the Play-Store feedback that the UI alre
 
 ## Implementation Status
 
-🚧 **Planned** - Design complete, implementation pending. Domain language and storage strategy resolved in a `/grilling` session; see `docs/adr/0001-per-sport-match-tables.md` for the storage decision.
+✅ **Complete** - Table tennis is fully functional for both round-robin and knockout tournaments. The implementation follows the per-sport two-table pattern; see `docs/adr/0001-per-sport-match-tables.md` for the storage decision.
 
 ## Domain Decisions (Grilling Summary)
 

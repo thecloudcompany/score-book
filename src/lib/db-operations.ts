@@ -6,6 +6,8 @@ import type {
   BadmintonGame,
   TennisMatch,
   TennisSet,
+  TableTennisMatch,
+  TableTennisGame,
   SportType,
   TournamentType,
 } from '@/types';
@@ -385,6 +387,132 @@ export function updateTennisMatchStatus(
   );
 }
 
+// ─── Table Tennis Matches ────────────────────────────────────────────────────
+
+export interface TableTennisMatchCreateOptions {
+  round?: number;
+  bracketPosition?: number;
+  feedsIntoMatchId?: number | null;
+  feedsIntoSlot?: 'A' | 'B' | null;
+}
+
+export function createTableTennisMatch(
+  tournamentId: number,
+  participantAId: number,
+  participantBId: number | null,
+  gamePoint: number,
+  bestOfGames: number,
+  options: TableTennisMatchCreateOptions = {}
+): TableTennisMatch {
+  const db = getDatabase();
+  const {
+    round = 1,
+    bracketPosition = 1,
+    feedsIntoMatchId = null,
+    feedsIntoSlot = null,
+  } = options;
+
+  const result = db.runSync(
+    `INSERT INTO table_tennis_matches
+     (tournament_id, participant_a_id, participant_b_id, game_point, best_of_games,
+      status, winner_id, round, bracket_position, feeds_into_match_id, feeds_into_slot)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    tournamentId,
+    participantAId,
+    participantBId,
+    gamePoint,
+    bestOfGames,
+    'upcoming',
+    null,
+    round,
+    bracketPosition,
+    feedsIntoMatchId,
+    feedsIntoSlot
+  );
+
+  const matchId = Number(result.lastInsertRowId);
+
+  if (participantBId !== null) {
+    for (let i = 1; i <= bestOfGames; i++) {
+      db.runSync(
+        'INSERT INTO table_tennis_match_games (match_id, game_number) VALUES (?, ?)',
+        matchId,
+        i
+      );
+    }
+  }
+
+  return {
+    id: matchId,
+    tournamentId,
+    participantAId,
+    participantBId,
+    gamePoint,
+    bestOfGames,
+    status: 'upcoming',
+    winnerId: null,
+    createdAt: Math.floor(Date.now() / 1000),
+    round,
+    bracketPosition,
+    feedsIntoMatchId,
+    feedsIntoSlot,
+  };
+}
+
+export function getTableTennisMatches(tournamentId: number): TableTennisMatch[] {
+  const db = getDatabase();
+  const rows = db.getAllSync<TableTennisMatch>(
+    `SELECT id, tournament_id as tournamentId, participant_a_id as participantAId,
+            participant_b_id as participantBId, game_point as gamePoint, best_of_games as bestOfGames,
+            status, winner_id as winnerId, created_at as createdAt,
+            round, bracket_position as bracketPosition,
+            feeds_into_match_id as feedsIntoMatchId, feeds_into_slot as feedsIntoSlot
+     FROM table_tennis_matches WHERE tournament_id = ? ORDER BY round, bracket_position`,
+    tournamentId
+  );
+  return rows;
+}
+
+export function getTableTennisGames(matchId: number): TableTennisGame[] {
+  const db = getDatabase();
+  const rows = db.getAllSync<TableTennisGame>(
+    `SELECT id, match_id as matchId, game_number as gameNumber, score_a as scoreA, score_b as scoreB
+     FROM table_tennis_match_games WHERE match_id = ? ORDER BY game_number`,
+    matchId
+  );
+  return rows;
+}
+
+export function updateTableTennisGame(
+  matchId: number,
+  gameNumber: number,
+  scoreA: number | null,
+  scoreB: number | null
+) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE table_tennis_match_games SET score_a = ?, score_b = ? WHERE match_id = ? AND game_number = ?',
+    scoreA,
+    scoreB,
+    matchId,
+    gameNumber
+  );
+}
+
+export function updateTableTennisMatchStatus(
+  matchId: number,
+  status: TableTennisMatch['status'],
+  winnerId: number | null
+) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE table_tennis_matches SET status = ?, winner_id = ? WHERE id = ?',
+    status,
+    winnerId,
+    matchId
+  );
+}
+
 // ─── Knockout Tournament Operations ──────────────────────────────────────────
 
 export function updateBadmintonMatchParticipant(
@@ -490,6 +618,57 @@ export function updateTennisMatchBracketLink(
   const db = getDatabase();
   db.runSync(
     'UPDATE tennis_matches SET feeds_into_match_id = ?, feeds_into_slot = ? WHERE id = ?',
+    feedsIntoMatchId,
+    feedsIntoSlot,
+    matchId
+  );
+}
+
+export function updateTableTennisMatchParticipant(
+  matchId: number,
+  slot: 'A' | 'B',
+  participantId: number
+) {
+  const db = getDatabase();
+  const column = slot === 'A' ? 'participant_a_id' : 'participant_b_id';
+  db.runSync(
+    `UPDATE table_tennis_matches SET ${column} = ? WHERE id = ?`,
+    participantId,
+    matchId
+  );
+
+  const match = db.getFirstSync<TableTennisMatch>(
+    `SELECT id, participant_a_id as participantAId, participant_b_id as participantBId, best_of_games as bestOfGames
+     FROM table_tennis_matches WHERE id = ?`,
+    matchId
+  );
+
+  if (match && match.participantAId !== null && match.participantBId !== null) {
+    const existingGames = db.getAllSync(
+      'SELECT id FROM table_tennis_match_games WHERE match_id = ?',
+      matchId
+    );
+
+    if (existingGames.length === 0) {
+      for (let i = 1; i <= match.bestOfGames; i++) {
+        db.runSync(
+          'INSERT INTO table_tennis_match_games (match_id, game_number) VALUES (?, ?)',
+          matchId,
+          i
+        );
+      }
+    }
+  }
+}
+
+export function updateTableTennisMatchBracketLink(
+  matchId: number,
+  feedsIntoMatchId: number,
+  feedsIntoSlot: 'A' | 'B'
+) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE table_tennis_matches SET feeds_into_match_id = ?, feeds_into_slot = ? WHERE id = ?',
     feedsIntoMatchId,
     feedsIntoSlot,
     matchId
