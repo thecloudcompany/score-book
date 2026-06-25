@@ -7,6 +7,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { s } from './score-entry-modal.styles';
@@ -81,94 +82,99 @@ export default function ScoreEntryModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={s.sheet}>
-          {/* Header */}
-          <View style={s.header}>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-              <Text style={s.closeText}>Close</Text>
-            </TouchableOpacity>
-            <Text style={s.headerTitle}>Score Entry</Text>
-            <View style={{ width: 50 }} />
-          </View>
-
-          {/* Players */}
-          <View style={s.playersRow}>
-            <Text style={s.playerName}>{playerA}</Text>
-            <Text style={s.vsText}>vs</Text>
-            <Text style={s.playerName}>{playerB}</Text>
-          </View>
-
-          {/* Units list — all games, tap to edit */}
-          {units.length > 0 && (
-            <View style={s.completedBox}>
-              {units.map((u) => {
-                const isEditing = currentUnit?.unitNumber === u.unitNumber;
-                const isFilled = u.scoreA !== null && u.scoreB !== null;
-                return (
-                  <TouchableOpacity
-                    key={u.unitNumber}
-                    style={[
-                      s.unitRow,
-                      isEditing && s.unitRowActive,
-                      isFilled && !isEditing && s.unitRowCompleted,
-                    ]}
-                    onPress={() => handleSelectUnit(u)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={s.unitLabel}>
-                      {unitLabel} {u.unitNumber}
-                    </Text>
-                    <Text style={[s.unitScore, isEditing && s.unitScoreActive]}>
-                      {u.scoreA != null && u.scoreB != null
-                        ? `${u.scoreA} - ${u.scoreB}`
-                        : '—'}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-
-          {/* Current unit input */}
-          {currentUnit && (
-            <View style={s.inputBox}>
-              <Text style={s.inputLabel}>
-                {editingUnitNumber != null ? 'Edit' : 'Enter'} {unitLabel} {currentUnit.unitNumber}
-              </Text>
-              <View style={s.inputsRow}>
-                <TextInput
-                  style={[s.scoreInput, error ? s.scoreInputError : null]}
-                  value={scoreA}
-                  onChangeText={setScoreA}
-                  placeholder="0"
-                  placeholderTextColor={Colors.textMuted}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  autoFocus
-                />
-                <Text style={s.dashText}>-</Text>
-                <TextInput
-                  style={[s.scoreInput, error ? s.scoreInputError : null]}
-                  value={scoreB}
-                  onChangeText={setScoreB}
-                  placeholder="0"
-                  placeholderTextColor={Colors.textMuted}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                />
-              </View>
-              {error !== '' && <Text style={s.errorText}>{error}</Text>}
-              <TouchableOpacity
-                style={[s.saveBtn, !(scoreA && scoreB) && s.saveBtnDisabled]}
-                onPress={handleSave}
-                activeOpacity={0.8}
-                disabled={!(scoreA && scoreB)}
-              >
-                <Text style={s.saveBtnText}>
-                  {editingUnitNumber != null ? 'Update Score' : 'Save Score'}
-                </Text>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header */}
+            <View style={s.header}>
+              <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+                <Text style={s.closeText}>Close</Text>
               </TouchableOpacity>
+              <Text style={s.headerTitle}>Score Entry</Text>
+              <View style={{ width: 50 }} />
             </View>
-          )}
+
+            {/* Players */}
+            <View style={s.playersRow}>
+              <Text style={s.playerName}>{playerA}</Text>
+              <Text style={s.vsText}>vs</Text>
+              <Text style={s.playerName}>{playerB}</Text>
+            </View>
+
+            {/* Units list — all games, tap to edit */}
+            {units.length > 0 && (
+              <View style={s.completedBox}>
+                {units.map((u) => {
+                  const isEditing = currentUnit?.unitNumber === u.unitNumber;
+                  const isFilled = u.scoreA !== null && u.scoreB !== null;
+                  return (
+                    <TouchableOpacity
+                      key={u.unitNumber}
+                      style={[
+                        s.unitRow,
+                        isEditing && s.unitRowActive,
+                        isFilled && !isEditing && s.unitRowCompleted,
+                      ]}
+                      onPress={() => handleSelectUnit(u)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={s.unitLabel}>
+                        {unitLabel} {u.unitNumber}
+                      </Text>
+                      <Text style={[s.unitScore, isEditing && s.unitScoreActive]}>
+                        {u.scoreA != null && u.scoreB !== null
+                          ? `${u.scoreA} - ${u.scoreB}`
+                          : '—'}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* Current unit input */}
+            {currentUnit && (
+              <View style={s.inputBox}>
+                <Text style={s.inputLabel}>
+                  {editingUnitNumber != null ? 'Edit' : 'Enter'} {unitLabel} {currentUnit.unitNumber}
+                </Text>
+                <View style={s.inputsRow}>
+                  <TextInput
+                    style={[s.scoreInput, error ? s.scoreInputError : null]}
+                    value={scoreA}
+                    onChangeText={setScoreA}
+                    placeholder="0"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    autoFocus
+                  />
+                  <Text style={s.dashText}>-</Text>
+                  <TextInput
+                    style={[s.scoreInput, error ? s.scoreInputError : null]}
+                    value={scoreB}
+                    onChangeText={setScoreB}
+                    placeholder="0"
+                    placeholderTextColor={Colors.textMuted}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                  />
+                </View>
+                {error !== '' && <Text style={s.errorText}>{error}</Text>}
+                <TouchableOpacity
+                  style={[s.saveBtn, !(scoreA && scoreB) && s.saveBtnDisabled]}
+                  onPress={handleSave}
+                  activeOpacity={0.8}
+                  disabled={!(scoreA && scoreB)}
+                >
+                  <Text style={s.saveBtnText}>
+                    {editingUnitNumber != null ? 'Update Score' : 'Save Score'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
