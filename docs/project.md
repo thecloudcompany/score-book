@@ -2,7 +2,7 @@
 
 ## What is ScoreBook?
 
-ScoreBook is a mobile-first tournament management application designed for casual racket sports players. It enables friends and groups to organize, track, and manage round-robin and knockout tournaments for badminton and tennis, with plans to expand to other sports.
+ScoreBook is a mobile-first tournament management application designed for casual racket sports players. It enables friends and groups to organize, track, and manage round-robin and knockout tournaments for badminton, tennis, and table tennis, with plans to expand to other sports.
 
 ## The Problem
 
@@ -20,7 +20,7 @@ Casual sports players face several challenges when organizing tournaments:
 
 ## Target Users
 
-- **Casual badminton/tennis players** who organize friendly tournaments with friends, family, or colleagues
+- **Casual badminton / tennis / table tennis players** who organize friendly tournaments with friends, family, or colleagues
 - **Recreational sports groups** looking for a simple way to track their regular play sessions
 - **Amateur tournament organizers** who need basic bracket management without the complexity of professional tools
 
@@ -40,7 +40,7 @@ To become the go-to tournament management tool for casual sports players by:
 
 1. **Prioritizing simplicity over features**: Every feature must justify its complexity
 2. **Maintaining offline-first architecture**: No feature should require internet connectivity
-3. **Supporting multiple sports**: Start with badminton and tennis, expand to other racket sports and beyond
+3. **Supporting multiple sports**: Start with badminton and tennis, expanded to table tennis; further racket sports (squash, pickleball, etc.) come next
 4. **Enabling social sharing**: Easy export of standings and results for sharing with participants
 5. **Growing organically**: Add features based on real user needs, not speculative requirements
 
@@ -78,7 +78,8 @@ Professional tournament software assumes organizers have training. ScoreBook ass
 - [x] Share standings as images
 
 ### Medium-term (v2)
-- [ ] Additional sports (table tennis, squash, pickleball)
+- [x] Additional sports (table tennis)
+- [ ] Additional sports (squash, pickleball, etc.)
 - [ ] Double elimination tournaments
 - [ ] Player profiles and statistics
 - [ ] Tournament history and replay

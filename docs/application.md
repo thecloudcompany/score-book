@@ -60,8 +60,9 @@ interface Sport {
 ```
 
 **Current Implementations:**
-- `badmintonSport`: Game-based scoring (21 points, best of 3)
+- `badmintonSport`: Game-based scoring (21 points, best of 3, no win-by-2)
 - `tennisSport`: Set-based scoring (6 games per set, best of 3 sets)
+- `tableTennisSport`: Game-based scoring (11 points, best of 3, win-by-2)
 
 **Benefits:**
 - Adding a new sport requires only implementing the Sport interface
@@ -130,7 +131,7 @@ The application works on web, iOS, and Android with platform-specific optimizati
 - Implements tiebreaker logic (wins → point diff → game diff)
 - Detects ties and groups tied participants
 
-**sports/badminton.ts & tennis.ts**
+**sports/badminton.ts, tennis.ts, table-tennis.ts**
 - Sport-specific scoring logic
 - Implements Sport interface
 - Validates scores according to sport rules
@@ -232,8 +233,9 @@ User views Standings tab
 ```sql
 id INTEGER PRIMARY KEY
 name TEXT NOT NULL
-sport TEXT NOT NULL ('badminton' | 'tennis')
+sport TEXT NOT NULL ('badminton' | 'tennis' | 'table_tennis')
 status TEXT NOT NULL ('upcoming' | 'active' | 'completed')
+type TEXT NOT NULL DEFAULT 'round_robin' ('round_robin' | 'knockout')
 created_at INTEGER
 updated_at INTEGER
 ```
@@ -269,6 +271,8 @@ score_b INTEGER (nullable)
 ```
 
 **tennis_matches** and **tennis_match_sets** follow similar structure with set-based scoring.
+
+**table_tennis_matches** and **table_tennis_match_games** follow the same shape as badminton's two-table pair (gamePoint, bestOfGames, status, winner, bracket fields). Each sport owns its own two-table pair; see `docs/adr/0001-per-sport-match-tables.md` for the rationale.
 
 ### Foreign Key Cascades
 
