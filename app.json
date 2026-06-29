@@ -3,7 +3,7 @@
     "name": "ScoreBook",
     "slug": "scorebook",
     "version": "1.0.1",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
     "userInterfaceStyle": "light",

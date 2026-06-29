@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Colors } from '@/constants/theme';
+import { useIsWideLayout, MODAL_MAX_WIDTH } from '@/hooks/use-layout';
 import { s } from './score-entry-modal.styles';
 import type { Sport, MatchFormat } from '@/types';
 
@@ -40,6 +41,7 @@ export default function ScoreEntryModal({
   onSave,
   onClose,
 }: ScoreEntryModalProps) {
+  const isWide = useIsWideLayout();
   const firstUnit = units.find((u) => u.scoreA === null || u.scoreB === null) ?? units[0];
   const [scoreA, setScoreA] = useState(firstUnit?.scoreA != null ? String(firstUnit.scoreA) : '');
   const [scoreB, setScoreB] = useState(firstUnit?.scoreB != null ? String(firstUnit.scoreB) : '');
@@ -76,12 +78,12 @@ export default function ScoreEntryModal({
   }, [scoreA, scoreB, currentUnit, onSave, onClose, sport, format]);
 
   return (
-    <Modal visible={true} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={true} animationType={isWide ? 'fade' : 'slide'} transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={s.overlay}
+        style={[s.overlay, isWide && { justifyContent: 'center', alignItems: 'center' }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={s.sheet}>
+        <View style={[isWide ? s.dialog : s.sheet, isWide && { width: '100%', maxWidth: MODAL_MAX_WIDTH }]}>
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}

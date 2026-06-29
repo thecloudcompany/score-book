@@ -14,6 +14,7 @@ import { useTournaments } from '@/hooks/use-tournaments';
 import { ParticipantsSection } from '@/components/participants-section';
 import { ByeSection } from '@/components/bye-section';
 import { TournamentDetailsSection } from '@/components/tournament-details-section';
+import { ContentContainer } from '@/components/content-container';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
@@ -126,46 +127,50 @@ export default function CreateTournamentScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <TournamentDetailsSection
-            name={name}
-            sport={sport}
-            tournamentType={tournamentType}
-            format={format}
-            errors={errors}
-            onNameChange={setName}
-            onSportChange={handleSetSport}
-            onTournamentTypeChange={setTournamentType}
-            onFormatChange={setFormat}
-          />
-
-          <ParticipantsSection
-            participants={participants}
-            errors={errors}
-            onChange={updateParticipant}
-            onAdd={addParticipant}
-            onRemove={removeParticipant}
-          />
-
-          {tournamentType === 'knockout' && (
-            <ByeSection
-              validParticipantCount={validParticipantCount}
-              nextPowerOf2={nextPowerOf2}
-              byesNeeded={byesNeeded}
-              participants={participants}
-              byeMethod={byeMethod}
-              selectedByeIndices={selectedByeIndices}
-              onMethodChange={setByeMethod}
-              onSelectedIndicesChange={setSelectedByeIndices}
+          <ContentContainer>
+            <TournamentDetailsSection
+              name={name}
+              sport={sport}
+              tournamentType={tournamentType}
+              format={format}
+              errors={errors}
+              onNameChange={setName}
+              onSportChange={handleSetSport}
+              onTournamentTypeChange={setTournamentType}
+              onFormatChange={setFormat}
             />
-          )}
 
-          <View style={{ height: 20 }} />
+            <ParticipantsSection
+              participants={participants}
+              errors={errors}
+              onChange={updateParticipant}
+              onAdd={addParticipant}
+              onRemove={removeParticipant}
+            />
+
+            {tournamentType === 'knockout' && (
+              <ByeSection
+                validParticipantCount={validParticipantCount}
+                nextPowerOf2={nextPowerOf2}
+                byesNeeded={byesNeeded}
+                participants={participants}
+                byeMethod={byeMethod}
+                selectedByeIndices={selectedByeIndices}
+                onMethodChange={setByeMethod}
+                onSelectedIndicesChange={setSelectedByeIndices}
+              />
+            )}
+
+            <View style={{ height: 20 }} />
+          </ContentContainer>
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.createBtn} onPress={handleCreate} activeOpacity={0.85}>
-            <Text style={styles.createBtnText}>Create Tournament</Text>
-          </TouchableOpacity>
+          <ContentContainer>
+            <TouchableOpacity style={styles.createBtn} onPress={handleCreate} activeOpacity={0.85}>
+              <Text style={styles.createBtnText}>Create Tournament</Text>
+            </TouchableOpacity>
+          </ContentContainer>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>

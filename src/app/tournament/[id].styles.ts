@@ -74,4 +74,47 @@ export const s = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
   },
+  wideRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  sideRail: {
+    width: 180,
+    borderRightWidth: 1,
+    borderRightColor: Colors.borderLight,
+    backgroundColor: Colors.bgElevated,
+    paddingVertical: Spacing.md,
+  },
+  railItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.xl,
+    position: 'relative',
+  },
+  railEmoji: {
+    fontSize: 18,
+  },
+  railLabel: {
+    fontFamily: Font.semibold,
+    fontSize: 14,
+    color: Colors.textMuted,
+  },
+  railLabelActive: {
+    color: Colors.text,
+  },
+  railIndicator: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3,
+    backgroundColor: Colors.primary,
+  },
+  contentWide: {
+    flex: 1,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
+  },
 });

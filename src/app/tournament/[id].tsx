@@ -18,6 +18,8 @@ import {
 } from '@/lib/db-operations';
 import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
+import { useIsWideLayout } from '@/hooks/use-layout';
+import { ContentContainer } from '@/components/content-container';
 import { Colors } from '@/constants/theme';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
@@ -26,6 +28,12 @@ import { s } from './[id].styles';
 import type { Tournament, Sport, MatchFormat } from '@/types';
 
 type TabType = 'matches' | 'standings' | 'settings';
+
+const TAB_META: Record<TabType, { emoji: string; label: string }> = {
+  matches: { emoji: '📋', label: 'Matches' },
+  standings: { emoji: '🏆', label: 'Standings' },
+  settings: { emoji: '⚙', label: 'Settings' },
+};
 
 export default function TournamentDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -40,6 +48,7 @@ export default function TournamentDetailScreen() {
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [participantsVersion, setParticipantsVersion] = useState(0);
   const standingsRef = useRef<View | null>(null);
+  const isWide = useIsWideLayout();
 
   const { matches, units, participants, refresh: refreshMatches, updateScore } = useMatches(
     tournamentId,
@@ -141,6 +150,45 @@ export default function TournamentDetailScreen() {
     }
   }, [tournamentName]);
 
+  const renderActiveTab = () => {
+    if (activeTab === 'matches') {
+      return (
+        <MatchesTab
+          tournamentType={tournament!.type ?? 'round_robin'}
+          matches={matches}
+          units={units}
+          sport={tournament!.sport ?? 'badminton'}
+          getParticipantName={getParticipantName}
+          onMatchPress={handleMatchPress}
+        />
+      );
+    }
+    if (activeTab === 'standings') {
+      return (
+        <StandingsTab
+          tournamentType={tournament!.type ?? 'round_robin'}
+          participants={fullParticipants}
+          matches={matches}
+          standings={standings}
+          captureRef={standingsRef}
+          getParticipantName={getParticipantName}
+        />
+      );
+    }
+    return (
+      <SettingsTab
+        tournament={tournament!}
+        participants={fullParticipants}
+        onRenameTournament={(name) => {
+          updateTournamentName(tournament!.id, name);
+          handleRenameTournament(name);
+        }}
+        onRenameParticipant={handleRenameParticipant}
+        onDeletePress={handleDeleteTournament}
+      />
+    );
+  };
+
   if (!tournament) {
     return (
       <View style={s.root}>
@@ -167,56 +215,57 @@ export default function TournamentDetailScreen() {
         )}
       </View>
 
-      <View style={s.tabBar}>
-        {(['matches', 'standings', 'settings'] as TabType[]).map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={s.tab}
-            onPress={() => setActiveTab(tab)}
-            activeOpacity={0.7}
-          >
-            <Text style={[s.tabText, activeTab === tab && s.tabTextActive]}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </Text>
-            {activeTab === tab && <View style={s.tabIndicator} />}
-          </TouchableOpacity>
-        ))}
-      </View>
+      {isWide ? (
+        <View style={s.wideRow}>
+          <View style={s.sideRail}>
+            {(['matches', 'standings', 'settings'] as TabType[]).map((tab) => {
+              const meta = TAB_META[tab];
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  style={s.railItem}
+                  onPress={() => setActiveTab(tab)}
+                  activeOpacity={0.7}
+                >
+                  {activeTab === tab && <View style={s.railIndicator} />}
+                  <Text style={s.railEmoji}>{meta.emoji}</Text>
+                  <Text style={[s.railLabel, activeTab === tab && s.railLabelActive]}>
+                    {meta.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-      <View style={s.content}>
-        {activeTab === 'matches' && (
-          <MatchesTab
-            tournamentType={tournament.type ?? 'round_robin'}
-            matches={matches}
-            units={units}
-            sport={tournament.sport ?? 'badminton'}
-            getParticipantName={getParticipantName}
-            onMatchPress={handleMatchPress}
-          />
-        )}
-        {activeTab === 'standings' && (
-          <StandingsTab
-            tournamentType={tournament.type ?? 'round_robin'}
-            participants={fullParticipants}
-            matches={matches}
-            standings={standings}
-            captureRef={standingsRef}
-            getParticipantName={getParticipantName}
-          />
-        )}
-        {activeTab === 'settings' && (
-          <SettingsTab
-            tournament={tournament}
-            participants={fullParticipants}
-            onRenameTournament={(name) => {
-              updateTournamentName(tournament.id, name);
-              handleRenameTournament(name);
-            }}
-            onRenameParticipant={handleRenameParticipant}
-            onDeletePress={handleDeleteTournament}
-          />
-        )}
-      </View>
+          <ContentContainer style={s.contentWide}>
+            {renderActiveTab()}
+          </ContentContainer>
+        </View>
+      ) : (
+        <>
+          <View style={s.tabBar}>
+            {(['matches', 'standings', 'settings'] as TabType[]).map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={s.tab}
+                onPress={() => setActiveTab(tab)}
+                activeOpacity={0.7}
+              >
+                <Text style={[s.tabText, activeTab === tab && s.tabTextActive]}>
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </Text>
+                {activeTab === tab && <View style={s.tabIndicator} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={s.content}>
+            <ContentContainer>
+              {renderActiveTab()}
+            </ContentContainer>
+          </View>
+        </>
+      )}
 
       {scoreModalVisible && selectedMatchId != null && (() => {
         const match = matches.find((m) => m.id === selectedMatchId);

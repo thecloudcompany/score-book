@@ -10,6 +10,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { ContentContainer } from '@/components/content-container';
+import { useGridColumnCount } from '@/hooks/use-layout';
 import { Font, Colors, Radius, Spacing, statusColor } from '@/constants/theme';
 import type { Tournament } from '@/types';
 
@@ -34,14 +36,16 @@ function TournamentCard({
   tournament,
   onPress,
   onLongPress,
+  style,
 }: {
   tournament: Tournament;
   onPress: () => void;
   onLongPress: () => void;
+  style?: import('react-native').ViewStyle;
 }) {
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, style]}
       onPress={onPress}
       onLongPress={onLongPress}
       activeOpacity={0.8}
@@ -73,6 +77,7 @@ export default function TournamentListScreen() {
   const router = useRouter();
   const { tournaments, refresh, deleteTournament } = useTournaments();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const gridColumns = useGridColumnCount();
 
   useFocusEffect(
     useCallback(() => {
@@ -116,14 +121,19 @@ export default function TournamentListScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          tournaments.map((t) => (
-            <TournamentCard
-              key={t.id}
-              tournament={t}
-              onPress={() => router.push(`/tournament/${t.id}`)}
-              onLongPress={() => setDeleteTarget({ id: t.id, name: t.name })}
-            />
-          ))
+          <ContentContainer>
+            <View style={styles.grid}>
+              {tournaments.map((t) => (
+                <TournamentCard
+                  key={t.id}
+                  tournament={t}
+                  onPress={() => router.push(`/tournament/${t.id}`)}
+                  onLongPress={() => setDeleteTarget({ id: t.id, name: t.name })}
+                  style={gridColumns > 1 ? { width: `${100 / gridColumns}%` } : undefined}
+                />
+              ))}
+            </View>
+          </ContentContainer>
         )}
       </ScrollView>
 
@@ -176,6 +186,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
     paddingBottom: 100,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.md,
   },
   card: {

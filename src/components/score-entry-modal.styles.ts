@@ -18,6 +18,16 @@ export const s = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.borderLight,
   },
+  dialog: {
+    backgroundColor: Colors.bgElevated,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.xxl,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xxxl,
+    maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

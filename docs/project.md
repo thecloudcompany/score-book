@@ -85,6 +85,7 @@ Professional tournament software assumes organizers have training. ScoreBook ass
 - [ ] Tournament history and replay
 
 ### Long-term (v3+)
+- [x] Android tablet / responsive layout
 - [ ] Multi-device sync (optional, user-controlled)
 - [ ] League management (recurring tournaments)
 - [ ] Advanced statistics and analytics
