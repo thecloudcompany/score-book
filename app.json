@@ -42,9 +42,8 @@
         {
           "backgroundColor": "#FFFFFF",
           "imageWidth": 200,
-          "android": {
-            "image": "./assets/images/splash-icon-square.png"
-          }
+          "resizeMode": "contain",
+          "image": "./assets/images/splash-icon-square.png"
         }
       ],
       [

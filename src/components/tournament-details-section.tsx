@@ -1,8 +1,41 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { styles } from './tournament-details-section.styles';
 import type { SportType, TournamentType } from '@/types';
+
+function NumberInput({
+  value,
+  defaultValue,
+  onChange,
+}: {
+  value: number;
+  defaultValue: number;
+  onChange: (n: number) => void;
+}) {
+  const [raw, setRaw] = useState(String(value ?? defaultValue));
+
+  const commit = useCallback(() => {
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      setRaw(String(defaultValue));
+      onChange(defaultValue);
+    } else {
+      setRaw(String(parsed));
+      onChange(parsed);
+    }
+  }, [raw, defaultValue, onChange]);
+
+  return (
+    <TextInput
+      style={styles.advancedInput}
+      value={raw}
+      onChangeText={setRaw}
+      onBlur={commit}
+      keyboardType="number-pad"
+    />
+  );
+}
 
 interface TournamentDetailsSectionProps {
   name: string;
@@ -151,25 +184,23 @@ export function TournamentDetailsSection({
           {sport === 'tennis' ? (
             <View style={styles.advancedRow}>
               <Text style={styles.advancedLabel}>Games per set</Text>
-              <TextInput
-                style={styles.advancedInput}
-                value={String(format.gamesToWinPerSet ?? 6)}
-                onChangeText={(v) =>
-                  onFormatChange({ ...format, gamesToWinPerSet: parseInt(v) || 6 })
+              <NumberInput
+                key={sport}
+                value={format.gamesToWinPerSet ?? 6}
+                defaultValue={6}
+                onChange={(gamesToWinPerSet) =>
+                  onFormatChange({ ...format, gamesToWinPerSet })
                 }
-                keyboardType="number-pad"
               />
             </View>
           ) : (
             <View style={styles.advancedRow}>
               <Text style={styles.advancedLabel}>Points to win</Text>
-              <TextInput
-                style={styles.advancedInput}
-                value={String(format.gamePoint ?? (sport === 'table_tennis' ? 11 : 21))}
-                onChangeText={(v) =>
-                  onFormatChange({ ...format, gamePoint: parseInt(v) || (sport === 'table_tennis' ? 11 : 21) })
-                }
-                keyboardType="number-pad"
+              <NumberInput
+                key={sport}
+                value={format.gamePoint ?? (sport === 'table_tennis' ? 11 : 21)}
+                defaultValue={sport === 'table_tennis' ? 11 : 21}
+                onChange={(gamePoint) => onFormatChange({ ...format, gamePoint })}
               />
             </View>
           )}
