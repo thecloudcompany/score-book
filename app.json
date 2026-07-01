@@ -2,7 +2,7 @@
   "expo": {
     "name": "ScoreBook",
     "slug": "scorebook",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "default",
     "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
@@ -20,7 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.moneshms.scorebook",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": []
     },
     "web": {
