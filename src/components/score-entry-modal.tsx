@@ -148,20 +148,22 @@ export default function ScoreEntryModal({
                     onChangeText={setScoreA}
                     placeholder="0"
                     placeholderTextColor={Colors.textMuted}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    autoFocus
-                  />
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  autoFocus
+                  selectionColor={Colors.primary}
+                />
                   <Text style={s.dashText}>-</Text>
                   <TextInput
                     style={[s.scoreInput, error ? s.scoreInputError : null]}
                     value={scoreB}
                     onChangeText={setScoreB}
                     placeholder="0"
-                    placeholderTextColor={Colors.textMuted}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                  />
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  selectionColor={Colors.primary}
+                />
                 </View>
                 {error !== '' && <Text style={s.errorText}>{error}</Text>}
                 <TouchableOpacity

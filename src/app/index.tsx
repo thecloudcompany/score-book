@@ -5,15 +5,18 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ContentContainer } from '@/components/content-container';
-import { useGridColumnCount } from '@/hooks/use-layout';
 import { Font, Colors, Radius, Spacing, statusColor } from '@/constants/theme';
 import type { Tournament } from '@/types';
+
+const TOURNAMENT_LIST_MAX_WIDTH = 960;
+const GRID_GAP = Spacing.md;
 
 function StatusDot({ status }: { status: Tournament['status'] }) {
   return (
@@ -75,9 +78,14 @@ function TournamentCard({
 
 export default function TournamentListScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const { tournaments, refresh, deleteTournament } = useTournaments();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
-  const gridColumns = useGridColumnCount();
+  const availableListWidth = Math.min(Math.max(width - Spacing.xl * 2, 0), TOURNAMENT_LIST_MAX_WIDTH);
+  const gridColumns = availableListWidth >= 760 ? 2 : 1;
+  const cardWidth = gridColumns === 1
+    ? '100%'
+    : (availableListWidth - GRID_GAP) / gridColumns;
 
   useFocusEffect(
     useCallback(() => {
@@ -98,10 +106,12 @@ export default function TournamentListScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>ScoreBook</Text>
-        <Text style={styles.subtitle}>
-          {tournaments.length} tournament{tournaments.length !== 1 ? 's' : ''}
-        </Text>
+        <ContentContainer maxWidth={TOURNAMENT_LIST_MAX_WIDTH} style={styles.headerContent}>
+          <Text style={styles.title}>ScoreBook</Text>
+          <Text style={styles.subtitle}>
+            {tournaments.length} tournament{tournaments.length !== 1 ? 's' : ''}
+          </Text>
+        </ContentContainer>
       </View>
 
       <ScrollView
@@ -121,7 +131,7 @@ export default function TournamentListScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <ContentContainer>
+          <ContentContainer maxWidth={TOURNAMENT_LIST_MAX_WIDTH}>
             <View style={styles.grid}>
               {tournaments.map((t) => (
                 <TournamentCard
@@ -129,7 +139,7 @@ export default function TournamentListScreen() {
                   tournament={t}
                   onPress={() => router.push(`/tournament/${t.id}`)}
                   onLongPress={() => setDeleteTarget({ id: t.id, name: t.name })}
-                  style={gridColumns > 1 ? { width: `${100 / gridColumns}%` } : undefined}
+                  style={{ width: cardWidth }}
                 />
               ))}
             </View>
@@ -161,11 +171,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg,
   },
   header: {
-    paddingHorizontal: Spacing.xl,
     paddingTop: 18,
     paddingBottom: Spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
+  },
+  headerContent: {
+    paddingHorizontal: Spacing.xl,
   },
   title: {
     fontFamily: Font.black,
@@ -190,7 +202,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
+    gap: GRID_GAP,
   },
   card: {
     backgroundColor: Colors.bgElevated,

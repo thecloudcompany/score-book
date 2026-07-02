@@ -33,6 +33,7 @@ function NumberInput({
       onChangeText={setRaw}
       onBlur={commit}
       keyboardType="number-pad"
+      selectionColor={Colors.primary}
     />
   );
 }
@@ -79,6 +80,7 @@ export function TournamentDetailsSection({
           onChangeText={onNameChange}
           placeholder="Weekend Smash"
           placeholderTextColor={Colors.textMuted}
+          selectionColor={Colors.primary}
         />
         {errors.name && <Text style={styles.error}>{errors.name}</Text>}
       </View>

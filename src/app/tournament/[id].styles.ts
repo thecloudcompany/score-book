@@ -116,5 +116,6 @@ export const s = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
+    alignSelf: 'flex-start',
   },
 });

@@ -35,6 +35,8 @@ const TAB_META: Record<TabType, { emoji: string; label: string }> = {
   settings: { emoji: '⚙', label: 'Settings' },
 };
 
+const MATCH_CONTENT_MAX_WIDTH = 760;
+
 export default function TournamentDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -237,7 +239,7 @@ export default function TournamentDetailScreen() {
             })}
           </View>
 
-          <ContentContainer style={s.contentWide}>
+          <ContentContainer maxWidth={MATCH_CONTENT_MAX_WIDTH} style={s.contentWide}>
             {renderActiveTab()}
           </ContentContainer>
         </View>

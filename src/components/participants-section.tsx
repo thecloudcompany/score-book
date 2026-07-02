@@ -68,6 +68,7 @@ export function ParticipantsSection({
                 }}
                 placeholder={`Player ${index + 1}`}
                 placeholderTextColor={Colors.textMuted}
+                selectionColor={Colors.primary}
               />
               {participants.length > 2 && (
                 <TouchableOpacity style={styles.removeBtn} onPress={() => onRemove(index)}>
@@ -138,6 +139,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     borderWidth: 1,
     borderColor: Colors.border,
+    outlineColor: Colors.primary,
   },
   removeBtn: {
     width: 40,

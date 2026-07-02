@@ -23,6 +23,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 13,
     borderWidth: 1,
     borderColor: Colors.border,
+    outlineColor: Colors.primary,
   },
   inputError: {
     borderColor: Colors.danger,
@@ -45,6 +46,7 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
     borderColor: Colors.border,
+    outlineColor: Colors.primary,
   },
   sportBtnActive: {
     backgroundColor: Colors.primaryMuted,

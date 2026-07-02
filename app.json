@@ -10,7 +10,8 @@
     "description": "Track badminton and tennis tournament scores with round-robin scheduling, live standings, and easy sharing.",
     "ios": {
       "icon": "./assets/images/icon-1024.png",
-      "bundleIdentifier": "com.moneshms.scorebook"
+      "bundleIdentifier": "com.moneshms.scorebook",
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

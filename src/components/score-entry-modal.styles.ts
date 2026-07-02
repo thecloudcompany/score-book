@@ -136,6 +136,7 @@ export const s = StyleSheet.create({
     textAlign: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
+    outlineColor: Colors.primary,
   },
   scoreInputError: {
     borderColor: Colors.warning,

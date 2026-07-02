@@ -31,6 +31,7 @@ export const s = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.primary,
+    outlineColor: Colors.primary,
   },
 
   metaStrip: {
@@ -147,6 +148,7 @@ export const s = StyleSheet.create({
     color: Colors.text,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
+    outlineColor: Colors.primary,
   },
 
   dangerZone: {

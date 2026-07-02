@@ -77,6 +77,7 @@ export function SettingsTab({
             onBlur={commitName}
             onSubmitEditing={commitName}
             selectTextOnFocus
+            selectionColor={Colors.primary}
           />
         ) : (
           <TouchableOpacity onPress={startEditingName} activeOpacity={0.7}>
@@ -127,6 +128,7 @@ export function SettingsTab({
             onBlur={commitParticipantName}
             onSubmitEditing={commitParticipantName}
             selectTextOnFocus
+            selectionColor={Colors.primary}
           />
         </View>
       ) : (
