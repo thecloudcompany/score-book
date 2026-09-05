@@ -59,7 +59,7 @@ export function MatchesTab({
   const getSlotLabel = useCallback(
     (match: Match, slot: 'A' | 'B'): string => {
       const id = slot === 'A' ? match.participantAId : match.participantBId;
-      if (id !== null) return getParticipantName(id);
+      if (id !== null && id !== undefined) return getParticipantName(id);
       if (tournamentType !== 'knockout') return 'TBD';
       if (slot === 'B' && isByeMatch(match)) return 'BYE';
       const feeders = feederByConsumer.get(match.id) ?? [];
@@ -116,7 +116,7 @@ export function MatchesTab({
           <MatchRow
             key={match.id}
             match={match}
-            playerADisplay={getParticipantName(match.participantAId)}
+            playerADisplay={getSlotLabel(match, 'A')}
             playerBDisplay={getSlotLabel(match, 'B')}
             isBye={false}
             isLocked={false}

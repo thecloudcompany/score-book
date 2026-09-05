@@ -7,9 +7,9 @@ interface ByeSectionProps {
   byesNeeded: number;
   participants: string[];
   byeMethod: 'random' | 'manual';
-  selectedByeIndices: number[];
+  selectedByeNames: string[];
   onMethodChange: (method: 'random' | 'manual') => void;
-  onSelectedIndicesChange: (indices: number[]) => void;
+  onSelectedNamesChange: (names: string[]) => void;
 }
 
 export function ByeSection({
@@ -18,15 +18,15 @@ export function ByeSection({
   byesNeeded,
   participants,
   byeMethod,
-  selectedByeIndices,
+  selectedByeNames,
   onMethodChange,
-  onSelectedIndicesChange,
+  onSelectedNamesChange,
 }: ByeSectionProps) {
   if (validParticipantCount < 2 || byesNeeded === 0) return null;
 
-  const validNames = participants
-    .map((p, i) => ({ name: p.trim(), index: i }))
-    .filter((p) => p.name.length > 0);
+  const validNames = [...new Set(
+    participants.map((p) => p.trim()).filter((p) => p.length > 0)
+  )];
 
   return (
     <View style={styles.section}>
@@ -60,12 +60,12 @@ export function ByeSection({
           <Text style={styles.byeSelectionLabel}>
             Select {byesNeeded} player{byesNeeded > 1 ? 's' : ''} to skip Round 1:
           </Text>
-          {validNames.map(({ name, index }) => {
-            const isSelected = selectedByeIndices.includes(index);
-            const canSelect = isSelected || selectedByeIndices.length < byesNeeded;
+          {validNames.map((name) => {
+            const isSelected = selectedByeNames.includes(name);
+            const canSelect = isSelected || selectedByeNames.length < byesNeeded;
             return (
               <TouchableOpacity
-                key={index}
+                key={name}
                 style={[
                   styles.byePlayerRow,
                   isSelected && styles.byePlayerRowSelected,
@@ -73,9 +73,9 @@ export function ByeSection({
                 ]}
                 onPress={() => {
                   if (isSelected) {
-                    onSelectedIndicesChange(selectedByeIndices.filter((i) => i !== index));
+                    onSelectedNamesChange(selectedByeNames.filter((n) => n !== name));
                   } else if (canSelect) {
-                    onSelectedIndicesChange([...selectedByeIndices, index]);
+                    onSelectedNamesChange([...selectedByeNames, name]);
                   }
                 }}
                 activeOpacity={canSelect ? 0.7 : 1}
@@ -89,7 +89,7 @@ export function ByeSection({
             );
           })}
           <Text style={styles.byeCounter}>
-            Selected: {selectedByeIndices.length} / {byesNeeded}
+            Selected: {selectedByeNames.length} / {byesNeeded}
           </Text>
         </View>
       )}

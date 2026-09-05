@@ -50,8 +50,12 @@ function assignByes(
   let byeIds: number[];
 
   if (config.method === 'random') {
-    // Shuffle and take first N
-    const shuffled = [...participantIds].sort(() => Math.random() - 0.5);
+    // Fisher–Yates shuffle, then take first N
+    const shuffled = [...participantIds];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
     byeIds = shuffled.slice(0, byesNeeded);
   } else {
     // Manual selection
@@ -76,7 +80,6 @@ export function generateKnockoutBracket(config: BracketConfig): BracketMatch[] {
     throw new Error('Need at least 2 participants for knockout tournament');
   }
 
-  const byesNeeded = calculateByesNeeded(participantIds.length);
   const bracketSize = nextPowerOf2(participantIds.length);
   const totalRounds = Math.log2(bracketSize);
 
@@ -87,7 +90,6 @@ export function generateKnockoutBracket(config: BracketConfig): BracketMatch[] {
   });
 
   const matches: BracketMatch[] = [];
-  let matchId = 1; // We'll use temporary IDs, real IDs assigned by DB
 
   // Generate Round 1 matches (only for non-bye participants)
   const round1Matches: BracketMatch[] = [];
@@ -102,7 +104,6 @@ export function generateKnockoutBracket(config: BracketConfig): BracketMatch[] {
     };
     round1Matches.push(match);
     matches.push(match);
-    matchId++;
   }
 
   // Generate bye matches (Round 1 matches that auto-complete)
@@ -118,7 +119,6 @@ export function generateKnockoutBracket(config: BracketConfig): BracketMatch[] {
     };
     byeMatches.push(match);
     matches.push(match);
-    matchId++;
   }
 
   // Combine Round 1 matches (playing + byes) and sort by bracket position
@@ -143,7 +143,6 @@ export function generateKnockoutBracket(config: BracketConfig): BracketMatch[] {
       };
       currentRoundMatches.push(match);
       matches.push(match);
-      matchId++;
     }
 
     // Link previous round matches to current round

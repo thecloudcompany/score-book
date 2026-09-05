@@ -26,7 +26,7 @@ export interface Participant {
 export interface BaseMatch {
   id: number;
   tournamentId: number;
-  participantAId: number;
+  participantAId: number | null; // null = TBD in later knockout rounds
   participantBId: number | null; // null for bye matches
   status: MatchStatus;
   winnerId: number | null;

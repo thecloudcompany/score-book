@@ -6,16 +6,10 @@ import {
   TextInput,
   ScrollView,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import { s } from './settings-tab.styles';
 import { Colors } from '@/constants/theme';
 import type { Tournament, Participant } from '@/types';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface SettingsTabProps {
   tournament: Tournament;
@@ -36,6 +30,7 @@ export function SettingsTab({
   const [nameValue, setNameValue] = useState(tournament.name);
   const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
   const [participantName, setParticipantName] = useState('');
+  const [participantError, setParticipantError] = useState('');
 
   const startEditingName = useCallback(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -55,15 +50,31 @@ export function SettingsTab({
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setEditingParticipant(id);
     setParticipantName(name);
+    setParticipantError('');
   }, []);
 
   const commitParticipantName = useCallback(() => {
-    if (editingParticipant != null && participantName.trim()) {
-      onRenameParticipant(editingParticipant, participantName.trim());
+    if (editingParticipant != null) {
+      const clean = participantName.trim();
+      if (!clean) {
+        setParticipantError('Name cannot be blank');
+        return;
+      }
+      if (participants.some((p) => p.id !== editingParticipant && p.name === clean)) {
+        setParticipantError(`Player "${clean}" already exists`);
+        return;
+      }
+      try {
+        onRenameParticipant(editingParticipant, clean);
+      } catch (e) {
+        setParticipantError(e instanceof Error ? e.message : 'Could not rename player');
+        return;
+      }
     }
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setEditingParticipant(null);
-  }, [editingParticipant, participantName, onRenameParticipant]);
+    setParticipantError('');
+  }, [editingParticipant, participantName, onRenameParticipant, participants]);
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -129,7 +140,9 @@ export function SettingsTab({
             onSubmitEditing={commitParticipantName}
             selectTextOnFocus
             selectionColor={Colors.primary}
+            accessibilityLabel="Player name"
           />
+          {participantError !== '' && <Text style={s.error}>{participantError}</Text>}
         </View>
       ) : (
         <View style={s.roster}>

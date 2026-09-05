@@ -10,15 +10,19 @@ import {
   Figtree_900Black,
 } from '@expo-google-fonts/figtree';
 import * as SplashScreen from 'expo-splash-screen';
+import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initDatabase } from '@/lib/database';
 
 SplashScreen.preventAutoHideAsync();
-SplashScreen.setOptions({
-  duration: 800,
-  fade: true,
-});
+// setOptions is a dev-build API — calling it in Expo Go only logs a warning.
+if (Constants.appOwnership !== 'expo') {
+  SplashScreen.setOptions({
+    duration: 800,
+    fade: true,
+  });
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({

@@ -83,10 +83,18 @@ export function deleteTournament(id: number) {
 
 export function createParticipant(tournamentId: number, name: string): Participant {
   const db = getDatabase();
+  const clean = name.trim();
+  const existing = db.getAllSync<{ name: string }>(
+    'SELECT name FROM participants WHERE tournament_id = ?',
+    tournamentId
+  );
+  if (existing.some((r) => r.name === clean)) {
+    throw new Error(`Player "${clean}" already exists in this tournament`);
+  }
   const result = db.runSync(
     'INSERT INTO participants (tournament_id, name) VALUES (?, ?)',
     tournamentId,
-    name
+    clean
   );
 
   return {
@@ -129,7 +137,22 @@ export function getAllParticipantNames(): { name: string; lastUsedAt: number }[]
 
 export function updateParticipantName(id: number, name: string) {
   const db = getDatabase();
-  db.runSync('UPDATE participants SET name = ? WHERE id = ?', name, id);
+  const clean = name.trim();
+  if (!clean) throw new Error('Player name cannot be blank');
+  const current = db.getFirstSync<{ tournamentId: number }>(
+    'SELECT tournament_id as tournamentId FROM participants WHERE id = ?',
+    id
+  );
+  if (current) {
+    const clash = db.getFirstSync<{ id: number }>(
+      'SELECT id FROM participants WHERE tournament_id = ? AND name = ? AND id != ?',
+      current.tournamentId,
+      clean,
+      id
+    );
+    if (clash) throw new Error(`Player "${clean}" already exists in this tournament`);
+  }
+  db.runSync('UPDATE participants SET name = ? WHERE id = ?', clean, id);
 }
 
 // ─── Badminton Matches ───────────────────────────────────────────────────────
@@ -143,7 +166,7 @@ export interface BadmintonMatchCreateOptions {
 
 export function createBadmintonMatch(
   tournamentId: number,
-  participantAId: number,
+  participantAId: number | null,
   participantBId: number | null,
   gamePoint: number,
   bestOfGames: number,
@@ -178,7 +201,7 @@ export function createBadmintonMatch(
   const matchId = Number(result.lastInsertRowId);
 
   // Create empty games (only if both participants are known)
-  if (participantBId !== null) {
+  if (participantAId !== null && participantBId !== null) {
     for (let i = 1; i <= bestOfGames; i++) {
       db.runSync(
         'INSERT INTO badminton_match_games (match_id, game_number) VALUES (?, ?)',
@@ -270,7 +293,7 @@ export interface TennisMatchCreateOptions {
 
 export function createTennisMatch(
   tournamentId: number,
-  participantAId: number,
+  participantAId: number | null,
   participantBId: number | null,
   setsToWin: number,
   gamesToWinPerSet: number,
@@ -306,7 +329,7 @@ export function createTennisMatch(
   const maxSets = setsToWin * 2 - 1;
 
   // Create empty sets (only if both participants are known)
-  if (participantBId !== null) {
+  if (participantAId !== null && participantBId !== null) {
     for (let i = 1; i <= maxSets; i++) {
       db.runSync(
         'INSERT INTO tennis_match_sets (match_id, set_number) VALUES (?, ?)',
@@ -398,7 +421,7 @@ export interface TableTennisMatchCreateOptions {
 
 export function createTableTennisMatch(
   tournamentId: number,
-  participantAId: number,
+  participantAId: number | null,
   participantBId: number | null,
   gamePoint: number,
   bestOfGames: number,
@@ -432,7 +455,7 @@ export function createTableTennisMatch(
 
   const matchId = Number(result.lastInsertRowId);
 
-  if (participantBId !== null) {
+  if (participantAId !== null && participantBId !== null) {
     for (let i = 1; i <= bestOfGames; i++) {
       db.runSync(
         'INSERT INTO table_tennis_match_games (match_id, game_number) VALUES (?, ?)',
@@ -518,7 +541,7 @@ export function updateTableTennisMatchStatus(
 export function updateBadmintonMatchParticipant(
   matchId: number,
   slot: 'A' | 'B',
-  participantId: number
+  participantId: number | null
 ) {
   const db = getDatabase();
   const column = slot === 'A' ? 'participant_a_id' : 'participant_b_id';
@@ -558,7 +581,7 @@ export function updateBadmintonMatchParticipant(
 export function updateTennisMatchParticipant(
   matchId: number,
   slot: 'A' | 'B',
-  participantId: number
+  participantId: number | null
 ) {
   const db = getDatabase();
   const column = slot === 'A' ? 'participant_a_id' : 'participant_b_id';
@@ -627,7 +650,7 @@ export function updateTennisMatchBracketLink(
 export function updateTableTennisMatchParticipant(
   matchId: number,
   slot: 'A' | 'B',
-  participantId: number
+  participantId: number | null
 ) {
   const db = getDatabase();
   const column = slot === 'A' ? 'participant_a_id' : 'participant_b_id';

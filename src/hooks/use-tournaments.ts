@@ -3,7 +3,6 @@ import {
   getTournaments,
   createTournament as dbCreateTournament,
   deleteTournament as dbDeleteTournament,
-  updateTournamentName,
   createParticipant,
   createBadmintonMatch,
   createTennisMatch,
@@ -45,8 +44,18 @@ export function useTournaments() {
       format: Record<string, number>,
       byeConfig?: ByeConfig
     ) => {
+      if (participantNames.length < 2) throw new Error('Need at least 2 players');
+      // Validate before writing so a bad bye selection can't leave a partial tournament.
+      if (tournamentType === 'knockout' && byeConfig?.method === 'manual') {
+        const bracketSize = Math.pow(2, Math.ceil(Math.log2(participantNames.length)));
+        const byesNeeded = bracketSize - participantNames.length;
+        if ((byeConfig.manualIds?.length ?? 0) !== byesNeeded) {
+          throw new Error(`Select ${byesNeeded} bye${byesNeeded === 1 ? '' : 's'}`);
+        }
+      }
       const tournament = dbCreateTournament(name, sport, tournamentType);
 
+      try {
       // Create participants
       const participants: { id: number; name: string }[] = [];
       for (const name of participantNames) {
@@ -112,7 +121,7 @@ export function useTournaments() {
           if (sport === 'badminton') {
             const match = createBadmintonMatch(
               tournament.id,
-              bracketMatch.participantAId!,
+              bracketMatch.participantAId,
               bracketMatch.participantBId,
               format.gamePoint ?? badmintonSport.defaultFormat.gamePoint,
               format.bestOfGames ?? badmintonSport.defaultFormat.bestOfGames,
@@ -125,7 +134,7 @@ export function useTournaments() {
           } else if (sport === 'table_tennis') {
             const match = createTableTennisMatch(
               tournament.id,
-              bracketMatch.participantAId!,
+              bracketMatch.participantAId,
               bracketMatch.participantBId,
               format.gamePoint ?? tableTennisSport.defaultFormat.gamePoint,
               format.bestOfGames ?? tableTennisSport.defaultFormat.bestOfGames,
@@ -139,7 +148,7 @@ export function useTournaments() {
             const setsToWin = Math.ceil((format.setsToWin ?? 3) / 2);
             const match = createTennisMatch(
               tournament.id,
-              bracketMatch.participantAId!,
+              bracketMatch.participantAId,
               bracketMatch.participantBId,
               setsToWin,
               format.gamesToWinPerSet ?? tennisSport.defaultFormat.gamesToWinPerSet,
@@ -217,6 +226,10 @@ export function useTournaments() {
 
       refresh();
       return tournament;
+      } catch (e) {
+        try { dbDeleteTournament(tournament.id); } catch {}
+        throw e;
+      }
     },
     [refresh]
   );
@@ -229,20 +242,11 @@ export function useTournaments() {
     [refresh]
   );
 
-  const renameTournament = useCallback(
-    (id: number, name: string) => {
-      updateTournamentName(id, name);
-      refresh();
-    },
-    [refresh]
-  );
-
   return {
     tournaments,
     loading,
     refresh,
     createTournament,
     deleteTournament,
-    renameTournament,
   };
 }

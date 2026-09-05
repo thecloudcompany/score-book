@@ -7,6 +7,7 @@ import type { Participant, Match, TournamentType, LeaderboardEntry } from '@/typ
 
 interface StandingsTabProps {
   tournamentType: TournamentType;
+  tournamentName: string;
   participants: Participant[];
   matches: Match[];
   standings: LeaderboardEntry[];
@@ -14,14 +15,23 @@ interface StandingsTabProps {
   getParticipantName: (id: number) => string;
 }
 
+const capturedAt = new Date().toLocaleString();
+
 export function StandingsTab({
   tournamentType,
+  tournamentName,
   participants,
   matches,
   standings,
   captureRef,
   getParticipantName,
 }: StandingsTabProps) {
+  const shareHeader = (
+    <View style={s.shareHeader}>
+      <Text style={s.shareTitle}>{tournamentName} — Standings</Text>
+      <Text style={s.shareSubtitle}>{capturedAt}</Text>
+    </View>
+  );
   if (tournamentType === 'knockout') {
     const knockoutStandings = calculateKnockoutStandings(participants, matches);
     const totalRounds = Math.max(...matches.map((m) => m.round || 1), 1);
@@ -29,6 +39,7 @@ export function StandingsTab({
     return (
       <ScrollView showsVerticalScrollIndicator={false}>
         <View ref={captureRef} style={s.captureArea}>
+          {shareHeader}
           {knockoutStandings.champion !== null && (
             <View style={s.knockoutSection}>
               <Text style={s.knockoutSectionTitle}>🏆 Champion</Text>
@@ -86,6 +97,7 @@ export function StandingsTab({
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View ref={captureRef} style={s.captureArea}>
+        {shareHeader}
         <View style={s.tableCard}>
           <View style={s.tableHeader}>
             <Text style={[s.th, { flex: 0.5 }]}>#</Text>

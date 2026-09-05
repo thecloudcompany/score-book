@@ -72,34 +72,19 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
         updateTableTennisGame(matchId, unitNumber, scoreA, scoreB);
       }
 
-      // Update the local unit first
-      const updatedUnits = { ...units };
-      const unitList = [...(updatedUnits[matchId] || [])];
-      const unitIndex = unitList.findIndex((u: any) =>
-        (u.gameNumber || u.setNumber) === unitNumber
-      );
-      if (unitIndex >= 0) {
-        const updatedUnit = { ...unitList[unitIndex] };
-        if (sport === 'badminton') {
-          (updatedUnit as BadmintonGame).scoreA = scoreA;
-          (updatedUnit as BadmintonGame).scoreB = scoreB;
-        } else if (sport === 'table_tennis') {
-          (updatedUnit as TableTennisGame).scoreA = scoreA;
-          (updatedUnit as TableTennisGame).scoreB = scoreB;
-        } else {
-          (updatedUnit as TennisSet).gamesA = scoreA;
-          (updatedUnit as TennisSet).gamesB = scoreB;
-        }
-        unitList[unitIndex] = updatedUnit;
-        (updatedUnits as any)[matchId] = unitList;
-        setUnits(updatedUnits);
-      }
+      // Read the updated units once instead of mirroring state by hand.
+      const freshUnits: any[] =
+        sport === 'badminton' ? getBadmintonGames(matchId)
+        : sport === 'tennis' ? getTennisSets(matchId)
+        : getTableTennisGames(matchId);
+      setUnits((prev) => ({ ...prev, [matchId]: freshUnits as any }));
 
       // Recalculate match state
       const currentMatch = matches.find((m) => m.id === matchId);
-      if (!currentMatch) return;
+      if (!currentMatch) { refresh(); return; }
+      const prevWinnerId = currentMatch.winnerId ?? null;
 
-      const currentUnits = updatedUnits[matchId] || [];
+      const currentUnits = freshUnits;
       const filledUnits = currentUnits.filter((u: any) => {
         const a = sport === 'badminton' || sport === 'table_tennis' ? u.scoreA : u.gamesA;
         const b = sport === 'badminton' || sport === 'table_tennis' ? u.scoreB : u.gamesB;
@@ -158,19 +143,36 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
         updateTableTennisMatchStatus(matchId, newStatus, winnerId);
       }
 
-      // Handle knockout progression
-      if (tournamentType === 'knockout' && isComplete && winnerId !== null) {
+      // Handle knockout progression — advance on completion, retract when the
+      // upstream winner changes (including to no winner).
+      if (tournamentType === 'knockout') {
         const feedsIntoMatchId = currentMatch.feedsIntoMatchId;
         const feedsIntoSlot = currentMatch.feedsIntoSlot;
-        
+
         if (feedsIntoMatchId && feedsIntoSlot) {
-          // Advance winner to next match
-          if (sport === 'badminton') {
-            updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
-          } else if (sport === 'tennis') {
-            updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
-          } else {
-            updateTableTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+          const downstream = matches.find((m) => m.id === feedsIntoMatchId);
+          // Never rewrite a finished downstream match; it stays locked instead.
+          if (downstream && downstream.status !== 'completed') {
+            const slotValue = feedsIntoSlot === 'A' ? downstream.participantAId : downstream.participantBId;
+            if (isComplete && winnerId !== null) {
+              if (slotValue !== winnerId) {
+                if (sport === 'badminton') {
+                  updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+                } else if (sport === 'tennis') {
+                  updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+                } else {
+                  updateTableTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+                }
+              }
+            } else if (prevWinnerId !== null && slotValue === prevWinnerId) {
+              if (sport === 'badminton') {
+                updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
+              } else if (sport === 'tennis') {
+                updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
+              } else {
+                updateTableTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
+              }
+            }
           }
         }
       }
@@ -191,7 +193,7 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
 
       refresh();
     },
-    [matches, units, sport, tournamentId, tournamentType, refresh]
+    [matches, sport, tournamentId, tournamentType, refresh]
   );
 
   return { matches, units, participants, refresh, updateScore };

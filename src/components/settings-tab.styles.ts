@@ -150,6 +150,13 @@ export const s = StyleSheet.create({
     paddingVertical: Spacing.sm,
     outlineColor: Colors.primary,
   },
+  error: {
+    fontFamily: Font.semibold,
+    fontSize: 13,
+    color: Colors.danger,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+  },
 
   dangerZone: {
     marginTop: Spacing.xxxl,

@@ -20,11 +20,10 @@ import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
 import { useIsWideLayout } from '@/hooks/use-layout';
 import { ContentContainer } from '@/components/content-container';
-import { Colors } from '@/constants/theme';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
-import { s } from './[id].styles';
+import { s } from '@/components/tournament-detail.styles';
 import type { Tournament, Sport, MatchFormat } from '@/types';
 
 type TabType = 'matches' | 'standings' | 'settings';
@@ -49,6 +48,7 @@ export default function TournamentDetailScreen() {
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [participantsVersion, setParticipantsVersion] = useState(0);
+  const [shareError, setShareError] = useState('');
   const standingsRef = useRef<View | null>(null);
   const isWide = useIsWideLayout();
 
@@ -101,9 +101,10 @@ export default function TournamentDetailScreen() {
     (pid: number, newName: string) => {
       updateParticipantName(pid, newName);
       refreshMatches();
+      refreshStandings();
       setParticipantsVersion((v) => v + 1);
     },
-    [refreshMatches]
+    [refreshMatches, refreshStandings]
   );
 
   const handleDeleteTournament = useCallback(() => setDeleteDialogVisible(true), []);
@@ -119,6 +120,7 @@ export default function TournamentDetailScreen() {
 
   const handleShare = useCallback(async () => {
     if (!standingsRef.current) return;
+    setShareError('');
     try {
       const uri = await captureRef(standingsRef, {
         format: 'png',
@@ -149,6 +151,7 @@ export default function TournamentDetailScreen() {
       }
     } catch (err) {
       console.error('Share failed:', err);
+      setShareError('Could not share standings. Try again.');
     }
   }, [tournamentName]);
 
@@ -169,6 +172,7 @@ export default function TournamentDetailScreen() {
       return (
         <StandingsTab
           tournamentType={tournament!.type ?? 'round_robin'}
+          tournamentName={tournament!.name}
           participants={fullParticipants}
           matches={matches}
           standings={standings}
@@ -193,9 +197,15 @@ export default function TournamentDetailScreen() {
 
   if (!tournament) {
     return (
-      <View style={s.root}>
-        <Text style={{ color: Colors.textMuted }}>Loading...</Text>
-      </View>
+      <SafeAreaView style={s.root}>
+        <View style={s.centered}>
+          <Text style={s.notFoundTitle}>Tournament not found</Text>
+          <Text style={s.notFoundHint}>It may have been deleted in another tab.</Text>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={s.backBtn}>
+            <Text style={s.backBtnText}>← Back to tournaments</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -209,13 +219,14 @@ export default function TournamentDetailScreen() {
           {tournament.name}
         </Text>
         {activeTab === 'standings' && standings.length > 0 ? (
-          <TouchableOpacity onPress={handleShare} activeOpacity={0.7} style={s.headerAction}>
+          <TouchableOpacity onPress={handleShare} activeOpacity={0.7} style={s.headerAction} accessibilityLabel="Share standings" accessibilityRole="button">
             <Text style={s.headerActionText}>📤</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ width: 60 }} />
         )}
       </View>
+      {shareError !== '' && <Text style={s.shareError}>{shareError}</Text>}
 
       {isWide ? (
         <View style={s.wideRow}>
@@ -272,7 +283,7 @@ export default function TournamentDetailScreen() {
       {scoreModalVisible && selectedMatchId != null && (() => {
         const match = matches.find((m) => m.id === selectedMatchId);
         if (!match) return null;
-        const pA = getParticipantName(match.participantAId);
+        const pA = match.participantAId != null ? getParticipantName(match.participantAId) : 'TBD';
         const pB = match.participantBId !== null ? getParticipantName(match.participantBId) : 'Player B';
         const matchUnits = units[selectedMatchId] || [];
         const isScoreSport = tournament.sport === 'badminton' || tournament.sport === 'table_tennis';

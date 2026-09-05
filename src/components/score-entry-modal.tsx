@@ -42,7 +42,28 @@ export default function ScoreEntryModal({
   onClose,
 }: ScoreEntryModalProps) {
   const isWide = useIsWideLayout();
-  const firstUnit = units.find((u) => u.scoreA === null || u.scoreB === null) ?? units[0];
+  // Only units up to and including the clincher are playable — later units
+  // would be ignored by the standings, so don't offer them.
+  const decidedIndex = (() => {
+    let aWins = 0;
+    let bWins = 0;
+    const winsNeeded =
+      'bestOfGames' in format
+        ? Math.ceil(((format.bestOfGames ?? 3) as number) / 2)
+        : ((format.setsToWin ?? 2) as number);
+    const ordered = [...units].sort((x, y) => x.unitNumber - y.unitNumber);
+    for (let i = 0; i < ordered.length; i++) {
+      const u = ordered[i];
+      if (u.scoreA !== null && u.scoreB !== null) {
+        if (u.scoreA > u.scoreB) aWins++;
+        else if (u.scoreB > u.scoreA) bWins++;
+        if (aWins >= winsNeeded || bWins >= winsNeeded) return i;
+      }
+    }
+    return -1;
+  })();
+  const playableUnits = decidedIndex >= 0 ? [...units].sort((x, y) => x.unitNumber - y.unitNumber).slice(0, decidedIndex + 1) : units;
+  const firstUnit = playableUnits.find((u) => u.scoreA === null || u.scoreB === null) ?? playableUnits[0];
   const [scoreA, setScoreA] = useState(firstUnit?.scoreA != null ? String(firstUnit.scoreA) : '');
   const [scoreB, setScoreB] = useState(firstUnit?.scoreB != null ? String(firstUnit.scoreB) : '');
   const [error, setError] = useState('');
@@ -61,12 +82,13 @@ export default function ScoreEntryModal({
 
   const handleSave = useCallback(() => {
     if (!currentUnit) return;
-    const a = parseInt(scoreA, 10);
-    const b = parseInt(scoreB, 10);
-    if (isNaN(a) || isNaN(b)) {
-      setError('Enter valid scores');
+    // Strict integers within entry bounds — parseInt would accept "6x".
+    if (!/^\d{1,2}$/.test(scoreA.trim()) || !/^\d{1,2}$/.test(scoreB.trim())) {
+      setError('Enter valid scores (0–99)');
       return;
     }
+    const a = parseInt(scoreA.trim(), 10);
+    const b = parseInt(scoreB.trim(), 10);
     const validation = sport.validateUnitScore(a, b, format);
     if (!validation.valid) {
       setError(validation.error ?? 'Invalid score');
@@ -105,9 +127,9 @@ export default function ScoreEntryModal({
             </View>
 
             {/* Units list — all games, tap to edit */}
-            {units.length > 0 && (
+            {playableUnits.length > 0 && (
               <View style={s.completedBox}>
-                {units.map((u) => {
+                {playableUnits.map((u) => {
                   const isEditing = currentUnit?.unitNumber === u.unitNumber;
                   const isFilled = u.scoreA !== null && u.scoreB !== null;
                   return (
@@ -148,22 +170,24 @@ export default function ScoreEntryModal({
                     onChangeText={setScoreA}
                     placeholder="0"
                     placeholderTextColor={Colors.textMuted}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  autoFocus
-                  selectionColor={Colors.primary}
-                />
+                    accessibilityLabel={`${playerA} score`}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    autoFocus
+                    selectionColor={Colors.primary}
+                  />
                   <Text style={s.dashText}>-</Text>
                   <TextInput
                     style={[s.scoreInput, error ? s.scoreInputError : null]}
                     value={scoreB}
                     onChangeText={setScoreB}
                     placeholder="0"
-                  placeholderTextColor={Colors.textMuted}
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  selectionColor={Colors.primary}
-                />
+                    placeholderTextColor={Colors.textMuted}
+                    accessibilityLabel={`${playerB} score`}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    selectionColor={Colors.primary}
+                  />
                 </View>
                 {error !== '' && <Text style={s.errorText}>{error}</Text>}
                 <TouchableOpacity

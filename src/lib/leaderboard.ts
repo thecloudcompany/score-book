@@ -3,6 +3,27 @@ import type { LeaderboardEntry, Participant, BadmintonMatch, BadmintonGame, Tenn
 interface MatchWithUnits {
   match: BadmintonMatch | TennisMatch;
   units: { scoreA: number | null; scoreB: number | null }[];
+  winsNeeded: number;
+}
+
+// Only units up to and including the clincher count — scores saved after a
+// match was already decided are ignored instead of corrupting differentials.
+function truncateAfterClinch(
+  units: { scoreA: number | null; scoreB: number | null }[],
+  winsNeeded: number
+): { scoreA: number | null; scoreB: number | null }[] {
+  let aWins = 0;
+  let bWins = 0;
+  const kept: { scoreA: number | null; scoreB: number | null }[] = [];
+  for (const unit of units) {
+    kept.push(unit);
+    if (unit.scoreA !== null && unit.scoreB !== null) {
+      if (unit.scoreA > unit.scoreB) aWins++;
+      else if (unit.scoreB > unit.scoreA) bWins++;
+      if (aWins >= winsNeeded || bWins >= winsNeeded) break;
+    }
+  }
+  return kept;
 }
 
 function calculateStats(
@@ -15,15 +36,15 @@ function calculateStats(
     stats[p.id] = { wins: 0, losses: 0, pointDiff: 0, gameDiff: 0 };
   }
 
-  for (const { match, units } of matches) {
+  for (const { match, units, winsNeeded } of matches) {
     if (match.status !== 'completed') continue;
 
     const a = match.participantAId;
     const b = match.participantBId;
     const winner = match.winnerId;
 
-    // Skip bye matches (where b is null)
-    if (b === null) continue;
+    // Skip bye/TBD matches (unfilled knockout slots)
+    if (a === null || b === null) continue;
 
     if (winner === a) {
       stats[a].wins++;
@@ -33,7 +54,7 @@ function calculateStats(
       stats[a].losses++;
     }
 
-    for (const unit of units) {
+    for (const unit of truncateAfterClinch(units, winsNeeded)) {
       if (unit.scoreA === null || unit.scoreB === null) continue;
 
       stats[a].pointDiff += unit.scoreA - unit.scoreB;
@@ -94,6 +115,7 @@ export function calculateBadmintonLeaderboard(
 ): LeaderboardEntry[] {
   const matchUnits = matches.map((match) => ({
     match,
+    winsNeeded: Math.ceil((match.bestOfGames ?? 3) / 2),
     units: games
       .filter((g) => g.matchId === match.id)
       .sort((a, b) => a.gameNumber - b.gameNumber)
@@ -110,6 +132,7 @@ export function calculateTennisLeaderboard(
 ): LeaderboardEntry[] {
   const matchUnits = matches.map((match) => ({
     match,
+    winsNeeded: match.setsToWin,
     units: sets
       .filter((s) => s.matchId === match.id)
       .sort((a, b) => a.setNumber - b.setNumber)
@@ -126,6 +149,7 @@ export function calculateTableTennisLeaderboard(
 ): LeaderboardEntry[] {
   const matchUnits = matches.map((match) => ({
     match,
+    winsNeeded: Math.ceil((match.bestOfGames ?? 3) / 2),
     units: games
       .filter((g) => g.matchId === match.id)
       .sort((a, b) => a.gameNumber - b.gameNumber)

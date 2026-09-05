@@ -7,6 +7,19 @@ export const s = StyleSheet.create({
     padding: 4,
     borderRadius: Radius.sm,
   },
+  shareHeader: {
+    marginBottom: Spacing.md,
+  },
+  shareTitle: {
+    fontFamily: Font.bold,
+    fontSize: 16,
+    color: Colors.text,
+  },
+  shareSubtitle: {
+    fontFamily: Font.regular,
+    fontSize: 12,
+    color: Colors.textMuted,
+  },
   empty: {
     alignItems: 'center',
     justifyContent: 'center',

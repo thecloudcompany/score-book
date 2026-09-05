@@ -26,14 +26,19 @@ export function MatchRow({
   preview,
   onPress,
 }: MatchRowProps) {
-  const isNonInteractive = isBye || isLocked;
+  const isTBD =
+    !isBye && (match.participantAId == null || match.participantBId == null);
+  const isNonInteractive = isBye || isLocked || isTBD;
 
   return (
     <TouchableOpacity
-      style={[s.row, isBye && s.rowBye, isLocked && s.rowLocked]}
+      style={[s.row, isBye && s.rowBye, (isLocked || isTBD) && s.rowLocked]}
       onPress={() => !isNonInteractive && onPress(match.id)}
       activeOpacity={isNonInteractive ? 1 : 0.8}
       disabled={isNonInteractive}
+      accessibilityRole="button"
+      accessibilityLabel={`${playerADisplay} versus ${playerBDisplay}, ${match.status}${isTBD ? ', waiting for previous winners' : ''}${isLocked ? ', locked' : ''}`}
+      accessibilityState={{ disabled: isNonInteractive }}
     >
       <View style={s.left}>
         <Text style={s.players}>
@@ -42,9 +47,12 @@ export function MatchRow({
           <Text style={isBye ? s.byeText : s.tbdText}>{playerBDisplay}</Text>
         </Text>
         {isLocked && <Text style={s.lockedNote}>Winner already advanced — locked</Text>}
+        {isTBD && <Text style={s.lockedNote}>Waiting for previous winners</Text>}
         {preview && <Text style={s.preview}>{preview}</Text>}
       </View>
-      <StatusDot status={match.status} />
+      <View accessibilityLabel={`Status: ${match.status}`} accessibilityRole="image">
+        <StatusDot status={match.status} />
+      </View>
     </TouchableOpacity>
   );
 }

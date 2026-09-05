@@ -8,23 +8,33 @@ function NumberInput({
   value,
   defaultValue,
   onChange,
+  min = 1,
+  max = 99,
 }: {
   value: number;
   defaultValue: number;
   onChange: (n: number) => void;
+  min?: number;
+  max?: number;
 }) {
   const [raw, setRaw] = useState(String(value ?? defaultValue));
 
   const commit = useCallback(() => {
-    const parsed = parseInt(raw, 10);
-    if (isNaN(parsed) || parsed <= 0) {
+    // Strict integer within the same bounds the score inputs allow (0–99).
+    if (!/^\d+$/.test(raw.trim())) {
+      setRaw(String(defaultValue));
+      onChange(defaultValue);
+      return;
+    }
+    const parsed = parseInt(raw.trim(), 10);
+    if (parsed < min || parsed > max) {
       setRaw(String(defaultValue));
       onChange(defaultValue);
     } else {
       setRaw(String(parsed));
       onChange(parsed);
     }
-  }, [raw, defaultValue, onChange]);
+  }, [raw, defaultValue, onChange, min, max]);
 
   return (
     <TextInput

@@ -17,14 +17,30 @@ class WebDatabase {
   private sequences: Record<string, number>;
 
   constructor() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      this.tables = parsed.tables;
-      this.sequences = parsed.sequences;
-    } else {
-      this.tables = {};
-      this.sequences = {};
+    this.tables = {};
+    this.sequences = {};
+    this.reload();
+    // Keep this tab fresh when another tab writes.
+    // Note: this narrows the stale-write window (every op reloads first)
+    // but overlapping same-moment writes can still race — no cross-tab lock.
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) this.reload();
+      });
+    }
+  }
+
+  // Re-read the persisted snapshot so an idle tab never writes from stale state.
+  private reload() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        this.tables = parsed.tables ?? {};
+        this.sequences = parsed.sequences ?? {};
+      }
+    } catch {
+      // Corrupt snapshot — keep in-memory state rather than wiping it.
     }
   }
 
@@ -43,6 +59,7 @@ class WebDatabase {
 
   // ─── execSync ─────────────────────────────────────────────────────────
   execSync(source: string) {
+    this.reload();
     const stmts = source
       .split(';')
       .map((s) => s.trim())
@@ -50,8 +67,11 @@ class WebDatabase {
 
     for (const stmt of stmts) {
       const upper = stmt.toUpperCase();
+      // Schemaless store: constraints/migrations/indexes are no-ops.
       if (upper.startsWith('PRAGMA')) continue;
       if (upper.startsWith('CREATE INDEX')) continue;
+      if (upper.startsWith('ALTER TABLE')) continue;
+      if (upper.startsWith('DROP TABLE')) continue;
 
       // CREATE TABLE IF NOT EXISTS table_name (...)
       const createMatch = stmt.match(
@@ -73,12 +93,15 @@ class WebDatabase {
 
   // ─── runSync ──────────────────────────────────────────────────────────
   runSync(source: string, ...params: any[]): RunResult {
+    this.reload();
     // INSERT INTO table (cols) VALUES (?...)
     const insertMatch = source.match(
       /INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i
     );
     if (insertMatch) {
       const table = insertMatch[1];
+      // INSERT OR IGNORE into schema_migrations — track versions in-memory only.
+      if (table === 'schema_migrations') return { lastInsertRowId: 0, changes: 0 };
       const cols = insertMatch[2].split(',').map((c) => c.trim());
       const row: Row = { id: this.nextId(table) };
       for (let i = 0; i < cols.length; i++) {
@@ -151,6 +174,11 @@ class WebDatabase {
       // CASCADE: delete from child tables
       if (table === 'tournaments') {
         const tid = params[0] as number;
+        const matchId = (t: string) =>
+          new Set((this.tables[t] || []).filter((r) => r.tournament_id === tid).map((r) => r.id));
+        const badmintonIds = matchId('badminton_matches');
+        const tennisIds = matchId('tennis_matches');
+        const tableTennisIds = matchId('table_tennis_matches');
         this.tables['participants'] = (this.tables['participants'] || []).filter(
           (r) => r.tournament_id !== tid
         );
@@ -162,6 +190,15 @@ class WebDatabase {
         );
         this.tables['table_tennis_matches'] = (this.tables['table_tennis_matches'] || []).filter(
           (r) => r.tournament_id !== tid
+        );
+        this.tables['badminton_match_games'] = (this.tables['badminton_match_games'] || []).filter(
+          (r) => !badmintonIds.has(r.match_id)
+        );
+        this.tables['tennis_match_sets'] = (this.tables['tennis_match_sets'] || []).filter(
+          (r) => !tennisIds.has(r.match_id)
+        );
+        this.tables['table_tennis_match_games'] = (this.tables['table_tennis_match_games'] || []).filter(
+          (r) => !tableTennisIds.has(r.match_id)
         );
       }
       if (table === 'badminton_matches') {
@@ -203,6 +240,11 @@ class WebDatabase {
 
   // ─── Internal query engine ────────────────────────────────────────────
   private query<T>(source: string, params: any[]): T[] {
+    this.reload();
+    const upper = source.trim().toUpperCase();
+    if (upper.startsWith('PRAGMA')) return [];
+    if (upper.includes('SQLITE_MASTER')) return [];
+    if (upper.includes('SCHEMA_MIGRATIONS')) return [];
     const selectMatch = source.match(
       /SELECT\s+([\s\S]+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+([\s\S]+?)(?=\s+ORDER\s+BY|$))?(?:\s+ORDER\s+BY\s+([\s\S]+))?/i
     );

@@ -6,6 +6,41 @@ export const s = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bg,
   },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+    gap: 8,
+  },
+  notFoundTitle: {
+    fontFamily: Font.bold,
+    fontSize: 18,
+    color: Colors.text,
+  },
+  notFoundHint: {
+    fontFamily: Font.regular,
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: 'center',
+  },
+  backBtn: {
+    marginTop: Spacing.md,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+  },
+  backBtnText: {
+    fontFamily: Font.semibold,
+    fontSize: 15,
+    color: Colors.primary,
+  },
+  shareError: {
+    fontFamily: Font.semibold,
+    fontSize: 13,
+    color: Colors.danger,
+    textAlign: 'center',
+    paddingVertical: Spacing.sm,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

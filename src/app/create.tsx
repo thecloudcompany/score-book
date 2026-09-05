@@ -29,7 +29,7 @@ export default function CreateTournamentScreen() {
   const [sport, setSport] = useState<SportType>('badminton');
   const [tournamentType, setTournamentType] = useState<TournamentType>('round_robin');
   const [byeMethod, setByeMethod] = useState<'random' | 'manual'>('random');
-  const [selectedByeIndices, setSelectedByeIndices] = useState<number[]>([]);
+  const [selectedByeNames, setSelectedByeNames] = useState<string[]>([]);
   const [format, setFormat] = useState<Record<string, number>>({
     gamePoint: badmintonSport.defaultFormat.gamePoint,
     bestOfGames: badmintonSport.defaultFormat.bestOfGames,
@@ -61,8 +61,39 @@ export default function CreateTournamentScreen() {
     setParticipants((prev) => [...prev, '']);
   }, []);
 
+  const validParticipantCount = participants.filter((p) => p.trim().length > 0).length;
+  const nextPowerOf2 = Math.pow(2, Math.ceil(Math.log2(validParticipantCount || 1)));
+  const byesNeeded = nextPowerOf2 - validParticipantCount;
+
+  const validate = useCallback((): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!name.trim()) newErrors.name = 'Required';
+    const valid = participants.map((p) => p.trim()).filter((p) => p.length > 0);
+    if (valid.length < 2) newErrors.participants = 'Need at least 2 players';
+    if (new Set(valid).size !== valid.length) newErrors.participants = 'Names must be unique';
+    if (
+      tournamentType === 'knockout' &&
+      byeMethod === 'manual' &&
+      byesNeeded > 0 &&
+      selectedByeNames.length !== byesNeeded
+    ) {
+      newErrors.byes = `Select ${byesNeeded} bye${byesNeeded === 1 ? '' : 's'}`;
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [name, participants, tournamentType, byeMethod, byesNeeded, selectedByeNames]);
+
   const removeParticipant = useCallback((index: number) => {
-    setParticipants((prev) => prev.filter((_, i) => i !== index));
+    setParticipants((prev) => {
+      const removed = prev[index]?.trim();
+      const next = prev.filter((_, i) => i !== index);
+      if (removed) {
+        setSelectedByeNames((prevNames) =>
+          prevNames.filter((n) => n !== removed && next.map((p) => p.trim()).includes(n))
+        );
+      }
+      return next;
+    });
   }, []);
 
   const updateParticipant = useCallback((index: number, value: string) => {
@@ -72,16 +103,6 @@ export default function CreateTournamentScreen() {
       return next;
     });
   }, []);
-
-  const validate = useCallback((): boolean => {
-    const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = 'Required';
-    const valid = participants.map((p) => p.trim()).filter((p) => p.length > 0);
-    if (valid.length < 2) newErrors.participants = 'Need at least 2 players';
-    if (new Set(valid).size !== valid.length) newErrors.participants = 'Names must be unique';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [name, participants]);
 
   const handleCreate = useCallback(() => {
     if (!validate()) return;
@@ -96,20 +117,22 @@ export default function CreateTournamentScreen() {
     let byeConfig: ByeConfig | undefined;
     if (tournamentType === 'knockout') {
       if (byeMethod === 'manual') {
-        const validIndices = selectedByeIndices.filter((i) => i < validParticipants.length);
+        const validIndices = selectedByeNames
+          .map((n) => validParticipants.indexOf(n))
+          .filter((i) => i >= 0);
         byeConfig = { method: 'manual', manualIds: validIndices };
       } else {
         byeConfig = { method: 'random' };
       }
     }
 
-    createTournament(name.trim(), sport, tournamentType, validParticipants, { ...defaultFormat, ...format }, byeConfig);
-    router.back();
-  }, [name, sport, tournamentType, byeMethod, selectedByeIndices, format, participants, validate, createTournament, router]);
-
-  const validParticipantCount = participants.filter((p) => p.trim().length > 0).length;
-  const nextPowerOf2 = Math.pow(2, Math.ceil(Math.log2(validParticipantCount || 1)));
-  const byesNeeded = nextPowerOf2 - validParticipantCount;
+    try {
+      createTournament(name.trim(), sport, tournamentType, validParticipants, { ...defaultFormat, ...format }, byeConfig);
+      router.back();
+    } catch (e) {
+      setErrors({ form: e instanceof Error ? e.message : 'Could not create tournament' });
+    }
+  }, [name, sport, tournamentType, byeMethod, selectedByeNames, format, participants, validate, createTournament, router]);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -155,11 +178,13 @@ export default function CreateTournamentScreen() {
                 byesNeeded={byesNeeded}
                 participants={participants}
                 byeMethod={byeMethod}
-                selectedByeIndices={selectedByeIndices}
+                selectedByeNames={selectedByeNames}
                 onMethodChange={setByeMethod}
-                onSelectedIndicesChange={setSelectedByeIndices}
+                onSelectedNamesChange={setSelectedByeNames}
               />
             )}
+            {errors.byes && <Text style={styles.formError}>{errors.byes}</Text>}
+            {errors.form && <Text style={styles.formError}>{errors.form}</Text>}
 
             <View style={{ height: 20 }} />
           </ContentContainer>
@@ -220,5 +245,11 @@ const styles = StyleSheet.create({
     fontFamily: Font.bold,
     fontSize: 16,
     color: Colors.textInverse,
+  },
+  formError: {
+    fontFamily: Font.semibold,
+    fontSize: 13,
+    color: '#DC2626',
+    marginTop: 8,
   },
 });

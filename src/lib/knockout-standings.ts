@@ -72,25 +72,12 @@ export function isByeMatch(match: Match): boolean {
 
 /**
  * Check if a knockout match can be edited.
- * Locked once its winner has already advanced to a next match that
- * already has both participants assigned — re-editing would corrupt
- * the downstream bracket.
+ * Locked only once the downstream match is completed — otherwise an edit
+ * retracts/updates the downstream slot (see use-matches).
  */
 export function canEditMatch(match: Match, allMatches: Match[]): boolean {
   if (match.feedsIntoMatchId == null) return true;
   const next = allMatches.find(m => m.id === match.feedsIntoMatchId);
   if (!next) return true;
-  return next.participantAId === null || next.participantBId === null;
-}
-
-/**
- * Get the display label for a null participant slot
- * - Round 1: "BYE" (auto-completed bye match)
- * - Later rounds: "TBD" (waiting for winner from previous match)
- */
-export function getParticipantPlaceholder(match: Match): string {
-  if (match.round === 1 && match.status === 'completed') {
-    return 'BYE';
-  }
-  return 'TBD';
+  return next.status !== 'completed';
 }

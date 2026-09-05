@@ -33,14 +33,16 @@ export function ConfirmDialog({
     if (!visible) return null;
     return (
       <View style={s.webOverlay}>
-        <View style={s.webDialog}>
-          <Text style={s.title}>{title}</Text>
+        <View style={s.webDialog} accessibilityRole="alert" accessibilityLabel={title} accessibilityViewIsModal>
+          <Text style={s.title} accessibilityRole="header">{title}</Text>
           <Text style={s.message}>{message}</Text>
           <View style={s.actions}>
             <TouchableOpacity
               style={[s.btn, s.btnCancel]}
               onPress={onCancel}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={cancelText}
             >
               <Text style={s.btnCancelText}>{cancelText}</Text>
             </TouchableOpacity>
@@ -48,6 +50,8 @@ export function ConfirmDialog({
               style={[s.btn, destructive ? s.btnDestructive : s.btnPrimary]}
               onPress={onConfirm}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={confirmText}
             >
               <Text style={s.btnPrimaryText}>{confirmText}</Text>
             </TouchableOpacity>

@@ -1,10 +1,11 @@
-// Simple server to test web build with COEP/COOP headers required for expo-sqlite
+// Simple server to preview the web export (local use only).
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
 const PORT = 3000;
-const DIST_DIR = path.join(__dirname, 'dist');
+// expo export --platform web writes to the project-root dist/.
+const DIST_DIR = path.join(__dirname, '..', 'dist');
 
 const MIME_TYPES = {
   '.html': 'text/html',
@@ -27,8 +28,24 @@ const server = http.createServer((req, res) => {
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
 
-  let filePath = path.join(DIST_DIR, req.url === '/' ? 'index.html' : req.url);
-  
+  const urlPath = (req.url || '/').split('?')[0].split('#')[0];
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath);
+  } catch {
+    res.writeHead(400);
+    res.end('Bad request');
+    return;
+  }
+  const joined = path.normalize(path.join(DIST_DIR, decoded === '/' ? 'index.html' : decoded));
+  // Reject paths escaping the public directory.
+  if (joined !== DIST_DIR && !joined.startsWith(DIST_DIR + path.sep)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+  let filePath = joined;
+
   // Handle client-side routing for SPA
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     filePath = path.join(DIST_DIR, 'index.html');
