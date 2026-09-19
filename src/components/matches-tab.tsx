@@ -1,8 +1,9 @@
-import { useMemo, useCallback } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { useMemo, useCallback, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { MatchRow } from './match-row';
 import { getRoundName } from '@/lib/bracket-generator';
 import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
+import { Colors } from '@/constants/theme';
 import { s } from './matches-tab.styles';
 import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, TournamentType } from '@/types';
 
@@ -69,17 +70,61 @@ export function MatchesTab({
     [tournamentType, getParticipantName, feederByConsumer]
   );
 
+  const [query, setQuery] = useState('');
+
+  // Every whitespace-separated token must appear in either side's name,
+  // so "india aus" finds India vs Australia.
+  const filteredMatches = useMemo(() => {
+    const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return matches;
+    return matches.filter((match) => {
+      const haystack = `${getSlotLabel(match, 'A')} ${getSlotLabel(match, 'B')}`.toLowerCase();
+      return tokens.every((token) => haystack.includes(token));
+    });
+  }, [matches, query, getSlotLabel]);
+
+  const showEmpty = query.trim() !== '' && filteredMatches.length === 0;
+
+  const searchBar = (
+    <View style={s.searchWrap}>
+      <TextInput
+        style={s.searchInput}
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Search team or opponent"
+        placeholderTextColor={Colors.textMuted}
+        selectionColor={Colors.primary}
+        autoCapitalize="none"
+        autoCorrect={false}
+        accessibilityLabel="Search matches"
+      />
+      {query !== '' && (
+        <TouchableOpacity
+          style={s.searchClear}
+          onPress={() => setQuery('')}
+          accessibilityLabel="Clear search"
+          accessibilityRole="button"
+        >
+          <Text style={s.searchClearText}>✕</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
   if (tournamentType === 'knockout') {
     const rounds = new Map<number, typeof matches>();
-    for (const match of matches) {
+    for (const match of filteredMatches) {
       const round = match.round || 1;
       if (!rounds.has(round)) rounds.set(round, []);
       rounds.get(round)!.push(match);
     }
-    const totalRounds = Math.max(...Array.from(rounds.keys()), 1);
+    // Round names come from the full bracket so filtering can't relabel rounds.
+    const totalRounds = Math.max(...matches.map((m) => m.round || 1), 1);
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+        {searchBar}
+        {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
         {Array.from(rounds.entries())
           .sort((a, b) => a[0] - b[0])
           .map(([round, roundMatches]) => (
@@ -103,9 +148,9 @@ export function MatchesTab({
     );
   }
 
-  const upcoming = matches.filter((m) => m.status === 'upcoming');
-  const inProgress = matches.filter((m) => m.status === 'in_progress');
-  const completed = matches.filter((m) => m.status === 'completed');
+  const upcoming = filteredMatches.filter((m) => m.status === 'upcoming');
+  const inProgress = filteredMatches.filter((m) => m.status === 'in_progress');
+  const completed = filteredMatches.filter((m) => m.status === 'completed');
 
   const renderSection = (title: string, matchList: typeof matches) => {
     if (matchList.length === 0) return null;
@@ -129,7 +174,9 @@ export function MatchesTab({
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+      {searchBar}
+      {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
       {renderSection('Live', inProgress)}
       {renderSection('Upcoming', upcoming)}
       {renderSection('Completed', completed)}
