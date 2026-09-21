@@ -2,12 +2,12 @@
   "expo": {
     "name": "ScoreBook",
     "slug": "scorebook",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "default",
     "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
     "userInterfaceStyle": "light",
-    "description": "Track badminton, tennis and table-tennis tournament scores with round-robin scheduling, live standings, and easy sharing.",
+    "description": "Track badminton, tennis, table tennis and pickleball tournament scores with round-robin scheduling, live standings, and easy sharing.",
     "ios": {
       "icon": "./assets/images/icon-1024.png",
       "bundleIdentifier": "com.moneshms.scorebook",
@@ -21,7 +21,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.moneshms.scorebook",
-      "versionCode": 5,
+      "versionCode": 6,
       "permissions": [],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"
