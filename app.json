@@ -2,7 +2,7 @@
   "expo": {
     "name": "ScoreBook",
     "slug": "scorebook",
-    "version": "1.0.4",
+    "version": "1.1",
     "orientation": "default",
     "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
