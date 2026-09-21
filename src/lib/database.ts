@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
-import { openDatabaseSync } from 'expo-sqlite';
-import { getWebDatabase } from './database-web';
+import { openDatabase } from './db-adapter';
 
 interface DatabaseLike {
   execSync(sql: string): void;
@@ -13,16 +12,12 @@ let db: DatabaseLike | null = null;
 
 export function getDatabase(): DatabaseLike {
   if (!db) {
-    if (Platform.OS === 'web') {
-      db = getWebDatabase() as DatabaseLike;
-    } else {
-      db = openDatabaseSync('scorebook.db') as unknown as DatabaseLike;
-    }
+    db = openDatabase() as unknown as DatabaseLike;
   }
   return db;
 }
 
-const SPORT_CHECK = `CHECK(sport IN ('badminton', 'tennis', 'table_tennis'))`;
+const SPORT_CHECK = `CHECK(sport IN ('badminton', 'tennis', 'table_tennis', 'pickleball'))`;
 
 function matchTableDef(table: string, extra: string): string {
   return `CREATE TABLE IF NOT EXISTS ${table} (
@@ -93,6 +88,16 @@ function baseSchema(database: DatabaseLike) {
       score_a INTEGER,
       score_b INTEGER,
       FOREIGN KEY (match_id) REFERENCES table_tennis_matches(id) ON DELETE CASCADE,
+      UNIQUE(match_id, game_number)
+    );`,
+    matchTableDef('pickleball_matches', 'game_point INTEGER NOT NULL DEFAULT 11,\n      best_of_games INTEGER NOT NULL DEFAULT 3'),
+    `CREATE TABLE IF NOT EXISTS pickleball_match_games (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      match_id INTEGER NOT NULL,
+      game_number INTEGER NOT NULL,
+      score_a INTEGER,
+      score_b INTEGER,
+      FOREIGN KEY (match_id) REFERENCES pickleball_matches(id) ON DELETE CASCADE,
       UNIQUE(match_id, game_number)
     );`,
   ];
@@ -207,6 +212,28 @@ function migrateNative(database: DatabaseLike) {
     }
     record(3);
   }
+
+  // v4: widen tournaments.sport to include pickleball.
+  if (!applied.has(4)) {
+    const sql = tableSql(database, 'tournaments');
+    if (sql && !sql.includes('pickleball')) {
+      rebuildTable(
+        database,
+        'tournaments',
+        `CREATE TABLE tournaments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          sport TEXT NOT NULL ${SPORT_CHECK},
+          type TEXT NOT NULL DEFAULT 'round_robin' CHECK(type IN ('round_robin', 'knockout')),
+          status TEXT NOT NULL DEFAULT 'upcoming' CHECK(status IN ('upcoming', 'active', 'completed')),
+          created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+          updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+        );`,
+        ['id', 'name', 'sport', 'type', 'status', 'created_at', 'updated_at']
+      );
+    }
+    record(4);
+  }
 }
 
 export function initDatabase() {
@@ -226,6 +253,7 @@ export function initDatabase() {
     ['badminton_matches', 'idx_badminton_matches_bracket'],
     ['tennis_matches', 'idx_tennis_matches_bracket'],
     ['table_tennis_matches', 'idx_table_tennis_matches_bracket'],
+    ['pickleball_matches', 'idx_pickleball_matches_bracket'],
   ] as const) {
     database.execSync(`CREATE INDEX IF NOT EXISTS ${name} ON ${table}(tournament_id, round, bracket_position);`);
   }

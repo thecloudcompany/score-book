@@ -33,6 +33,7 @@ const SPORT_LABELS: Record<Tournament['sport'], string> = {
   badminton: 'Badminton',
   tennis: 'Tennis',
   table_tennis: 'Table Tennis',
+  pickleball: 'Pickleball',
 };
 
 function TournamentCard({

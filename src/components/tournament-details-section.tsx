@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { styles } from './tournament-details-section.styles';
 import type { SportType, TournamentType } from '@/types';
@@ -128,6 +128,20 @@ export function TournamentDetailsSection({
               Table Tennis
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sportBtn, sport === 'pickleball' && styles.sportBtnActive]}
+            onPress={() => onSportChange('pickleball')}
+            activeOpacity={0.8}
+          >
+            <Image
+              source={require('../../assets/images/pickleball.png')}
+              style={styles.sportIcon}
+              resizeMode="contain"
+            />
+            <Text style={[styles.sportText, sport === 'pickleball' && styles.sportTextActive]}>
+              Pickleball
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -210,8 +224,8 @@ export function TournamentDetailsSection({
               <Text style={styles.advancedLabel}>Points to win</Text>
               <NumberInput
                 key={sport}
-                value={format.gamePoint ?? (sport === 'table_tennis' ? 11 : 21)}
-                defaultValue={sport === 'table_tennis' ? 11 : 21}
+                value={format.gamePoint ?? (sport === 'badminton' ? 21 : 11)}
+                defaultValue={sport === 'badminton' ? 21 : 11}
                 onChange={(gamePoint) => onFormatChange({ ...format, gamePoint })}
               />
             </View>

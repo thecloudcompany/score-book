@@ -23,6 +23,7 @@ import { ContentContainer } from '@/components/content-container';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
+import { pickleballSport } from '@/lib/sports/pickleball';
 import { s } from '@/components/tournament-detail.styles';
 import type { Tournament, Sport, MatchFormat } from '@/types';
 
@@ -286,7 +287,7 @@ export default function TournamentDetailScreen() {
         const pA = match.participantAId != null ? getParticipantName(match.participantAId) : 'TBD';
         const pB = match.participantBId !== null ? getParticipantName(match.participantBId) : 'Player B';
         const matchUnits = units[selectedMatchId] || [];
-        const isScoreSport = tournament.sport === 'badminton' || tournament.sport === 'table_tennis';
+        const isScoreSport = tournament.sport !== 'tennis';
         const modalUnits = matchUnits.map((u: any) => ({
           unitNumber: u.gameNumber ?? u.setNumber,
           scoreA: isScoreSport ? u.scoreA : u.gamesA,
@@ -296,7 +297,9 @@ export default function TournamentDetailScreen() {
           ? badmintonSport
           : tournament.sport === 'table_tennis'
             ? tableTennisSport
-            : tennisSport;
+            : tournament.sport === 'pickleball'
+              ? pickleballSport
+              : tennisSport;
         const format: MatchFormat = 'gamePoint' in match
           ? { gamePoint: match.gamePoint, bestOfGames: match.bestOfGames }
           : { setsToWin: match.setsToWin, gamesToWinPerSet: match.gamesToWinPerSet };

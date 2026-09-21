@@ -179,6 +179,7 @@ class WebDatabase {
         const badmintonIds = matchId('badminton_matches');
         const tennisIds = matchId('tennis_matches');
         const tableTennisIds = matchId('table_tennis_matches');
+        const pickleballIds = matchId('pickleball_matches');
         this.tables['participants'] = (this.tables['participants'] || []).filter(
           (r) => r.tournament_id !== tid
         );
@@ -200,6 +201,12 @@ class WebDatabase {
         this.tables['table_tennis_match_games'] = (this.tables['table_tennis_match_games'] || []).filter(
           (r) => !tableTennisIds.has(r.match_id)
         );
+        this.tables['pickleball_matches'] = (this.tables['pickleball_matches'] || []).filter(
+          (r) => r.tournament_id !== tid
+        );
+        this.tables['pickleball_match_games'] = (this.tables['pickleball_match_games'] || []).filter(
+          (r) => !pickleballIds.has(r.match_id)
+        );
       }
       if (table === 'badminton_matches') {
         const mid = params[0] as number;
@@ -216,6 +223,12 @@ class WebDatabase {
       if (table === 'table_tennis_matches') {
         const mid = params[0] as number;
         this.tables['table_tennis_match_games'] = (this.tables['table_tennis_match_games'] || []).filter(
+          (r) => r.match_id !== mid
+        );
+      }
+      if (table === 'pickleball_matches') {
+        const mid = params[0] as number;
+        this.tables['pickleball_match_games'] = (this.tables['pickleball_match_games'] || []).filter(
           (r) => r.match_id !== mid
         );
       }

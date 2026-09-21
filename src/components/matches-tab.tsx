@@ -5,13 +5,13 @@ import { getRoundName } from '@/lib/bracket-generator';
 import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
 import { Colors } from '@/constants/theme';
 import { s } from './matches-tab.styles';
-import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, TournamentType } from '@/types';
+import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, SportType, TournamentType } from '@/types';
 
 interface MatchesTabProps {
   tournamentType: TournamentType;
-  matches: (BadmintonMatch | TennisMatch | TableTennisMatch)[];
-  units: Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[]>;
-  sport: 'badminton' | 'tennis' | 'table_tennis';
+  matches: (BadmintonMatch | TennisMatch | TableTennisMatch | PickleballMatch)[];
+  units: Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[] | PickleballGame[]>;
+  sport: SportType;
   getParticipantName: (id: number) => string;
   onMatchPress: (matchId: number) => void;
 }
@@ -24,7 +24,7 @@ export function MatchesTab({
   getParticipantName,
   onMatchPress,
 }: MatchesTabProps) {
-  const isScoreSport = sport === 'badminton' || sport === 'table_tennis';
+  const isScoreSport = sport !== 'tennis';
 
   const getPreview = (matchId: number): string | null => {
     const matchUnits = units[matchId] || [];

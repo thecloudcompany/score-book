@@ -12,20 +12,26 @@ import {
   getTableTennisGames,
   updateTableTennisGame,
   updateTableTennisMatchStatus,
+  getPickleballMatches,
+  getPickleballGames,
+  updatePickleballGame,
+  updatePickleballMatchStatus,
   getParticipants,
   updateTournamentStatus,
   updateBadmintonMatchParticipant,
   updateTennisMatchParticipant,
   updateTableTennisMatchParticipant,
+  updatePickleballMatchParticipant,
 } from '@/lib/db-operations';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
-import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame, MatchStatus, TournamentType } from '@/types';
+import { pickleballSport } from '@/lib/sports/pickleball';
+import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, MatchStatus, SportType, TournamentType } from '@/types';
 
-export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' | 'table_tennis', tournamentType: TournamentType = 'round_robin') {
-  const [matches, setMatches] = useState<(BadmintonMatch | TennisMatch | TableTennisMatch)[]>([]);
-  const [units, setUnits] = useState<Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[]>>({});
+export function useMatches(tournamentId: number, sport: SportType, tournamentType: TournamentType = 'round_robin') {
+  const [matches, setMatches] = useState<(BadmintonMatch | TennisMatch | TableTennisMatch | PickleballMatch)[]>([]);
+  const [units, setUnits] = useState<Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[] | PickleballGame[]>>({});
   const [participants, setParticipants] = useState<{ id: number; name: string }[]>([]);
 
   const refresh = useCallback(() => {
@@ -50,13 +56,22 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
         unitsMap[match.id] = getTennisSets(match.id);
       }
       setUnits(unitsMap);
-    } else {
+    } else if (sport === 'table_tennis') {
       const matchList = getTableTennisMatches(tournamentId);
       setMatches(matchList);
 
       const unitsMap: Record<number, TableTennisGame[]> = {};
       for (const match of matchList) {
         unitsMap[match.id] = getTableTennisGames(match.id);
+      }
+      setUnits(unitsMap);
+    } else {
+      const matchList = getPickleballMatches(tournamentId);
+      setMatches(matchList);
+
+      const unitsMap: Record<number, PickleballGame[]> = {};
+      for (const match of matchList) {
+        unitsMap[match.id] = getPickleballGames(match.id);
       }
       setUnits(unitsMap);
     }
@@ -68,15 +83,18 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
         updateBadmintonGame(matchId, unitNumber, scoreA, scoreB);
       } else if (sport === 'tennis') {
         updateTennisSet(matchId, unitNumber, scoreA, scoreB);
-      } else {
+      } else if (sport === 'table_tennis') {
         updateTableTennisGame(matchId, unitNumber, scoreA, scoreB);
+      } else {
+        updatePickleballGame(matchId, unitNumber, scoreA, scoreB);
       }
 
       // Read the updated units once instead of mirroring state by hand.
       const freshUnits: any[] =
         sport === 'badminton' ? getBadmintonGames(matchId)
         : sport === 'tennis' ? getTennisSets(matchId)
-        : getTableTennisGames(matchId);
+        : sport === 'table_tennis' ? getTableTennisGames(matchId)
+        : getPickleballGames(matchId);
       setUnits((prev) => ({ ...prev, [matchId]: freshUnits as any }));
 
       // Recalculate match state
@@ -86,8 +104,8 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
 
       const currentUnits = freshUnits;
       const filledUnits = currentUnits.filter((u: any) => {
-        const a = sport === 'badminton' || sport === 'table_tennis' ? u.scoreA : u.gamesA;
-        const b = sport === 'badminton' || sport === 'table_tennis' ? u.scoreB : u.gamesB;
+        const a = sport !== 'tennis' ? u.scoreA : u.gamesA;
+        const b = sport !== 'tennis' ? u.scoreB : u.gamesB;
         return a !== null && b !== null;
       });
 
@@ -103,6 +121,11 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
           gamePoint: (currentMatch as TableTennisMatch).gamePoint,
           bestOfGames: (currentMatch as TableTennisMatch).bestOfGames,
         };
+      } else if (sport === 'pickleball') {
+        matchFormat = {
+          gamePoint: (currentMatch as PickleballMatch).gamePoint,
+          bestOfGames: (currentMatch as PickleballMatch).bestOfGames,
+        };
       } else {
         matchFormat = {
           setsToWin: (currentMatch as TennisMatch).setsToWin,
@@ -112,12 +135,15 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
 
       const scoringUnitsForCheck = filledUnits.map((u: any) => ({
         unitNumber: u.gameNumber || u.setNumber,
-        scoreA: sport === 'badminton' || sport === 'table_tennis' ? u.scoreA : u.gamesA,
-        scoreB: sport === 'badminton' || sport === 'table_tennis' ? u.scoreB : u.gamesB,
+        scoreA: sport !== 'tennis' ? u.scoreA : u.gamesA,
+        scoreB: sport !== 'tennis' ? u.scoreB : u.gamesB,
       }));
 
       const sportModule =
-        sport === 'badminton' ? badmintonSport : sport === 'tennis' ? tennisSport : tableTennisSport;
+        sport === 'badminton' ? badmintonSport
+        : sport === 'tennis' ? tennisSport
+        : sport === 'table_tennis' ? tableTennisSport
+        : pickleballSport;
       const isComplete = sportModule.isMatchComplete(scoringUnitsForCheck, matchFormat);
       const winner = isComplete
         ? sportModule.determineWinner(scoringUnitsForCheck, matchFormat)
@@ -139,8 +165,10 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
         updateBadmintonMatchStatus(matchId, newStatus, winnerId);
       } else if (sport === 'tennis') {
         updateTennisMatchStatus(matchId, newStatus, winnerId);
-      } else {
+      } else if (sport === 'table_tennis') {
         updateTableTennisMatchStatus(matchId, newStatus, winnerId);
+      } else {
+        updatePickleballMatchStatus(matchId, newStatus, winnerId);
       }
 
       // Handle knockout progression — advance on completion, retract when the
@@ -160,8 +188,10 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
                   updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
                 } else if (sport === 'tennis') {
                   updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
-                } else {
+                } else if (sport === 'table_tennis') {
                   updateTableTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
+                } else {
+                  updatePickleballMatchParticipant(feedsIntoMatchId, feedsIntoSlot, winnerId);
                 }
               }
             } else if (prevWinnerId !== null && slotValue === prevWinnerId) {
@@ -169,8 +199,10 @@ export function useMatches(tournamentId: number, sport: 'badminton' | 'tennis' |
                 updateBadmintonMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
               } else if (sport === 'tennis') {
                 updateTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
-              } else {
+              } else if (sport === 'table_tennis') {
                 updateTableTennisMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
+              } else {
+                updatePickleballMatchParticipant(feedsIntoMatchId, feedsIntoSlot, null);
               }
             }
           }

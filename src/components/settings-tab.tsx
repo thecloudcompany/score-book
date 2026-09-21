@@ -111,7 +111,9 @@ export function SettingsTab({
               ? 'Badminton'
               : tournament.sport === 'table_tennis'
                 ? 'Table Tennis'
-                : 'Tennis'}
+                : tournament.sport === 'pickleball'
+                  ? 'Pickleball'
+                  : 'Tennis'}
           </Text>
         </View>
         <View style={s.metaDivider} />

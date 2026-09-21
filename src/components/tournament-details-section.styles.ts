@@ -54,6 +54,12 @@ export const styles = StyleSheet.create({
   },
   sportEmoji: {
     fontSize: 22,
+    lineHeight: 26,
+    marginBottom: 6,
+  },
+  sportIcon: {
+    width: 26,
+    height: 26,
     marginBottom: 6,
   },
   sportText: {

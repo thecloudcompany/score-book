@@ -1,4 +1,4 @@
-import type { LeaderboardEntry, Participant, BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame } from '@/types';
+import type { LeaderboardEntry, Participant, BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame } from '@/types';
 
 interface MatchWithUnits {
   match: BadmintonMatch | TennisMatch;
@@ -145,6 +145,23 @@ export function calculateTennisLeaderboard(
 export function calculateTableTennisLeaderboard(
   matches: TableTennisMatch[],
   games: TableTennisGame[],
+  participants: Participant[]
+): LeaderboardEntry[] {
+  const matchUnits = matches.map((match) => ({
+    match,
+    winsNeeded: Math.ceil((match.bestOfGames ?? 3) / 2),
+    units: games
+      .filter((g) => g.matchId === match.id)
+      .sort((a, b) => a.gameNumber - b.gameNumber)
+      .map((g) => ({ scoreA: g.scoreA, scoreB: g.scoreB })),
+  }));
+
+  return calculateStats(matchUnits, participants);
+}
+
+export function calculatePickleballLeaderboard(
+  matches: PickleballMatch[],
+  games: PickleballGame[],
   participants: Participant[]
 ): LeaderboardEntry[] {
   const matchUnits = matches.map((match) => ({

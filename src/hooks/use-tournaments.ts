@@ -7,21 +7,26 @@ import {
   createBadmintonMatch,
   createTennisMatch,
   createTableTennisMatch,
+  createPickleballMatch,
   updateBadmintonMatchBracketLink,
   updateTennisMatchBracketLink,
   updateTableTennisMatchBracketLink,
+  updatePickleballMatchBracketLink,
   updateBadmintonMatchStatus,
   updateTennisMatchStatus,
   updateTableTennisMatchStatus,
+  updatePickleballMatchStatus,
   updateBadmintonMatchParticipant,
   updateTennisMatchParticipant,
   updateTableTennisMatchParticipant,
+  updatePickleballMatchParticipant,
 } from '@/lib/db-operations';
 import { generateRoundRobin } from '@/lib/scheduler';
 import { generateKnockoutBracket } from '@/lib/bracket-generator';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
+import { pickleballSport } from '@/lib/sports/pickleball';
 import type { Tournament, SportType, TournamentType, ByeConfig } from '@/types';
 
 export function useTournaments() {
@@ -87,6 +92,14 @@ export function useTournaments() {
               format.gamePoint ?? tableTennisSport.defaultFormat.gamePoint,
               format.bestOfGames ?? tableTennisSport.defaultFormat.bestOfGames
             );
+          } else if (sport === 'pickleball') {
+            createPickleballMatch(
+              tournament.id,
+              aId,
+              bId,
+              format.gamePoint ?? pickleballSport.defaultFormat.gamePoint,
+              format.bestOfGames ?? pickleballSport.defaultFormat.bestOfGames
+            );
           } else {
             // form.setsToWin is "best of N" (1, 3, 5); storage is "first to N wins"
             const setsToWin = Math.ceil((format.setsToWin ?? 3) / 2);
@@ -144,6 +157,19 @@ export function useTournaments() {
               }
             );
             matchId = match.id;
+          } else if (sport === 'pickleball') {
+            const match = createPickleballMatch(
+              tournament.id,
+              bracketMatch.participantAId,
+              bracketMatch.participantBId,
+              format.gamePoint ?? pickleballSport.defaultFormat.gamePoint,
+              format.bestOfGames ?? pickleballSport.defaultFormat.bestOfGames,
+              {
+                round: bracketMatch.round,
+                bracketPosition: bracketMatch.bracketPosition,
+              }
+            );
+            matchId = match.id;
           } else {
             const setsToWin = Math.ceil((format.setsToWin ?? 3) / 2);
             const match = createTennisMatch(
@@ -182,6 +208,12 @@ export function useTournaments() {
                 targetMatchId,
                 bracketMatch.feedsIntoSlot
               );
+            } else if (sport === 'pickleball') {
+              updatePickleballMatchBracketLink(
+                createdMatchIds[i],
+                targetMatchId,
+                bracketMatch.feedsIntoSlot
+              );
             } else {
               updateTennisMatchBracketLink(
                 createdMatchIds[i],
@@ -205,6 +237,8 @@ export function useTournaments() {
               updateBadmintonMatchStatus(matchId, 'completed', winnerId);
             } else if (sport === 'table_tennis') {
               updateTableTennisMatchStatus(matchId, 'completed', winnerId);
+            } else if (sport === 'pickleball') {
+              updatePickleballMatchStatus(matchId, 'completed', winnerId);
             } else {
               updateTennisMatchStatus(matchId, 'completed', winnerId);
             }
@@ -216,6 +250,8 @@ export function useTournaments() {
                 updateBadmintonMatchParticipant(targetMatchId, bracketMatch.feedsIntoSlot, winnerId);
               } else if (sport === 'table_tennis') {
                 updateTableTennisMatchParticipant(targetMatchId, bracketMatch.feedsIntoSlot, winnerId);
+              } else if (sport === 'pickleball') {
+                updatePickleballMatchParticipant(targetMatchId, bracketMatch.feedsIntoSlot, winnerId);
               } else {
                 updateTennisMatchParticipant(targetMatchId, bracketMatch.feedsIntoSlot, winnerId);
               }

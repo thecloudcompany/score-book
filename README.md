@@ -1,11 +1,11 @@
 # ScoreBook
 
-A clean, offline-first tournament manager for casual racket sports. Track round-robin and knockout tournaments for badminton and tennis, with live standings and easy sharing — all on-device, no account, no internet.
+A clean, offline-first tournament manager for casual racket sports. Track round-robin and knockout tournaments for badminton, tennis, table tennis, and pickleball, with live standings and easy sharing — all on-device, no account, no internet.
 
 ## Features
 
 - **Tournament types:** Round-robin and single-elimination knockout
-- **Sports:** Badminton and tennis (more coming)
+- **Sports:** Badminton, tennis, table tennis, and pickleball
 - **Configurable scoring:** Game points, best-of-N games, sets-to-win, games-per-set
 - **Live standings:** Auto-computed leaderboard with tiebreakers
 - **Knockout bracket:** Random or manual bye assignment, automatic winner advancement
@@ -39,7 +39,7 @@ src/
     db-operations.ts      Typed CRUD
     bracket-generator.ts  Knockout bracket creation
     leaderboard.ts        Standings calculation
-    sports/               Sport modules (badminton, tennis)
+    sports/               Sport modules (badminton, tennis, table-tennis, pickleball)
   constants/theme.ts      Shared design tokens
 
 docs/

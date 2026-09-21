@@ -18,6 +18,7 @@ import { ContentContainer } from '@/components/content-container';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
+import { pickleballSport } from '@/lib/sports/pickleball';
 import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 import type { SportType, TournamentType, ByeConfig } from '@/types';
 
@@ -48,6 +49,11 @@ export default function CreateTournamentScreen() {
       setFormat({
         gamePoint: tableTennisSport.defaultFormat.gamePoint,
         bestOfGames: tableTennisSport.defaultFormat.bestOfGames,
+      });
+    } else if (newSport === 'pickleball') {
+      setFormat({
+        gamePoint: pickleballSport.defaultFormat.gamePoint,
+        bestOfGames: pickleballSport.defaultFormat.bestOfGames,
       });
     } else {
       setFormat({
@@ -112,7 +118,9 @@ export default function CreateTournamentScreen() {
         ? badmintonSport.defaultFormat
         : sport === 'table_tennis'
           ? tableTennisSport.defaultFormat
-          : tennisSport.defaultFormat;
+          : sport === 'pickleball'
+            ? pickleballSport.defaultFormat
+            : tennisSport.defaultFormat;
 
     let byeConfig: ByeConfig | undefined;
     if (tournamentType === 'knockout') {
