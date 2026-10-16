@@ -122,7 +122,7 @@ export function MatchesTab({
     const totalRounds = Math.max(...matches.map((m) => m.round || 1), 1);
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
         {searchBar}
         {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
         {Array.from(rounds.entries())
@@ -174,7 +174,7 @@ export function MatchesTab({
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+    <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
       {searchBar}
       {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
       {renderSection('Live', inProgress)}

@@ -16,7 +16,7 @@ import { Font, Colors, Radius, Spacing, statusColor } from '@/constants/theme';
 import type { Tournament } from '@/types';
 
 const TOURNAMENT_LIST_MAX_WIDTH = 960;
-const GRID_GAP = Spacing.md;
+const GRID_GAP = Spacing.lg;
 
 function StatusDot({ status }: { status: Tournament['status'] }) {
   return (
@@ -35,6 +35,20 @@ const SPORT_LABELS: Record<Tournament['sport'], string> = {
   table_tennis: 'Table Tennis',
   pickleball: 'Pickleball',
 };
+
+function formatTournamentStatus(status: Tournament['status']): string {
+  switch (status) {
+    case 'active':
+      return 'Live';
+    case 'in_progress':
+      return 'In Progress';
+    case 'completed':
+      return 'Completed';
+    case 'upcoming':
+    default:
+      return 'Upcoming';
+  }
+}
 
 function TournamentCard({
   tournament,
@@ -56,16 +70,16 @@ function TournamentCard({
     >
       <View style={styles.cardTop}>
         <View style={styles.sportRow}>
-          <Text style={styles.sportLabel}>{SPORT_LABELS[tournament.sport]}</Text>
+          <Text style={styles.sportLabel} numberOfLines={1}>{SPORT_LABELS[tournament.sport]}</Text>
           <View style={styles.sportDivider} />
-          <Text style={styles.typeLabel}>
+          <Text style={styles.typeLabel} numberOfLines={1}>
             {tournament.type === 'knockout' ? 'Knockout' : 'Round robin'}
           </Text>
         </View>
         <View style={styles.statusRow}>
           <StatusDot status={tournament.status} />
-          <Text style={[styles.statusText, { color: statusColor(tournament.status) }]}>
-            {tournament.status === 'active' ? 'Live' : tournament.status}
+          <Text style={[styles.statusText, { color: statusColor(tournament.status) }]} numberOfLines={1}>
+            {formatTournamentStatus(tournament.status)}
           </Text>
         </View>
       </View>
@@ -82,7 +96,8 @@ export default function TournamentListScreen() {
   const { width } = useWindowDimensions();
   const { tournaments, refresh, deleteTournament } = useTournaments();
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
-  const availableListWidth = Math.min(Math.max(width - Spacing.xl * 2, 0), TOURNAMENT_LIST_MAX_WIDTH);
+  const horizontalPad = width < 380 ? Spacing.lg : Spacing.xl;
+  const availableListWidth = Math.min(Math.max(width - horizontalPad * 2, 0), TOURNAMENT_LIST_MAX_WIDTH);
   const gridColumns = availableListWidth >= 760 ? 2 : 1;
   const cardWidth = gridColumns === 1
     ? '100%'
@@ -105,9 +120,9 @@ export default function TournamentListScreen() {
   }, [deleteTarget, deleteTournament]);
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.header}>
-        <ContentContainer maxWidth={TOURNAMENT_LIST_MAX_WIDTH} style={styles.headerContent}>
+        <ContentContainer maxWidth={TOURNAMENT_LIST_MAX_WIDTH} style={[styles.headerContent, { paddingHorizontal: horizontalPad }]}>
           <Text style={styles.title}>ScoreBook</Text>
           <Text style={styles.subtitle}>
             {tournaments.length} tournament{tournaments.length !== 1 ? 's' : ''}
@@ -117,7 +132,7 @@ export default function TournamentListScreen() {
 
       <ScrollView
         style={styles.list}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingHorizontal: horizontalPad }]}
         showsVerticalScrollIndicator={false}
       >
         {tournaments.length === 0 ? (
@@ -222,12 +237,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: Spacing.md,
   },
   sportRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 1,
+    minWidth: 100,
   },
   sportLabel: {
     fontFamily: Font.semibold,
@@ -251,16 +270,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 0,
   },
   statusDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
+    flexShrink: 0,
   },
   statusText: {
     fontFamily: Font.semibold,
     fontSize: 12,
-    textTransform: 'capitalize',
   },
   cardTitle: {
     fontFamily: Font.bold,

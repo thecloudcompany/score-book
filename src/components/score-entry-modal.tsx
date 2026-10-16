@@ -121,9 +121,9 @@ export default function ScoreEntryModal({
 
             {/* Players */}
             <View style={s.playersRow}>
-              <Text style={s.playerName}>{playerA}</Text>
+              <Text style={s.playerName} numberOfLines={1}>{playerA}</Text>
               <Text style={s.vsText}>vs</Text>
-              <Text style={s.playerName}>{playerB}</Text>
+              <Text style={s.playerName} numberOfLines={1}>{playerB}</Text>
             </View>
 
             {/* Units list — all games, tap to edit */}

@@ -36,13 +36,18 @@ export const styles = StyleSheet.create({
   },
   sportRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   sportBtn: {
-    flex: 1,
+    flexBasis: '48%',
+    flexGrow: 1,
+    minWidth: 120,
     borderRadius: Radius.sm,
-    paddingVertical: 15,
+    paddingVertical: 14,
+    paddingHorizontal: 6,
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -64,8 +69,9 @@ export const styles = StyleSheet.create({
   },
   sportText: {
     fontFamily: Font.semibold,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
+    textAlign: 'center',
   },
   sportTextActive: {
     color: Colors.primary,
@@ -76,10 +82,12 @@ export const styles = StyleSheet.create({
   },
   formatBtn: {
     flex: 1,
-    paddingVertical: 13,
+    paddingVertical: 12,
+    paddingHorizontal: 2,
     borderRadius: Radius.sm,
     backgroundColor: Colors.bgElevated,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -89,8 +97,9 @@ export const styles = StyleSheet.create({
   },
   formatBtnText: {
     fontFamily: Font.semibold,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
+    textAlign: 'center',
   },
   formatBtnTextActive: {
     color: Colors.primary,
@@ -136,13 +145,13 @@ export const styles = StyleSheet.create({
   },
   typeRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   typeBtn: {
     flex: 1,
     borderRadius: Radius.sm,
-    paddingVertical: 15,
-    paddingHorizontal: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -155,7 +164,7 @@ export const styles = StyleSheet.create({
     fontFamily: Font.semibold,
     fontSize: 14,
     color: Colors.textSecondary,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   typeTextActive: {
     color: Colors.primary,

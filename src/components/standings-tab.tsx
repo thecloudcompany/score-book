@@ -37,7 +37,7 @@ export function StandingsTab({
     const totalRounds = Math.max(...matches.map((m) => m.round || 1), 1);
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         <View ref={captureRef} style={s.captureArea}>
           {shareHeader}
           {knockoutStandings.champion !== null && (
@@ -95,31 +95,31 @@ export function StandingsTab({
   }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
       <View ref={captureRef} style={s.captureArea}>
         {shareHeader}
         <View style={s.tableCard}>
           <View style={s.tableHeader}>
-            <Text style={[s.th, { flex: 0.5 }]}>#</Text>
-            <Text style={[s.th, { flex: 2.2 }]}>Player</Text>
-            <Text style={[s.th, { flex: 0.7, textAlign: 'center' }]}>W</Text>
-            <Text style={[s.th, { flex: 0.7, textAlign: 'center' }]}>L</Text>
-            <Text style={[s.th, { flex: 1, textAlign: 'right' }]}>Diff</Text>
+            <Text style={[s.th, s.colRank]}>#</Text>
+            <Text style={[s.th, s.colPlayer]}>Player</Text>
+            <Text style={[s.th, s.colStat]}>W</Text>
+            <Text style={[s.th, s.colStat]}>L</Text>
+            <Text style={[s.th, s.colDiff]}>Diff</Text>
           </View>
           {standings.map((entry) => (
             <View key={entry.participantId} style={s.tableRow}>
-              <Text style={[s.td, { flex: 0.5, fontFamily: Font.extrabold }]}>
+              <Text style={[s.td, s.colRank, { fontFamily: Font.extrabold }]}>
                 {entry.tiedWith.length > 0 ? `T${entry.rank}` : entry.rank}
               </Text>
-              <Text style={[s.td, { flex: 2.2 }]} numberOfLines={1}>
+              <Text style={[s.td, s.colPlayer]} numberOfLines={1}>
                 {entry.name}
               </Text>
-              <Text style={[s.td, { flex: 0.7, textAlign: 'center' }]}>{entry.wins}</Text>
-              <Text style={[s.td, { flex: 0.7, textAlign: 'center' }]}>{entry.losses}</Text>
+              <Text style={[s.td, s.colStat]}>{entry.wins}</Text>
+              <Text style={[s.td, s.colStat]}>{entry.losses}</Text>
               <Text
                 style={[
                   s.td,
-                  { flex: 1, textAlign: 'right' },
+                  s.colDiff,
                   entry.pointDiff > 0 && { color: Colors.success },
                   entry.pointDiff < 0 && { color: Colors.danger },
                 ]}

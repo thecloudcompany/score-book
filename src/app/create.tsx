@@ -7,8 +7,9 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
 import { ParticipantsSection } from '@/components/participants-section';
@@ -142,10 +143,14 @@ export default function CreateTournamentScreen() {
     }
   }, [name, sport, tournamentType, byeMethod, selectedByeNames, format, participants, validate, createTournament, router]);
 
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const horizontalPad = width < 380 ? Spacing.lg : Spacing.xl;
+
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingHorizontal: horizontalPad }]}>
           <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
@@ -155,6 +160,7 @@ export default function CreateTournamentScreen() {
 
         <ScrollView
           style={styles.content}
+          contentContainerStyle={{ paddingHorizontal: horizontalPad }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -198,7 +204,7 @@ export default function CreateTournamentScreen() {
           </ContentContainer>
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingHorizontal: horizontalPad, paddingBottom: Math.max(insets.bottom, 16) }]}>
           <ContentContainer>
             <TouchableOpacity style={styles.createBtn} onPress={handleCreate} activeOpacity={0.85}>
               <Text style={styles.createBtnText}>Create Tournament</Text>
@@ -216,7 +222,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
@@ -234,10 +239,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.xl,
   },
   footer: {
-    paddingHorizontal: Spacing.xl,
     paddingVertical: 16,
     backgroundColor: Colors.bgElevated,
     borderTopWidth: 1,

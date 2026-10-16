@@ -15,6 +15,9 @@ import {
   updateParticipantName,
   updateTournamentName,
   deleteTournament,
+  getTournamentMaxScore,
+  hasTournamentScores,
+  updateTournamentMaxScore,
 } from '@/lib/db-operations';
 import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
@@ -49,6 +52,7 @@ export default function TournamentDetailScreen() {
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [participantsVersion, setParticipantsVersion] = useState(0);
+  const [settingsVersion, setSettingsVersion] = useState(0);
   const [shareError, setShareError] = useState('');
   const standingsRef = useRef<View | null>(null);
   const isWide = useIsWideLayout();
@@ -61,6 +65,18 @@ export default function TournamentDetailScreen() {
   const { standings, refresh: refreshStandings } = useStandings(
     tournamentId,
     tournament?.sport ?? 'badminton'
+  );
+
+  const maxScore = useMemo(
+    () => (tournament ? getTournamentMaxScore(tournamentId, tournament.sport) : 21),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tournamentId, tournament?.sport, settingsVersion, matches]
+  );
+
+  const hasScores = useMemo(
+    () => (tournament ? hasTournamentScores(tournamentId, tournament.sport) : false),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tournamentId, tournament?.sport, settingsVersion, units]
   );
 
   const fullParticipants = useMemo(
@@ -106,6 +122,24 @@ export default function TournamentDetailScreen() {
       setParticipantsVersion((v) => v + 1);
     },
     [refreshMatches, refreshStandings]
+  );
+
+  const handleUpdateMaxScore = useCallback(
+    (newMaxScore: number, resetScores: boolean) => {
+      if (!tournament) return;
+      updateTournamentMaxScore(
+        tournament.id,
+        tournament.sport,
+        tournament.type,
+        newMaxScore,
+        resetScores
+      );
+      refreshMatches();
+      refreshStandings();
+      setTournament(getTournament(tournament.id));
+      setSettingsVersion((v) => v + 1);
+    },
+    [tournament, refreshMatches, refreshStandings]
   );
 
   const handleDeleteTournament = useCallback(() => setDeleteDialogVisible(true), []);
@@ -186,11 +220,14 @@ export default function TournamentDetailScreen() {
       <SettingsTab
         tournament={tournament!}
         participants={fullParticipants}
+        maxScore={maxScore}
+        hasScores={hasScores}
         onRenameTournament={(name) => {
           updateTournamentName(tournament!.id, name);
           handleRenameTournament(name);
         }}
         onRenameParticipant={handleRenameParticipant}
+        onUpdateMaxScore={handleUpdateMaxScore}
         onDeletePress={handleDeleteTournament}
       />
     );
@@ -211,7 +248,7 @@ export default function TournamentDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={s.root}>
+    <SafeAreaView style={s.root} edges={['top', 'left', 'right', 'bottom']}>
       <View style={s.header}>
         <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Text style={s.backText}>← Back</Text>
@@ -224,7 +261,7 @@ export default function TournamentDetailScreen() {
             <Text style={s.headerActionText}>📤</Text>
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 60 }} />
+          <View style={{ minWidth: 48 }} />
         )}
       </View>
       {shareError !== '' && <Text style={s.shareError}>{shareError}</Text>}

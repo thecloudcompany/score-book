@@ -876,3 +876,276 @@ export function updatePickleballMatchBracketLink(
     matchId
   );
 }
+
+// ─── Tournament Format & Score Reset Operations ────────────────────────────
+
+export function hasTournamentScores(tournamentId: number, sport: SportType): boolean {
+  if (sport === 'badminton') {
+    const matches = getBadmintonMatches(tournamentId);
+    for (const match of matches) {
+      const games = getBadmintonGames(match.id);
+      if (games.some((g) => g.scoreA !== null || g.scoreB !== null)) return true;
+    }
+    return false;
+  } else if (sport === 'tennis') {
+    const matches = getTennisMatches(tournamentId);
+    for (const match of matches) {
+      const sets = getTennisSets(match.id);
+      if (sets.some((s) => s.gamesA !== null || s.gamesB !== null)) return true;
+    }
+    return false;
+  } else if (sport === 'table_tennis') {
+    const matches = getTableTennisMatches(tournamentId);
+    for (const match of matches) {
+      const games = getTableTennisGames(match.id);
+      if (games.some((g) => g.scoreA !== null || g.scoreB !== null)) return true;
+    }
+    return false;
+  } else {
+    const matches = getPickleballMatches(tournamentId);
+    for (const match of matches) {
+      const games = getPickleballGames(match.id);
+      if (games.some((g) => g.scoreA !== null || g.scoreB !== null)) return true;
+    }
+    return false;
+  }
+}
+
+export function getTournamentMaxScore(tournamentId: number, sport: SportType): number {
+  if (sport === 'badminton') {
+    const matches = getBadmintonMatches(tournamentId);
+    return matches.length > 0 ? matches[0].gamePoint : 21;
+  } else if (sport === 'tennis') {
+    const matches = getTennisMatches(tournamentId);
+    return matches.length > 0 ? matches[0].gamesToWinPerSet : 6;
+  } else if (sport === 'table_tennis') {
+    const matches = getTableTennisMatches(tournamentId);
+    return matches.length > 0 ? matches[0].gamePoint : 11;
+  } else {
+    const matches = getPickleballMatches(tournamentId);
+    return matches.length > 0 ? matches[0].gamePoint : 11;
+  }
+}
+
+export function resetTournamentScores(
+  tournamentId: number,
+  sport: SportType,
+  tournamentType: TournamentType
+): void {
+  if (sport === 'badminton') {
+    const matches = getBadmintonMatches(tournamentId);
+    for (const match of matches) {
+      const games = getBadmintonGames(match.id);
+      for (const game of games) {
+        if (game.scoreA !== null || game.scoreB !== null) {
+          updateBadmintonGame(match.id, game.gameNumber, null, null);
+        }
+      }
+      if (tournamentType === 'round_robin') {
+        updateBadmintonMatchStatus(match.id, 'upcoming', null);
+      } else {
+        if (match.round === 1 && match.participantBId === null) {
+          updateBadmintonMatchStatus(match.id, 'completed', match.participantAId);
+        } else {
+          updateBadmintonMatchStatus(match.id, 'upcoming', null);
+        }
+      }
+    }
+
+    if (tournamentType === 'knockout') {
+      const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
+      for (const m of matches) {
+        if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
+          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+            byeWinnersByConsumer.set(m.feedsIntoMatchId, {
+              slot: m.feedsIntoSlot,
+              winnerId: m.participantAId,
+            });
+          }
+        }
+      }
+      for (const m of matches) {
+        if ((m.round || 1) > 1) {
+          const byeAdv = byeWinnersByConsumer.get(m.id);
+          const slotA = byeAdv?.slot === 'A' ? byeAdv.winnerId : null;
+          const slotB = byeAdv?.slot === 'B' ? byeAdv.winnerId : null;
+          updateBadmintonMatchParticipant(m.id, 'A', slotA);
+          updateBadmintonMatchParticipant(m.id, 'B', slotB);
+        }
+      }
+    }
+  } else if (sport === 'tennis') {
+    const matches = getTennisMatches(tournamentId);
+    for (const match of matches) {
+      const sets = getTennisSets(match.id);
+      for (const set of sets) {
+        if (set.gamesA !== null || set.gamesB !== null) {
+          updateTennisSet(match.id, set.setNumber, null, null);
+        }
+      }
+      if (tournamentType === 'round_robin') {
+        updateTennisMatchStatus(match.id, 'upcoming', null);
+      } else {
+        if (match.round === 1 && match.participantBId === null) {
+          updateTennisMatchStatus(match.id, 'completed', match.participantAId);
+        } else {
+          updateTennisMatchStatus(match.id, 'upcoming', null);
+        }
+      }
+    }
+
+    if (tournamentType === 'knockout') {
+      const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
+      for (const m of matches) {
+        if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
+          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+            byeWinnersByConsumer.set(m.feedsIntoMatchId, {
+              slot: m.feedsIntoSlot,
+              winnerId: m.participantAId,
+            });
+          }
+        }
+      }
+      for (const m of matches) {
+        if ((m.round || 1) > 1) {
+          const byeAdv = byeWinnersByConsumer.get(m.id);
+          const slotA = byeAdv?.slot === 'A' ? byeAdv.winnerId : null;
+          const slotB = byeAdv?.slot === 'B' ? byeAdv.winnerId : null;
+          updateTennisMatchParticipant(m.id, 'A', slotA);
+          updateTennisMatchParticipant(m.id, 'B', slotB);
+        }
+      }
+    }
+  } else if (sport === 'table_tennis') {
+    const matches = getTableTennisMatches(tournamentId);
+    for (const match of matches) {
+      const games = getTableTennisGames(match.id);
+      for (const game of games) {
+        if (game.scoreA !== null || game.scoreB !== null) {
+          updateTableTennisGame(match.id, game.gameNumber, null, null);
+        }
+      }
+      if (tournamentType === 'round_robin') {
+        updateTableTennisMatchStatus(match.id, 'upcoming', null);
+      } else {
+        if (match.round === 1 && match.participantBId === null) {
+          updateTableTennisMatchStatus(match.id, 'completed', match.participantAId);
+        } else {
+          updateTableTennisMatchStatus(match.id, 'upcoming', null);
+        }
+      }
+    }
+
+    if (tournamentType === 'knockout') {
+      const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
+      for (const m of matches) {
+        if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
+          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+            byeWinnersByConsumer.set(m.feedsIntoMatchId, {
+              slot: m.feedsIntoSlot,
+              winnerId: m.participantAId,
+            });
+          }
+        }
+      }
+      for (const m of matches) {
+        if ((m.round || 1) > 1) {
+          const byeAdv = byeWinnersByConsumer.get(m.id);
+          const slotA = byeAdv?.slot === 'A' ? byeAdv.winnerId : null;
+          const slotB = byeAdv?.slot === 'B' ? byeAdv.winnerId : null;
+          updateTableTennisMatchParticipant(m.id, 'A', slotA);
+          updateTableTennisMatchParticipant(m.id, 'B', slotB);
+        }
+      }
+    }
+  } else {
+    const matches = getPickleballMatches(tournamentId);
+    for (const match of matches) {
+      const games = getPickleballGames(match.id);
+      for (const game of games) {
+        if (game.scoreA !== null || game.scoreB !== null) {
+          updatePickleballGame(match.id, game.gameNumber, null, null);
+        }
+      }
+      if (tournamentType === 'round_robin') {
+        updatePickleballMatchStatus(match.id, 'upcoming', null);
+      } else {
+        if (match.round === 1 && match.participantBId === null) {
+          updatePickleballMatchStatus(match.id, 'completed', match.participantAId);
+        } else {
+          updatePickleballMatchStatus(match.id, 'upcoming', null);
+        }
+      }
+    }
+
+    if (tournamentType === 'knockout') {
+      const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
+      for (const m of matches) {
+        if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
+          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+            byeWinnersByConsumer.set(m.feedsIntoMatchId, {
+              slot: m.feedsIntoSlot,
+              winnerId: m.participantAId,
+            });
+          }
+        }
+      }
+      for (const m of matches) {
+        if ((m.round || 1) > 1) {
+          const byeAdv = byeWinnersByConsumer.get(m.id);
+          const slotA = byeAdv?.slot === 'A' ? byeAdv.winnerId : null;
+          const slotB = byeAdv?.slot === 'B' ? byeAdv.winnerId : null;
+          updatePickleballMatchParticipant(m.id, 'A', slotA);
+          updatePickleballMatchParticipant(m.id, 'B', slotB);
+        }
+      }
+    }
+  }
+
+  updateTournamentStatus(tournamentId, 'upcoming');
+}
+
+export function updateTournamentMaxScore(
+  tournamentId: number,
+  sport: SportType,
+  tournamentType: TournamentType,
+  newMaxScore: number,
+  resetScores: boolean
+): void {
+  const db = getDatabase();
+
+  if (sport === 'badminton') {
+    db.runSync(
+      'UPDATE badminton_matches SET game_point = ? WHERE tournament_id = ?',
+      newMaxScore,
+      tournamentId
+    );
+  } else if (sport === 'tennis') {
+    db.runSync(
+      'UPDATE tennis_matches SET games_to_win_per_set = ? WHERE tournament_id = ?',
+      newMaxScore,
+      tournamentId
+    );
+  } else if (sport === 'table_tennis') {
+    db.runSync(
+      'UPDATE table_tennis_matches SET game_point = ? WHERE tournament_id = ?',
+      newMaxScore,
+      tournamentId
+    );
+  } else {
+    db.runSync(
+      'UPDATE pickleball_matches SET game_point = ? WHERE tournament_id = ?',
+      newMaxScore,
+      tournamentId
+    );
+  }
+
+  if (resetScores) {
+    resetTournamentScores(tournamentId, sport, tournamentType);
+  } else {
+    db.runSync(
+      "UPDATE tournaments SET updated_at = strftime('%s', 'now') WHERE id = ?",
+      tournamentId
+    );
+  }
+}

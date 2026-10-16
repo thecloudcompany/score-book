@@ -104,7 +104,7 @@ export function TournamentDetailsSection({
             activeOpacity={0.8}
           >
             <Text style={styles.sportEmoji}>🏸</Text>
-            <Text style={[styles.sportText, sport === 'badminton' && styles.sportTextActive]}>
+            <Text style={[styles.sportText, sport === 'badminton' && styles.sportTextActive]} numberOfLines={1}>
               Badminton
             </Text>
           </TouchableOpacity>
@@ -114,7 +114,7 @@ export function TournamentDetailsSection({
             activeOpacity={0.8}
           >
             <Text style={styles.sportEmoji}>🎾</Text>
-            <Text style={[styles.sportText, sport === 'tennis' && styles.sportTextActive]}>
+            <Text style={[styles.sportText, sport === 'tennis' && styles.sportTextActive]} numberOfLines={1}>
               Tennis
             </Text>
           </TouchableOpacity>
@@ -124,7 +124,7 @@ export function TournamentDetailsSection({
             activeOpacity={0.8}
           >
             <Text style={styles.sportEmoji}>🏓</Text>
-            <Text style={[styles.sportText, sport === 'table_tennis' && styles.sportTextActive]}>
+            <Text style={[styles.sportText, sport === 'table_tennis' && styles.sportTextActive]} numberOfLines={1}>
               Table Tennis
             </Text>
           </TouchableOpacity>
@@ -138,7 +138,7 @@ export function TournamentDetailsSection({
               style={styles.sportIcon}
               resizeMode="contain"
             />
-            <Text style={[styles.sportText, sport === 'pickleball' && styles.sportTextActive]}>
+            <Text style={[styles.sportText, sport === 'pickleball' && styles.sportTextActive]} numberOfLines={1}>
               Pickleball
             </Text>
           </TouchableOpacity>

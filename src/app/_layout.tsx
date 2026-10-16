@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { View } from 'react-native';
+import { View, StatusBar } from 'react-native';
 import { useFonts } from 'expo-font';
 import {
   Figtree_400Regular,
@@ -12,8 +12,9 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { initDatabase } from '@/lib/database';
+import { Colors } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 // setOptions is a dev-build API — calling it in Expo Go only logs a warning.
@@ -49,8 +50,13 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: '#FAFBFC' }}>
+    <SafeAreaProvider initialWindowMetrics={initialWindowMetrics}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
+      />
+      <View style={{ flex: 1, backgroundColor: Colors.bg }}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>
     </SafeAreaProvider>

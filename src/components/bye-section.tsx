@@ -81,7 +81,7 @@ export function ByeSection({
                 activeOpacity={canSelect ? 0.7 : 1}
                 disabled={!canSelect && !isSelected}
               >
-                <Text style={[styles.byePlayerName, isSelected && styles.byePlayerNameSelected]}>
+                <Text style={[styles.byePlayerName, isSelected && styles.byePlayerNameSelected]} numberOfLines={1}>
                   {name}
                 </Text>
                 {isSelected && <Text style={styles.byeCheckmark}>✓</Text>}
@@ -176,6 +176,8 @@ const styles = StyleSheet.create({
     fontFamily: Font.medium,
     fontSize: 14,
     color: Colors.text,
+    flex: 1,
+    marginRight: 8,
   },
   byePlayerNameSelected: {
     color: Colors.primary,

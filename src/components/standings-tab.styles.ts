@@ -39,11 +39,12 @@ export const s = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: 'row',
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 11,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
+    alignItems: 'center',
   },
   th: {
     fontFamily: Font.semibold,
@@ -52,7 +53,7 @@ export const s = StyleSheet.create({
   },
   tableRow: {
     flexDirection: 'row',
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -62,6 +63,21 @@ export const s = StyleSheet.create({
     fontFamily: Font.medium,
     fontSize: 14,
     color: Colors.text,
+  },
+  colRank: {
+    width: 28,
+  },
+  colPlayer: {
+    flex: 1,
+    paddingRight: 6,
+  },
+  colStat: {
+    width: 32,
+    textAlign: 'center',
+  },
+  colDiff: {
+    width: 44,
+    textAlign: 'right',
   },
   knockoutSection: {
     marginBottom: Spacing.xl,

@@ -10,7 +10,7 @@ export const s = StyleSheet.create({
     borderRadius: Radius.sm,
     paddingVertical: 15,
     paddingHorizontal: Spacing.lg,
-    marginBottom: 7,
+    marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -63,5 +63,6 @@ export const s = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    flexShrink: 0,
   },
 });

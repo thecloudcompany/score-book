@@ -45,8 +45,8 @@ export const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-    paddingTop: 18,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -55,7 +55,7 @@ export const s = StyleSheet.create({
     fontFamily: Font.semibold,
     fontSize: 15,
     color: Colors.primary,
-    width: 60,
+    minWidth: 48,
   },
   headerTitle: {
     fontFamily: Font.bold,
@@ -63,10 +63,10 @@ export const s = StyleSheet.create({
     color: Colors.text,
     flex: 1,
     textAlign: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 6,
   },
   headerAction: {
-    width: 60,
+    minWidth: 48,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
@@ -75,7 +75,7 @@ export const s = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
     backgroundColor: Colors.bgElevated,
@@ -91,7 +91,7 @@ export const s = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.4,
   },
   tabTextActive: {
     color: Colors.text,
@@ -106,8 +106,8 @@ export const s = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
   },
   wideRow: {
     flex: 1,
