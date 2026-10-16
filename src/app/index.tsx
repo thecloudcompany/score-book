@@ -40,8 +40,6 @@ function formatTournamentStatus(status: Tournament['status']): string {
   switch (status) {
     case 'active':
       return 'Live';
-    case 'in_progress':
-      return 'In Progress';
     case 'completed':
       return 'Completed';
     case 'upcoming':

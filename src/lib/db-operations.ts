@@ -956,7 +956,7 @@ export function resetTournamentScores(
       const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
       for (const m of matches) {
         if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
-          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+          if (m.feedsIntoMatchId != null && m.feedsIntoSlot != null) {
             byeWinnersByConsumer.set(m.feedsIntoMatchId, {
               slot: m.feedsIntoSlot,
               winnerId: m.participantAId,
@@ -998,7 +998,7 @@ export function resetTournamentScores(
       const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
       for (const m of matches) {
         if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
-          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+          if (m.feedsIntoMatchId != null && m.feedsIntoSlot != null) {
             byeWinnersByConsumer.set(m.feedsIntoMatchId, {
               slot: m.feedsIntoSlot,
               winnerId: m.participantAId,
@@ -1040,7 +1040,7 @@ export function resetTournamentScores(
       const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
       for (const m of matches) {
         if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
-          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+          if (m.feedsIntoMatchId != null && m.feedsIntoSlot != null) {
             byeWinnersByConsumer.set(m.feedsIntoMatchId, {
               slot: m.feedsIntoSlot,
               winnerId: m.participantAId,
@@ -1082,7 +1082,7 @@ export function resetTournamentScores(
       const byeWinnersByConsumer = new Map<number, { slot: 'A' | 'B'; winnerId: number }>();
       for (const m of matches) {
         if (m.round === 1 && m.participantBId === null && m.participantAId !== null) {
-          if (m.feedsIntoMatchId !== null && m.feedsIntoSlot !== null) {
+          if (m.feedsIntoMatchId != null && m.feedsIntoSlot != null) {
             byeWinnersByConsumer.set(m.feedsIntoMatchId, {
               slot: m.feedsIntoSlot,
               winnerId: m.participantAId,

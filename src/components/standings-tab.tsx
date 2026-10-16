@@ -11,7 +11,7 @@ interface StandingsTabProps {
   participants: Participant[];
   matches: Match[];
   standings: LeaderboardEntry[];
-  captureRef: React.RefObject<View | null>;
+  captureRef: React.RefObject<React.ComponentRef<typeof View> | null>;
   getParticipantName: (id: number) => string;
 }
 

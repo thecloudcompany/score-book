@@ -50,12 +50,8 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider initialWindowMetrics={initialWindowMetrics}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <StatusBar barStyle="dark-content" />
       <View style={{ flex: 1, backgroundColor: Colors.bg }}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>

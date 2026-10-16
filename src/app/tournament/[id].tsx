@@ -54,7 +54,7 @@ export default function TournamentDetailScreen() {
   const [participantsVersion, setParticipantsVersion] = useState(0);
   const [settingsVersion, setSettingsVersion] = useState(0);
   const [shareError, setShareError] = useState('');
-  const standingsRef = useRef<View | null>(null);
+  const standingsRef = useRef<React.ComponentRef<typeof View> | null>(null);
   const isWide = useIsWideLayout();
 
   const { matches, units, participants, refresh: refreshMatches, updateScore } = useMatches(
