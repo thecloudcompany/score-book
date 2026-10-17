@@ -2,7 +2,7 @@
   "expo": {
     "name": "ScoreBook",
     "slug": "scorebook",
-    "version": "1.1",
+    "version": "1.1.1",
     "orientation": "default",
     "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
@@ -21,7 +21,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.moneshms.scorebook",
-      "versionCode": 6,
+      "versionCode": 8,
       "permissions": [],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"
