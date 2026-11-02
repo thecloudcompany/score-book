@@ -9,13 +9,16 @@ interface MatchRowProps {
   playerBDisplay: string;
   isBye: boolean;
   isLocked: boolean;
+  lockedNote?: string;
   preview: string | null;
   onPress: (matchId: number) => void;
 }
 
-function StatusDot({ status }: { status: MatchStatus }) {
-  return <View style={[s.statusDot, { backgroundColor: statusColor(status) }]} />;
-}
+const STATUS_LABEL: Record<MatchStatus, string> = {
+  upcoming: 'Not started',
+  in_progress: 'Live',
+  completed: 'Done',
+};
 
 export function MatchRow({
   match,
@@ -23,35 +26,39 @@ export function MatchRow({
   playerBDisplay,
   isBye,
   isLocked,
+  lockedNote = 'Winner already advanced',
   preview,
   onPress,
 }: MatchRowProps) {
   const isTBD =
     !isBye && (match.participantAId == null || match.participantBId == null);
   const isNonInteractive = isBye || isLocked || isTBD;
+  const note = isLocked ? lockedNote : isTBD ? 'Waiting for previous winners' : null;
 
   return (
     <TouchableOpacity
-      style={[s.row, isBye && s.rowBye, (isLocked || isTBD) && s.rowLocked]}
+      style={[s.row, isBye && s.rowBye]}
       onPress={() => !isNonInteractive && onPress(match.id)}
       activeOpacity={isNonInteractive ? 1 : 0.8}
       disabled={isNonInteractive}
       accessibilityRole="button"
-      accessibilityLabel={`${playerADisplay} versus ${playerBDisplay}, ${match.status}${isTBD ? ', waiting for previous winners' : ''}${isLocked ? ', locked' : ''}`}
+      accessibilityLabel={`${playerADisplay} against ${playerBDisplay}, ${STATUS_LABEL[match.status]}${note ? `, ${note}` : ''}`}
       accessibilityState={{ disabled: isNonInteractive }}
     >
-      <View style={s.left}>
-        <Text style={s.players}>
-          {playerADisplay}
-          <Text style={s.vs}> vs </Text>
-          <Text style={isBye ? s.byeText : s.tbdText}>{playerBDisplay}</Text>
+      <View style={s.players}>
+        <Text style={s.name} numberOfLines={1}>{playerADisplay}</Text>
+        <Text style={[s.name, (isBye || isTBD) && s.nameMuted]} numberOfLines={1}>
+          {playerBDisplay}
         </Text>
-        {isLocked && <Text style={s.lockedNote}>Winner already advanced — locked</Text>}
-        {isTBD && <Text style={s.lockedNote}>Waiting for previous winners</Text>}
-        {preview && <Text style={s.preview}>{preview}</Text>}
+        {note && <Text style={s.note}>{note}</Text>}
       </View>
-      <View accessibilityLabel={`Status: ${match.status}`} accessibilityRole="image">
-        <StatusDot status={match.status} />
+      <View style={s.side}>
+        {preview && <Text style={s.score}>{preview}</Text>}
+        {!isBye && (
+          <Text style={[s.status, { color: statusColor(match.status) }]}>
+            {STATUS_LABEL[match.status]}
+          </Text>
+        )}
       </View>
     </TouchableOpacity>
   );

@@ -3,6 +3,7 @@ import {
   getTournaments,
   createTournament as dbCreateTournament,
   deleteTournament as dbDeleteTournament,
+  deleteAllTournaments as dbDeleteAllTournaments,
   createParticipant,
   createBadmintonMatch,
   createTennisMatch,
@@ -278,11 +279,17 @@ export function useTournaments() {
     [refresh]
   );
 
+  const deleteAllTournaments = useCallback(() => {
+    dbDeleteAllTournaments();
+    refresh();
+  }, [refresh]);
+
   return {
     tournaments,
     loading,
     refresh,
     createTournament,
     deleteTournament,
+    deleteAllTournaments,
   };
 }

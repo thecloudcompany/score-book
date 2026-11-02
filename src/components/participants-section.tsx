@@ -110,11 +110,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: Font.semibold,
-    fontSize: 12,
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 10,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 8,
   },
   error: {
     fontFamily: Font.medium,

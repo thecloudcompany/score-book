@@ -14,14 +14,16 @@ import { useRouter } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
 import { ParticipantsSection } from '@/components/participants-section';
 import { ByeSection } from '@/components/bye-section';
-import { TournamentDetailsSection } from '@/components/tournament-details-section';
+import { TournamentDetailsSection, type PlayMode } from '@/components/tournament-details-section';
 import { ContentContainer } from '@/components/content-container';
+import { startPools } from '@/lib/pool-operations';
+import { defaultAdvancement } from '@/lib/pool-rules';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
 import { pickleballSport } from '@/lib/sports/pickleball';
 import { Font, Colors, Radius, Spacing } from '@/constants/theme';
-import type { SportType, TournamentType, ByeConfig } from '@/types';
+import type { SportType, ByeConfig } from '@/types';
 
 export default function CreateTournamentScreen() {
   const router = useRouter();
@@ -29,12 +31,12 @@ export default function CreateTournamentScreen() {
 
   const [name, setName] = useState('');
   const [sport, setSport] = useState<SportType>('badminton');
-  const [tournamentType, setTournamentType] = useState<TournamentType>('round_robin');
+  const [playMode, setPlayMode] = useState<PlayMode>('round_robin');
   const [byeMethod, setByeMethod] = useState<'random' | 'manual'>('random');
   const [selectedByeNames, setSelectedByeNames] = useState<string[]>([]);
   const [format, setFormat] = useState<Record<string, number>>({
     gamePoint: badmintonSport.defaultFormat.gamePoint,
-    bestOfGames: badmintonSport.defaultFormat.bestOfGames,
+    bestOfGames: 1,
   });
   const [participants, setParticipants] = useState<string[]>(['', '']);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -44,21 +46,21 @@ export default function CreateTournamentScreen() {
     if (newSport === 'badminton') {
       setFormat({
         gamePoint: badmintonSport.defaultFormat.gamePoint,
-        bestOfGames: badmintonSport.defaultFormat.bestOfGames,
+        bestOfGames: 1,
       });
     } else if (newSport === 'table_tennis') {
       setFormat({
         gamePoint: tableTennisSport.defaultFormat.gamePoint,
-        bestOfGames: tableTennisSport.defaultFormat.bestOfGames,
+        bestOfGames: 1,
       });
     } else if (newSport === 'pickleball') {
       setFormat({
         gamePoint: pickleballSport.defaultFormat.gamePoint,
-        bestOfGames: pickleballSport.defaultFormat.bestOfGames,
+        bestOfGames: 1,
       });
     } else {
       setFormat({
-        setsToWin: 3,
+        setsToWin: 1,
         gamesToWinPerSet: tennisSport.defaultFormat.gamesToWinPerSet,
       });
     }
@@ -68,27 +70,32 @@ export default function CreateTournamentScreen() {
     setParticipants((prev) => [...prev, '']);
   }, []);
 
+  // Groups only exist for badminton, so any other sport falls back to everyone-plays-everyone.
+  const effectiveMode: PlayMode = sport === 'badminton' ? playMode : playMode === 'groups' ? 'round_robin' : playMode;
+  const tournamentType = effectiveMode === 'knockout' ? 'knockout' : 'round_robin';
+
   const validParticipantCount = participants.filter((p) => p.trim().length > 0).length;
   const nextPowerOf2 = Math.pow(2, Math.ceil(Math.log2(validParticipantCount || 1)));
   const byesNeeded = nextPowerOf2 - validParticipantCount;
 
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = 'Required';
+    if (!name.trim()) newErrors.name = 'Please enter a name';
     const valid = participants.map((p) => p.trim()).filter((p) => p.length > 0);
-    if (valid.length < 2) newErrors.participants = 'Need at least 2 players';
-    if (new Set(valid).size !== valid.length) newErrors.participants = 'Names must be unique';
+    if (valid.length < 2) newErrors.participants = 'Add at least 2 players';
+    if (new Set(valid).size !== valid.length) newErrors.participants = 'Each player needs a different name';
+    if (effectiveMode === 'groups' && valid.length < 4) newErrors.participants = 'Groups need at least 4 players';
     if (
       tournamentType === 'knockout' &&
       byeMethod === 'manual' &&
       byesNeeded > 0 &&
       selectedByeNames.length !== byesNeeded
     ) {
-      newErrors.byes = `Select ${byesNeeded} bye${byesNeeded === 1 ? '' : 's'}`;
+      newErrors.byes = `Choose ${byesNeeded} player${byesNeeded === 1 ? '' : 's'} to skip the first round`;
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [name, participants, tournamentType, byeMethod, byesNeeded, selectedByeNames]);
+  }, [name, participants, effectiveMode, tournamentType, byeMethod, byesNeeded, selectedByeNames]);
 
   const removeParticipant = useCallback((index: number) => {
     setParticipants((prev) => {
@@ -136,12 +143,22 @@ export default function CreateTournamentScreen() {
     }
 
     try {
-      createTournament(name.trim(), sport, tournamentType, validParticipants, { ...defaultFormat, ...format }, byeConfig);
+      const tournament = createTournament(
+        name.trim(),
+        sport,
+        tournamentType,
+        validParticipants,
+        { ...defaultFormat, ...format },
+        byeConfig
+      );
+      if (effectiveMode === 'groups') {
+        startPools(tournament.id, defaultAdvancement(validParticipants.length));
+      }
       router.back();
     } catch (e) {
       setErrors({ form: e instanceof Error ? e.message : 'Could not create tournament' });
     }
-  }, [name, sport, tournamentType, byeMethod, selectedByeNames, format, participants, validate, createTournament, router]);
+  }, [name, sport, tournamentType, effectiveMode, byeMethod, selectedByeNames, format, participants, validate, createTournament, router]);
 
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -168,12 +185,12 @@ export default function CreateTournamentScreen() {
             <TournamentDetailsSection
               name={name}
               sport={sport}
-              tournamentType={tournamentType}
+              playMode={effectiveMode}
               format={format}
               errors={errors}
               onNameChange={setName}
               onSportChange={handleSetSport}
-              onTournamentTypeChange={setTournamentType}
+              onPlayModeChange={setPlayMode}
               onFormatChange={setFormat}
             />
 
@@ -207,7 +224,7 @@ export default function CreateTournamentScreen() {
         <View style={[styles.footer, { paddingHorizontal: horizontalPad, paddingBottom: Math.max(insets.bottom, 16) }]}>
           <ContentContainer>
             <TouchableOpacity style={styles.createBtn} onPress={handleCreate} activeOpacity={0.85}>
-              <Text style={styles.createBtnText}>Create Tournament</Text>
+              <Text style={styles.createBtnText}>Create tournament</Text>
             </TouchableOpacity>
           </ContentContainer>
         </View>

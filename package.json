@@ -14,6 +14,7 @@
     "expo-splash-screen": "~58.0.9",
     "expo-sqlite": "~58.0.13",
     "expo-system-ui": "^58.0.6",
+    "html2canvas-pro": "^2.4.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "~0.88.0",
@@ -42,7 +43,7 @@
     "lint": "oxlint .",
     "web:serve": "node scripts/serve-web.js",
     "web:export": "bunx expo export --platform web",
-    "build:andriod": "bunx expo prebuild --platform android",
+    "build:android": "bunx expo prebuild --platform android",
     "generate:android-icon": "bun scripts/generate-android-icon.js"
   },
   "private": true

@@ -1,4 +1,4 @@
-// Modern Light Theme — Sleek, minimal, sharp corners
+// Scoreboard theme: paper-white surfaces, near-black ink, one court-green accent.
 
 export const Font = {
   regular: 'Figtree_400Regular',
@@ -6,54 +6,42 @@ export const Font = {
   semibold: 'Figtree_600SemiBold',
   bold: 'Figtree_700Bold',
   extrabold: 'Figtree_800ExtraBold',
-  black: 'Figtree_900Black',
 };
 
 export const Colors = {
-  // Backgrounds
-  bg: '#F8FAFB',           // Page background — very subtle off-white
-  bgElevated: '#FFFFFF',   // Cards, sheets
-  surface: '#F3F5F6',      // Subtle elevated surfaces, inputs
-  surfaceHover: '#ECEFF1', // Hover states
+  // Surfaces
+  bg: '#F5F7F6',
+  bgElevated: '#FFFFFF',
+  surface: '#EEF2F1',
 
-  // Borders (thin, minimal)
-  border: '#DDE3E7',       // 1px dividers
-  borderLight: '#EBEFF2',  // Very subtle separators
+  // Lines
+  border: '#D5DEDB',
+  borderLight: '#E6ECEA',
 
-  // Text
-  text: '#14181F',         // Primary — near black
-  textSecondary: '#56616D', // Labels, secondary
-  textMuted: '#8792A0',    // Disabled, hints
-  textInverse: '#FFFFFF',  // On dark/colored bg
+  // Ink
+  text: '#111A18',
+  textSecondary: '#4B5A57',
+  textMuted: '#74837F',
+  textInverse: '#FFFFFF',
 
-  // Accents — refined teal/slate
-  primary: '#0B8F86',      // Teal — primary action
-  primaryMuted: 'rgba(11, 143, 134, 0.09)',
-  primaryDark: '#0A6F69',
+  // Accent: court green. Used for actions and live state only.
+  primary: '#0D7A6C',
+  primaryMuted: 'rgba(13, 122, 108, 0.10)',
 
-  // Status — refined, desaturated
-  success: '#059669',      // Completed
-  successMuted: 'rgba(5, 150, 105, 0.08)',
+  success: '#15803D',
 
-  warning: '#D97706',      // In progress
-  warningMuted: 'rgba(217, 119, 6, 0.08)',
 
-  info: '#2563EB',         // Upcoming / neutral
-  infoMuted: 'rgba(37, 99, 235, 0.08)',
 
-  danger: '#DC2626',       // Errors
+  danger: '#B42318',
 
-  // Overlays
-  overlay: 'rgba(0, 0, 0, 0.25)',
+  overlay: 'rgba(17, 26, 24, 0.35)',
 };
 
 export const Radius = {
-  none: 0,
-  xs: 2,
-  sm: 4,
-  md: 6,
-  lg: 8,
-  xl: 10,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
   full: 9999,
 };
 
@@ -67,16 +55,23 @@ export const Spacing = {
   xxxl: 32,
 };
 
+// Sentence-case text scale. Components should use these, not ad-hoc sizes.
+export const Type = {
+  title: 26,
+  section: 17,
+  body: 15,
+  meta: 13,
+};
+
 export function statusColor(status: string): string {
   switch (status) {
     case 'completed':
       return Colors.success;
     case 'in_progress':
-      return Colors.warning;
     case 'active':
       return Colors.primary;
     case 'upcoming':
     default:
-      return Colors.info;
+      return Colors.textMuted;
   }
 }

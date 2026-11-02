@@ -1,6 +1,6 @@
 import type { ByeConfig } from '@/types';
 
-export interface BracketMatch {
+interface BracketMatch {
   round: number;
   bracketPosition: number;
   participantAId: number | null;
@@ -9,7 +9,7 @@ export interface BracketMatch {
   feedsIntoSlot: 'A' | 'B' | null;
 }
 
-export interface BracketConfig {
+interface BracketConfig {
   participantIds: number[];
   byeMethod: 'random' | 'manual';
   manualByeIds?: number[];
@@ -177,6 +177,6 @@ export function getRoundName(round: number, totalRounds: number): string {
   if (roundsRemaining === 1) return 'Final';
   if (roundsRemaining === 2) return 'Semifinals';
   if (roundsRemaining === 3) return 'Quarterfinals';
-  
-  return `Round ${round}`;
+
+  return `Round of ${2 ** roundsRemaining}`;
 }

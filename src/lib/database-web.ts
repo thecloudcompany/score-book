@@ -183,6 +183,10 @@ class WebDatabase {
         this.tables['participants'] = (this.tables['participants'] || []).filter(
           (r) => r.tournament_id !== tid
         );
+        this.tables['pools'] = (this.tables['pools'] || []).filter((r) => r.tournament_id !== tid);
+        this.tables['qualifiers'] = (this.tables['qualifiers'] || []).filter(
+          (r) => r.tournament_id !== tid
+        );
         this.tables['badminton_matches'] = (this.tables['badminton_matches'] || []).filter(
           (r) => r.tournament_id !== tid
         );

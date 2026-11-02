@@ -3,15 +3,13 @@ import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 
 export const styles = StyleSheet.create({
   section: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.lg,
   },
   label: {
     fontFamily: Font.semibold,
-    fontSize: 12,
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 10,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 6,
   },
   input: {
     fontFamily: Font.regular,
@@ -37,14 +35,14 @@ export const styles = StyleSheet.create({
   sportRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
   },
   sportBtn: {
     flexBasis: '48%',
     flexGrow: 1,
     minWidth: 120,
     borderRadius: Radius.sm,
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -56,16 +54,6 @@ export const styles = StyleSheet.create({
   sportBtnActive: {
     backgroundColor: Colors.primaryMuted,
     borderColor: Colors.primary,
-  },
-  sportEmoji: {
-    fontSize: 22,
-    lineHeight: 26,
-    marginBottom: 6,
-  },
-  sportIcon: {
-    width: 26,
-    height: 26,
-    marginBottom: 6,
   },
   sportText: {
     fontFamily: Font.semibold,
@@ -82,7 +70,7 @@ export const styles = StyleSheet.create({
   },
   formatBtn: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 2,
     borderRadius: Radius.sm,
     backgroundColor: Colors.bgElevated,
@@ -143,15 +131,13 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  typeRow: {
-    flexDirection: 'row',
-    gap: 8,
+  optionList: {
+    gap: 6,
   },
-  typeBtn: {
-    flex: 1,
+  optionCard: {
     borderRadius: Radius.sm,
-    paddingVertical: 14,
-    paddingHorizontal: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -162,17 +148,10 @@ export const styles = StyleSheet.create({
   },
   typeText: {
     fontFamily: Font.semibold,
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
-    marginBottom: 3,
   },
   typeTextActive: {
     color: Colors.primary,
-  },
-  typeDescription: {
-    fontFamily: Font.regular,
-    fontSize: 12,
-    color: Colors.textMuted,
-    lineHeight: 16,
   },
 });

@@ -1,24 +1,25 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing } from '@/constants/theme';
+import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
+
+const numeric = { fontVariant: ['tabular-nums' as const] };
 
 export const s = StyleSheet.create({
   captureArea: {
     backgroundColor: Colors.bg,
-    padding: 4,
-    borderRadius: Radius.sm,
   },
   shareHeader: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   shareTitle: {
     fontFamily: Font.bold,
-    fontSize: 16,
+    fontSize: Type.section,
     color: Colors.text,
   },
   shareSubtitle: {
     fontFamily: Font.regular,
-    fontSize: 12,
+    fontSize: Type.meta,
     color: Colors.textMuted,
+    marginTop: 2,
   },
   empty: {
     alignItems: 'center',
@@ -27,83 +28,105 @@ export const s = StyleSheet.create({
   },
   emptyText: {
     fontFamily: Font.medium,
-    fontSize: 15,
+    fontSize: Type.body,
     color: Colors.textMuted,
   },
   tableCard: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.borderLight,
   },
   tableHeader: {
     flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 11,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 10,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    alignItems: 'center',
-  },
-  th: {
-    fontFamily: Font.semibold,
-    fontSize: 12,
-    color: Colors.textMuted,
   },
   tableRow: {
     flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 13,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    alignItems: 'center',
+  },
+  th: {
+    fontFamily: Font.semibold,
+    fontSize: Type.meta,
+    color: Colors.textSecondary,
   },
   td: {
     fontFamily: Font.medium,
-    fontSize: 14,
+    fontSize: Type.body,
     color: Colors.text,
+    ...numeric,
   },
   colRank: {
-    width: 28,
+    width: 40,
   },
   colPlayer: {
     flex: 1,
-    paddingRight: 6,
+    paddingRight: Spacing.sm,
   },
   colStat: {
-    width: 32,
-    textAlign: 'center',
+    width: 36,
+    textAlign: 'right',
   },
   colDiff: {
-    width: 44,
+    width: 52,
     textAlign: 'right',
+  },
+  colTag: {
+    width: 84,
+    textAlign: 'right',
+  },
+  tagText: {
+    fontFamily: Font.semibold,
+    fontSize: Type.meta,
+    color: Colors.textMuted,
+    textAlign: 'right',
+  },
+  tagQualified: {
+    color: Colors.primary,
+  },
+  poolSection: {
+    marginBottom: Spacing.xxl,
+  },
+  poolTitle: {
+    fontFamily: Font.bold,
+    fontSize: Type.section,
+    color: Colors.text,
+    marginBottom: Spacing.md,
   },
   knockoutSection: {
     marginBottom: Spacing.xl,
   },
   knockoutSectionTitle: {
-    fontFamily: Font.semibold,
-    fontSize: 11,
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 10,
+    fontFamily: Font.bold,
+    fontSize: Type.section,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
   },
   knockoutParticipantCard: {
     backgroundColor: Colors.bgElevated,
     borderRadius: Radius.sm,
-    padding: Spacing.md,
-    marginBottom: 6,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.borderLight,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
+    marginBottom: Spacing.sm,
   },
   knockoutParticipantCardEliminated: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
   knockoutParticipantName: {
-    fontFamily: Font.medium,
-    fontSize: 15,
+    fontFamily: Font.semibold,
+    fontSize: Type.body,
     color: Colors.text,
   },
 });

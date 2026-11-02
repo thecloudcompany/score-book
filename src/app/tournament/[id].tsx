@@ -8,8 +8,11 @@ import ScoreEntryModal from '@/components/score-entry-modal';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { MatchesTab } from '@/components/matches-tab';
 import { StandingsTab } from '@/components/standings-tab';
-import { SettingsTab } from '@/components/settings-tab';
+import { SettingsTab, type LateAdditionsState, type PoolSettingsActions } from '@/components/settings-tab';
+import { NextStepCard } from '@/components/next-step-card';
+import { nextStepFor } from '@/lib/next-step';
 import {
+  closeLateAdditions,
   getTournament,
   getParticipants,
   updateParticipantName,
@@ -19,9 +22,17 @@ import {
   hasTournamentScores,
   updateTournamentMaxScore,
 } from '@/lib/db-operations';
+import {
+  addLateParticipant,
+  lockKnockout,
+  previewKnockout,
+  startPools,
+  toggleLateAdditions,
+  updatePoolAdvancement,
+} from '@/lib/pool-operations';
+import { randomSeed } from '@/lib/rng';
 import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
-import { useIsWideLayout } from '@/hooks/use-layout';
 import { ContentContainer } from '@/components/content-container';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
@@ -32,13 +43,11 @@ import type { Tournament, Sport, MatchFormat } from '@/types';
 
 type TabType = 'matches' | 'standings' | 'settings';
 
-const TAB_META: Record<TabType, { emoji: string; label: string }> = {
-  matches: { emoji: '📋', label: 'Matches' },
-  standings: { emoji: '🏆', label: 'Standings' },
-  settings: { emoji: '⚙', label: 'Settings' },
-};
-
-const MATCH_CONTENT_MAX_WIDTH = 760;
+const TABS: { key: TabType; label: string }[] = [
+  { key: 'matches', label: 'Matches' },
+  { key: 'standings', label: 'Standings' },
+  { key: 'settings', label: 'Settings' },
+];
 
 export default function TournamentDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -55,14 +64,16 @@ export default function TournamentDetailScreen() {
   const [settingsVersion, setSettingsVersion] = useState(0);
   const [shareError, setShareError] = useState('');
   const standingsRef = useRef<React.ComponentRef<typeof View> | null>(null);
-  const isWide = useIsWideLayout();
+
+  const [drawPreview, setDrawPreview] = useState<{ seed: number; order: number[]; signature: string } | null>(null);
+  const [actionError, setActionError] = useState('');
 
   const { matches, units, participants, refresh: refreshMatches, updateScore } = useMatches(
     tournamentId,
     tournament?.sport ?? 'badminton',
-    tournament?.type ?? 'round_robin'
+    tournament?.stage ?? null
   );
-  const { standings, refresh: refreshStandings } = useStandings(
+  const { standings, poolViews, qualifiers, refresh: refreshStandings } = useStandings(
     tournamentId,
     tournament?.sport ?? 'badminton'
   );
@@ -96,6 +107,128 @@ export default function TournamentDetailScreen() {
     (pid: number) => participants.find((p) => p.id === pid)?.name ?? 'Unknown',
     [participants]
   );
+
+  const refreshAll = useCallback(() => {
+    setTournament(getTournament(tournamentId));
+    setParticipantsVersion((v) => v + 1);
+    refreshMatches();
+    refreshStandings();
+  }, [tournamentId, refreshMatches, refreshStandings]);
+
+  const poolMatches = matches.filter((m) => m.poolId != null);
+  // A draw is only valid for the pool results it was made from.
+  const knockoutSettings = [tournament?.startingSlots, tournament?.qualifiersPerPool, tournament?.wildcardMetric].join('/');
+  const poolSignature = knockoutSettings + '#' + poolMatches
+    .map((m) => {
+      const scores = (units[m.id] ?? []).map((u: any) => `${u.scoreA}-${u.scoreB}`).join('|');
+      return `${m.id}:${m.winnerId ?? ''}:${scores}`;
+    })
+    .join(',');
+  const drawActive = drawPreview !== null && drawPreview.signature === poolSignature ? drawPreview : null;
+  const drawPairs = drawActive
+    ? Array.from({ length: drawActive.order.length / 2 }, (_, i) => [
+        getParticipantName(drawActive.order[2 * i]),
+        getParticipantName(drawActive.order[2 * i + 1]),
+      ] as [string, string])
+    : null;
+
+  const drawKnockoutPreview = useCallback(
+    (seed: number) => {
+      try {
+        const preview = previewKnockout(tournamentId, seed);
+        setDrawPreview({ seed, order: preview.order, signature: poolSignature });
+        setActionError('');
+      } catch (e) {
+        setActionError(e instanceof Error ? e.message : 'Could not draw the knockout');
+      }
+    },
+    [tournamentId, poolSignature]
+  );
+
+  const handleLockKnockout = useCallback(() => {
+    if (!drawActive) return;
+    try {
+      lockKnockout(tournamentId, drawActive.seed);
+      setDrawPreview(null);
+      setActionError('');
+      refreshAll();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Could not lock the bracket');
+    }
+  }, [tournamentId, drawActive, refreshAll]);
+
+  const handleToggleLateAdditions = useCallback(
+    (enabled: boolean) => {
+      try {
+        toggleLateAdditions(tournamentId, enabled);
+        setActionError('');
+      } catch (e) {
+        setActionError(e instanceof Error ? e.message : 'Could not change late additions');
+      }
+      refreshAll();
+    },
+    [tournamentId, refreshAll]
+  );
+
+  const handleAddLatePlayer = useCallback(
+    (name: string): string | null => {
+      try {
+        addLateParticipant(tournamentId, name);
+        refreshAll();
+        return null;
+      } catch (e) {
+        return e instanceof Error ? e.message : 'Could not add player';
+      }
+    },
+    [tournamentId, refreshAll]
+  );
+
+  const handleEndLateAdditions = useCallback(() => {
+    closeLateAdditions(tournamentId);
+    refreshAll();
+  }, [tournamentId, refreshAll]);
+
+  const handleStartPools = useCallback(
+    (settings: Parameters<typeof startPools>[1]): string | null => {
+      try {
+        startPools(tournamentId, settings);
+        setActionError('');
+        refreshAll();
+        return null;
+      } catch (e) {
+        return e instanceof Error ? e.message : 'Could not start pools';
+      }
+    },
+    [tournamentId, refreshAll]
+  );
+
+  const handleUpdateAdvancement = useCallback(
+    (patch: Parameters<typeof updatePoolAdvancement>[1]): string | null => {
+      try {
+        updatePoolAdvancement(tournamentId, patch);
+        refreshAll();
+        return null;
+      } catch (e) {
+        return e instanceof Error ? e.message : 'Could not update pools';
+      }
+    },
+    [tournamentId, refreshAll]
+  );
+
+  const poolSettingsActions: PoolSettingsActions | null =
+    tournament && tournament.type === 'round_robin' && tournament.sport === 'badminton'
+      ? { onStartPools: handleStartPools, onUpdateAdvancement: handleUpdateAdvancement }
+      : null;
+
+  const lateAdditions: LateAdditionsState | null =
+    tournament && tournament.type === 'round_robin' && tournament.sport === 'badminton'
+      ? {
+          enabled: Boolean(tournament.lateAdditionsEnabled),
+          closed: Boolean(tournament.lateAdditionsClosed) || tournament.stage === 'knockout',
+          closedNote: tournament.stage === 'knockout' ? 'Closed — the knockout is set' : 'Closed',
+          canClose: tournament.stage !== 'pools',
+        }
+      : null;
 
   const handleMatchPress = useCallback((matchId: number) => {
     setSelectedMatchId(matchId);
@@ -148,8 +281,9 @@ export default function TournamentDetailScreen() {
     if (!tournament) return;
     setDeleteDialogVisible(false);
     deleteTournament(tournament.id);
-    router.back();
-  }, [tournament, router, deleteTournament]);
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  }, [tournament, router]);
 
   const tournamentName = tournament?.name ?? 'tournament';
 
@@ -190,6 +324,18 @@ export default function TournamentDetailScreen() {
     }
   }, [tournamentName]);
 
+  const nextStep = tournament
+    ? nextStepFor({
+        tournamentType: tournament.type ?? 'round_robin',
+        stage: tournament.stage,
+        matches,
+        drawPairs,
+        getName: getParticipantName,
+        onDraw: () => drawKnockoutPreview(randomSeed()),
+        onLock: handleLockKnockout,
+      })
+    : null;
+
   const renderActiveTab = () => {
     if (activeTab === 'matches') {
       return (
@@ -198,6 +344,8 @@ export default function TournamentDetailScreen() {
           matches={matches}
           units={units}
           sport={tournament!.sport ?? 'badminton'}
+          pools={poolViews.map((view) => view.pool)}
+          poolsLocked={tournament!.stage === 'knockout'}
           getParticipantName={getParticipantName}
           onMatchPress={handleMatchPress}
         />
@@ -211,6 +359,8 @@ export default function TournamentDetailScreen() {
           participants={fullParticipants}
           matches={matches}
           standings={standings}
+          poolViews={poolViews}
+          qualifiers={qualifiers}
           captureRef={standingsRef}
           getParticipantName={getParticipantName}
         />
@@ -222,12 +372,18 @@ export default function TournamentDetailScreen() {
         participants={fullParticipants}
         maxScore={maxScore}
         hasScores={hasScores}
+        poolSettings={poolSettingsActions}
+        lateAdditions={lateAdditions}
+        pools={poolViews.map((view) => view.pool)}
         onRenameTournament={(name) => {
           updateTournamentName(tournament!.id, name);
           handleRenameTournament(name);
         }}
         onRenameParticipant={handleRenameParticipant}
         onUpdateMaxScore={handleUpdateMaxScore}
+        onToggleLateAdditions={handleToggleLateAdditions}
+        onAddLatePlayer={handleAddLatePlayer}
+        onEndLateAdditions={handleEndLateAdditions}
         onDeletePress={handleDeleteTournament}
       />
     );
@@ -258,65 +414,47 @@ export default function TournamentDetailScreen() {
         </Text>
         {activeTab === 'standings' && standings.length > 0 ? (
           <TouchableOpacity onPress={handleShare} activeOpacity={0.7} style={s.headerAction} accessibilityLabel="Share standings" accessibilityRole="button">
-            <Text style={s.headerActionText}>📤</Text>
+            <Text style={s.headerActionText}>Share</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ minWidth: 48 }} />
         )}
       </View>
-      {shareError !== '' && <Text style={s.shareError}>{shareError}</Text>}
+      {(shareError || actionError) !== '' && <Text style={s.shareError}>{shareError || actionError}</Text>}
 
-      {isWide ? (
-        <View style={s.wideRow}>
-          <View style={s.sideRail}>
-            {(['matches', 'standings', 'settings'] as TabType[]).map((tab) => {
-              const meta = TAB_META[tab];
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  style={s.railItem}
-                  onPress={() => setActiveTab(tab)}
-                  activeOpacity={0.7}
-                >
-                  {activeTab === tab && <View style={s.railIndicator} />}
-                  <Text style={s.railEmoji}>{meta.emoji}</Text>
-                  <Text style={[s.railLabel, activeTab === tab && s.railLabelActive]}>
-                    {meta.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <ContentContainer maxWidth={MATCH_CONTENT_MAX_WIDTH} style={s.contentWide}>
-            {renderActiveTab()}
+      {nextStep && (
+        <View style={s.nextStepWrap}>
+          <ContentContainer>
+            <NextStepCard {...nextStep} />
           </ContentContainer>
         </View>
-      ) : (
-        <>
-          <View style={s.tabBar}>
-            {(['matches', 'standings', 'settings'] as TabType[]).map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                style={s.tab}
-                onPress={() => setActiveTab(tab)}
-                activeOpacity={0.7}
-              >
-                <Text style={[s.tabText, activeTab === tab && s.tabTextActive]}>
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </Text>
-                {activeTab === tab && <View style={s.tabIndicator} />}
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <View style={s.content}>
-            <ContentContainer>
-              {renderActiveTab()}
-            </ContentContainer>
-          </View>
-        </>
       )}
+
+      <View style={s.segmentWrap}>
+        <View style={s.segmented} accessibilityRole="tablist">
+          {TABS.map((tab) => {
+            const active = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[s.segment, active && s.segmentActive]}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.8}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[s.segmentText, active && s.segmentTextActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={s.content}>
+        <ContentContainer style={s.fill}>
+          {renderActiveTab()}
+        </ContentContainer>
+      </View>
 
       {scoreModalVisible && selectedMatchId != null && (() => {
         const match = matches.find((m) => m.id === selectedMatchId);

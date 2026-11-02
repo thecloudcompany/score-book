@@ -1,28 +1,26 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing } from '@/constants/theme';
+import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   section: {
     marginBottom: Spacing.xxl,
   },
   sectionTitle: {
-    fontFamily: Font.semibold,
-    fontSize: 11,
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: 12,
+    fontFamily: Font.bold,
+    fontSize: Type.section,
+    color: Colors.text,
+    marginBottom: Spacing.md,
   },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.bg,
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
   searchInput: {
     flex: 1,
     fontFamily: Font.regular,
-    fontSize: 15,
+    fontSize: Type.body,
     color: Colors.text,
     backgroundColor: Colors.bgElevated,
     borderRadius: Radius.sm,
@@ -33,23 +31,22 @@ export const s = StyleSheet.create({
     outlineColor: Colors.primary,
   },
   searchClear: {
-    width: 36,
-    height: 36,
-    marginLeft: 8,
+    width: 40,
+    height: 40,
+    marginLeft: Spacing.sm,
     borderRadius: Radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.surface,
   },
   searchClearText: {
-    fontFamily: Font.medium,
-    fontSize: 13,
-    lineHeight: 15,
+    fontFamily: Font.semibold,
+    fontSize: Type.meta,
     color: Colors.textSecondary,
   },
   emptyText: {
     fontFamily: Font.regular,
-    fontSize: 14,
+    fontSize: Type.body,
     color: Colors.textMuted,
     textAlign: 'center',
     paddingVertical: Spacing.xl,

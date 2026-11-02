@@ -1,8 +1,16 @@
 import { useState, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { styles } from './tournament-details-section.styles';
-import type { SportType, TournamentType } from '@/types';
+import type { SportType } from '@/types';
+
+export type PlayMode = 'round_robin' | 'knockout' | 'groups';
+
+const PLAY_MODES: { value: PlayMode; title: string; badmintonOnly?: boolean }[] = [
+  { value: 'round_robin', title: 'Everyone plays everyone' },
+  { value: 'knockout', title: 'Knockout' },
+  { value: 'groups', title: 'Groups, then knockout', badmintonOnly: true },
+];
 
 function NumberInput({
   value,
@@ -51,24 +59,24 @@ function NumberInput({
 interface TournamentDetailsSectionProps {
   name: string;
   sport: SportType;
-  tournamentType: TournamentType;
+  playMode: PlayMode;
   format: Record<string, number>;
   errors: Record<string, string>;
   onNameChange: (name: string) => void;
   onSportChange: (sport: SportType) => void;
-  onTournamentTypeChange: (type: TournamentType) => void;
+  onPlayModeChange: (mode: PlayMode) => void;
   onFormatChange: (format: Record<string, number>) => void;
 }
 
 export function TournamentDetailsSection({
   name,
   sport,
-  tournamentType,
+  playMode,
   format,
   errors,
   onNameChange,
   onSportChange,
-  onTournamentTypeChange,
+  onPlayModeChange,
   onFormatChange,
 }: TournamentDetailsSectionProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -76,19 +84,20 @@ export function TournamentDetailsSection({
   const formatKey = sport === 'tennis' ? 'setsToWin' : 'bestOfGames';
   const currentFormat = format[formatKey] ?? 3;
   const formatLabel = (num: number) => {
-    if (num === 1) return 'Single';
+    if (num === 1) return 'Just one';
     return `Best of ${num}`;
   };
+  const visibleModes = PLAY_MODES.filter((mode) => !mode.badmintonOnly || sport === 'badminton');
 
   return (
     <>
       <View style={styles.section}>
-        <Text style={styles.label}>Name</Text>
+        <Text style={styles.label}>Tournament name</Text>
         <TextInput
           style={[styles.input, errors.name && styles.inputError]}
           value={name}
           onChangeText={onNameChange}
-          placeholder="Weekend Smash"
+          placeholder="e.g. Sunday Badminton"
           placeholderTextColor={Colors.textMuted}
           selectionColor={Colors.primary}
         />
@@ -103,7 +112,6 @@ export function TournamentDetailsSection({
             onPress={() => onSportChange('badminton')}
             activeOpacity={0.8}
           >
-            <Text style={styles.sportEmoji}>🏸</Text>
             <Text style={[styles.sportText, sport === 'badminton' && styles.sportTextActive]} numberOfLines={1}>
               Badminton
             </Text>
@@ -113,7 +121,6 @@ export function TournamentDetailsSection({
             onPress={() => onSportChange('tennis')}
             activeOpacity={0.8}
           >
-            <Text style={styles.sportEmoji}>🎾</Text>
             <Text style={[styles.sportText, sport === 'tennis' && styles.sportTextActive]} numberOfLines={1}>
               Tennis
             </Text>
@@ -123,9 +130,8 @@ export function TournamentDetailsSection({
             onPress={() => onSportChange('table_tennis')}
             activeOpacity={0.8}
           >
-            <Text style={styles.sportEmoji}>🏓</Text>
             <Text style={[styles.sportText, sport === 'table_tennis' && styles.sportTextActive]} numberOfLines={1}>
-              Table Tennis
+              Table tennis
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -133,11 +139,6 @@ export function TournamentDetailsSection({
             onPress={() => onSportChange('pickleball')}
             activeOpacity={0.8}
           >
-            <Image
-              source={require('../../assets/images/pickleball.png')}
-              style={styles.sportIcon}
-              resizeMode="contain"
-            />
             <Text style={[styles.sportText, sport === 'pickleball' && styles.sportTextActive]} numberOfLines={1}>
               Pickleball
             </Text>
@@ -146,33 +147,28 @@ export function TournamentDetailsSection({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Tournament Type</Text>
-        <View style={styles.typeRow}>
-          <TouchableOpacity
-            style={[styles.typeBtn, tournamentType === 'round_robin' && styles.typeBtnActive]}
-            onPress={() => onTournamentTypeChange('round_robin')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.typeText, tournamentType === 'round_robin' && styles.typeTextActive]}>
-              Round-Robin
-            </Text>
-            <Text style={styles.typeDescription}>Everyone plays everyone</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.typeBtn, tournamentType === 'knockout' && styles.typeBtnActive]}
-            onPress={() => onTournamentTypeChange('knockout')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.typeText, tournamentType === 'knockout' && styles.typeTextActive]}>
-              Knockout
-            </Text>
-            <Text style={styles.typeDescription}>Single elimination</Text>
-          </TouchableOpacity>
+        <Text style={styles.label}>How will it be played?</Text>
+        <View style={styles.optionList}>
+          {visibleModes.map((mode) => {
+            const active = playMode === mode.value;
+            return (
+              <TouchableOpacity
+                key={mode.value}
+                style={[styles.optionCard, active && styles.typeBtnActive]}
+                onPress={() => onPlayModeChange(mode.value)}
+                activeOpacity={0.8}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.typeText, active && styles.typeTextActive]}>{mode.title}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>{sport === 'tennis' ? 'Sets to win' : 'Games to win'}</Text>
+        <Text style={styles.label}>{sport === 'tennis' ? 'Sets in a match' : 'Games in a match'}</Text>
         <View style={styles.formatRow}>
           {formatOptions.map((num) => (
             <TouchableOpacity
@@ -200,7 +196,7 @@ export function TournamentDetailsSection({
         activeOpacity={0.7}
       >
         <Text style={styles.advancedText}>
-          {showAdvanced ? 'Hide Advanced' : 'Advanced Options'}
+          {showAdvanced ? 'Hide points setting' : 'Change points to win'}
         </Text>
         <Text style={styles.advancedArrow}>{showAdvanced ? '▼' : '▶'}</Text>
       </TouchableOpacity>

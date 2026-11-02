@@ -115,7 +115,7 @@ export default function ScoreEntryModal({
               <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
                 <Text style={s.closeText}>Close</Text>
               </TouchableOpacity>
-              <Text style={s.headerTitle}>Score Entry</Text>
+              <Text style={s.headerTitle}>Score</Text>
               <View style={{ width: 50 }} />
             </View>
 
@@ -147,7 +147,7 @@ export default function ScoreEntryModal({
                         {unitLabel} {u.unitNumber}
                       </Text>
                       <Text style={[s.unitScore, isEditing && s.unitScoreActive]}>
-                        {u.scoreA != null && u.scoreB !== null
+                        {u.scoreA != null && u.scoreB != null
                           ? `${u.scoreA} - ${u.scoreB}`
                           : '—'}
                       </Text>
@@ -161,7 +161,7 @@ export default function ScoreEntryModal({
             {currentUnit && (
               <View style={s.inputBox}>
                 <Text style={s.inputLabel}>
-                  {editingUnitNumber != null ? 'Edit' : 'Enter'} {unitLabel} {currentUnit.unitNumber}
+                  {editingUnitNumber != null ? 'Edit' : 'Enter'} {unitLabel.toLowerCase()} {currentUnit.unitNumber}
                 </Text>
                 <View style={s.inputsRow}>
                   <TextInput

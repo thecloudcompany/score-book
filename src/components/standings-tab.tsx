@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { calculateKnockoutStandings } from '@/lib/knockout-standings';
 import { getRoundName } from '@/lib/bracket-generator';
+import type { PoolView } from '@/lib/pool-operations';
 import { Font, Colors } from '@/constants/theme';
 import { s } from './standings-tab.styles';
-import type { Participant, Match, TournamentType, LeaderboardEntry } from '@/types';
+import type { Participant, Match, TournamentType, LeaderboardEntry, QualifierRecord } from '@/types';
 
 interface StandingsTabProps {
   tournamentType: TournamentType;
@@ -11,11 +13,11 @@ interface StandingsTabProps {
   participants: Participant[];
   matches: Match[];
   standings: LeaderboardEntry[];
+  poolViews: PoolView[];
+  qualifiers: QualifierRecord[];
   captureRef: React.RefObject<React.ComponentRef<typeof View> | null>;
   getParticipantName: (id: number) => string;
 }
-
-const capturedAt = new Date().toLocaleString();
 
 export function StandingsTab({
   tournamentType,
@@ -23,64 +25,148 @@ export function StandingsTab({
   participants,
   matches,
   standings,
+  poolViews,
+  qualifiers,
   captureRef,
   getParticipantName,
 }: StandingsTabProps) {
+  const [viewedAt] = useState(() => new Date().toLocaleString());
   const shareHeader = (
     <View style={s.shareHeader}>
-      <Text style={s.shareTitle}>{tournamentName} — Standings</Text>
-      <Text style={s.shareSubtitle}>{capturedAt}</Text>
+      <Text style={s.shareTitle}>{tournamentName}</Text>
+      <Text style={s.shareSubtitle}>Standings, {viewedAt}</Text>
     </View>
   );
+
+  const renderKnockout = (knockoutMatches: Match[], knockoutParticipants: Participant[]) => {
+    const knockoutStandings = calculateKnockoutStandings(knockoutParticipants, knockoutMatches);
+    const totalRounds = Math.max(...knockoutMatches.map((m) => m.round || 1), 1);
+
+    return (
+      <>
+        {knockoutStandings.champion !== null && (
+          <View style={s.knockoutSection}>
+            <Text style={s.knockoutSectionTitle}>Champion</Text>
+            <View style={s.knockoutParticipantCard}>
+              <Text style={s.knockoutParticipantName}>
+                {getParticipantName(knockoutStandings.champion)}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {knockoutStandings.stillCompeting.length > 0 && (
+          <View style={s.knockoutSection}>
+            <Text style={s.knockoutSectionTitle}>
+              Still Competing ({knockoutStandings.stillCompeting.length})
+            </Text>
+            {knockoutStandings.stillCompeting.map((p) => (
+              <View key={p.id} style={s.knockoutParticipantCard}>
+                <Text style={s.knockoutParticipantName}>{p.name}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {Array.from(knockoutStandings.eliminatedByRound.entries())
+          .sort((a, b) => b[0] - a[0])
+          .map(([round, eliminatedParticipants]) => (
+            <View key={round} style={s.knockoutSection}>
+              <Text style={s.knockoutSectionTitle}>
+                Eliminated in {getRoundName(round, totalRounds)} ({eliminatedParticipants.length})
+              </Text>
+              {eliminatedParticipants.map((p) => (
+                <View
+                  key={p.id}
+                  style={[s.knockoutParticipantCard, s.knockoutParticipantCardEliminated]}
+                >
+                  <Text style={s.knockoutParticipantName}>{p.name}</Text>
+                </View>
+              ))}
+            </View>
+          ))}
+      </>
+    );
+  };
+
   if (tournamentType === 'knockout') {
-    const knockoutStandings = calculateKnockoutStandings(participants, matches);
-    const totalRounds = Math.max(...matches.map((m) => m.round || 1), 1);
+    return (
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        <View ref={captureRef} style={s.captureArea}>
+          {shareHeader}
+          {renderKnockout(matches, participants)}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (poolViews.length > 0) {
+    const knockoutMatches = matches.filter((m) => m.poolId == null);
+    const qualifiedIds = new Set(qualifiers.map((q) => q.participantId));
+    const qualifiedParticipants = participants.filter((p) => qualifiedIds.has(p.id));
+    const isLocked = qualifiers.length > 0;
 
     return (
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         <View ref={captureRef} style={s.captureArea}>
           {shareHeader}
-          {knockoutStandings.champion !== null && (
-            <View style={s.knockoutSection}>
-              <Text style={s.knockoutSectionTitle}>🏆 Champion</Text>
-              <View style={s.knockoutParticipantCard}>
-                <Text style={s.knockoutParticipantName}>
-                  {getParticipantName(knockoutStandings.champion)}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {knockoutStandings.stillCompeting.length > 0 && (
-            <View style={s.knockoutSection}>
-              <Text style={s.knockoutSectionTitle}>
-                Still Competing ({knockoutStandings.stillCompeting.length})
-              </Text>
-              {knockoutStandings.stillCompeting.map((p) => (
-                <View key={p.id} style={s.knockoutParticipantCard}>
-                  <Text style={s.knockoutParticipantName}>{p.name}</Text>
+          {poolViews.map(({ pool, rows }) => (
+            <View key={pool.id} style={s.poolSection}>
+              <Text style={s.poolTitle}>{pool.name}</Text>
+              <View style={s.tableCard}>
+                <View style={s.tableHeader}>
+                  <Text style={[s.th, s.colRank]}>#</Text>
+                  <Text style={[s.th, s.colPlayer]}>Player</Text>
+                  <Text style={[s.th, s.colStat]}>P</Text>
+                  <Text style={[s.th, s.colStat]}>W</Text>
+                  <Text style={[s.th, s.colStat]}>L</Text>
+                  <Text style={[s.th, s.colDiff]}>Diff</Text>
+                  <Text style={[s.th, s.colTag]}></Text>
                 </View>
-              ))}
-            </View>
-          )}
-
-          {Array.from(knockoutStandings.eliminatedByRound.entries())
-            .sort((a, b) => b[0] - a[0])
-            .map(([round, eliminatedParticipants]) => (
-              <View key={round} style={s.knockoutSection}>
-                <Text style={s.knockoutSectionTitle}>
-                  Eliminated in {getRoundName(round, totalRounds)} ({eliminatedParticipants.length})
-                </Text>
-                {eliminatedParticipants.map((p) => (
-                  <View
-                    key={p.id}
-                    style={[s.knockoutParticipantCard, s.knockoutParticipantCardEliminated]}
-                  >
-                    <Text style={s.knockoutParticipantName}>{p.name}</Text>
-                  </View>
-                ))}
+                {rows.map((row) => {
+                  const qualifier = qualifiers.find((q) => q.participantId === row.participantId);
+                  const tag = !isLocked
+                    ? ''
+                    : qualifier?.source === 'direct'
+                      ? 'Goes through'
+                      : qualifier
+                        ? 'Best runner-up'
+                        : 'Out';
+                  return (
+                    <View key={row.participantId} style={s.tableRow}>
+                      <Text style={[s.td, s.colRank, { fontFamily: Font.extrabold }]}>{row.rank}</Text>
+                      <Text style={[s.td, s.colPlayer]} numberOfLines={1}>
+                        {getParticipantName(row.participantId)}
+                      </Text>
+                      <Text style={[s.td, s.colStat]}>{row.played}</Text>
+                      <Text style={[s.td, s.colStat]}>{row.wins}</Text>
+                      <Text style={[s.td, s.colStat]}>{row.losses}</Text>
+                      <Text
+                        style={[
+                          s.td,
+                          s.colDiff,
+                          row.pointDiff > 0 && { color: Colors.success },
+                          row.pointDiff < 0 && { color: Colors.danger },
+                        ]}
+                      >
+                        {row.pointDiff > 0 ? `+${row.pointDiff}` : row.pointDiff}
+                      </Text>
+                      <Text
+                        style={[
+                          s.tagText,
+                          s.colTag,
+                          (tag === 'Goes through' || tag === 'Best runner-up') && s.tagQualified,
+                        ]}
+                      >
+                        {tag}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
-            ))}
+            </View>
+          ))}
+          {knockoutMatches.length > 0 && renderKnockout(knockoutMatches, qualifiedParticipants)}
         </View>
       </ScrollView>
     );

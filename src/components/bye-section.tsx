@@ -103,10 +103,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: Font.semibold,
-    fontSize: 12,
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    fontSize: 13,
+    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
   },
   byeInfo: {

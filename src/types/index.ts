@@ -6,6 +6,10 @@ export type TournamentStatus = 'upcoming' | 'active' | 'completed';
 
 export type MatchStatus = 'upcoming' | 'in_progress' | 'completed';
 
+export type WildcardMetric = 'win_rate' | 'point_diff_per_match';
+
+export type PoolStage = 'pools' | 'knockout';
+
 export interface Tournament {
   id: number;
   name: string;
@@ -14,6 +18,30 @@ export interface Tournament {
   status: TournamentStatus;
   createdAt: number;
   updatedAt: number;
+  // Pool stage (round robin pools → knockout). Null for tournaments without pools.
+  poolCount?: number | null;
+  startingSlots?: number | null;
+  qualifiersPerPool?: number | null;
+  wildcardMetric?: WildcardMetric | null;
+  lateAdditionsEnabled?: boolean;
+  lateAdditionsClosed?: boolean;
+  stage?: PoolStage | null;
+  poolSeed?: number | null;
+  bracketSeed?: number | null;
+}
+
+export interface Pool {
+  id: number;
+  tournamentId: number;
+  position: number;
+  name: string;
+}
+
+export interface QualifierRecord {
+  participantId: number;
+  poolId: number;
+  poolRank: number;
+  source: 'direct' | 'wildcard';
 }
 
 export interface Participant {
@@ -21,9 +49,10 @@ export interface Participant {
   tournamentId: number;
   name: string;
   createdAt: number;
+  poolId?: number | null;
 }
 
-export interface BaseMatch {
+interface BaseMatch {
   id: number;
   tournamentId: number;
   participantAId: number | null; // null = TBD in later knockout rounds
@@ -31,6 +60,8 @@ export interface BaseMatch {
   status: MatchStatus;
   winnerId: number | null;
   createdAt: number;
+  // Pool stage: set on pool matches, null on knockout matches
+  poolId?: number | null;
   // Knockout bracket fields
   round?: number;
   bracketPosition?: number;

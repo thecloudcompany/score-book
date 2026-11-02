@@ -27,9 +27,9 @@ import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
 import { pickleballSport } from '@/lib/sports/pickleball';
-import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, MatchStatus, SportType, TournamentType } from '@/types';
+import type { BadmintonMatch, BadmintonGame, TennisMatch, TennisSet, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, MatchStatus, SportType, PoolStage } from '@/types';
 
-export function useMatches(tournamentId: number, sport: SportType, tournamentType: TournamentType = 'round_robin') {
+export function useMatches(tournamentId: number, sport: SportType, stage: PoolStage | null = null) {
   const [matches, setMatches] = useState<(BadmintonMatch | TennisMatch | TableTennisMatch | PickleballMatch)[]>([]);
   const [units, setUnits] = useState<Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[] | PickleballGame[]>>({});
   const [participants, setParticipants] = useState<{ id: number; name: string }[]>([]);
@@ -79,6 +79,9 @@ export function useMatches(tournamentId: number, sport: SportType, tournamentTyp
 
   const updateScore = useCallback(
     (matchId: number, unitNumber: number, scoreA: number | null, scoreB: number | null) => {
+      // Pool results are final once the knockout is set.
+      if (stage === 'knockout' && matches.find((m) => m.id === matchId)?.poolId != null) return;
+
       if (sport === 'badminton') {
         updateBadmintonGame(matchId, unitNumber, scoreA, scoreB);
       } else if (sport === 'tennis') {
@@ -173,7 +176,7 @@ export function useMatches(tournamentId: number, sport: SportType, tournamentTyp
 
       // Handle knockout progression — advance on completion, retract when the
       // upstream winner changes (including to no winner).
-      if (tournamentType === 'knockout') {
+      if (currentMatch.feedsIntoMatchId != null) {
         const feedsIntoMatchId = currentMatch.feedsIntoMatchId;
         const feedsIntoSlot = currentMatch.feedsIntoSlot;
 
@@ -214,18 +217,20 @@ export function useMatches(tournamentId: number, sport: SportType, tournamentTyp
         updateTournamentStatus(tournamentId, 'active');
       }
 
-      // Check if all matches are completed — if so, mark tournament as completed
-      const allMatchStatuses = matches.map((m) =>
+      // Check if all knockout/round-robin matches are completed. Pool matches
+      // don't finish the tournament: the knockout does.
+      const scoped = matches.filter((m) => m.poolId == null);
+      const allMatchStatuses = scoped.map((m) =>
         m.id === matchId ? newStatus : m.status
       );
       const allCompleted = allMatchStatuses.every((s) => s === 'completed');
-      if (allCompleted && matches.length > 0) {
+      if (allCompleted && scoped.length > 0) {
         updateTournamentStatus(tournamentId, 'completed');
       }
 
       refresh();
     },
-    [matches, sport, tournamentId, tournamentType, refresh]
+    [matches, sport, tournamentId, stage, refresh]
   );
 
   return { matches, units, participants, refresh, updateScore };

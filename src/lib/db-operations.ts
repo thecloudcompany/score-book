@@ -12,9 +12,23 @@ import type {
   PickleballGame,
   SportType,
   TournamentType,
+  Pool,
+  QualifierRecord,
+  WildcardMetric,
 } from '@/types';
 
 // ─── Tournaments ─────────────────────────────────────────────────────────────
+
+const TOURNAMENT_COLUMNS =
+  'id, name, sport, type, status, created_at as createdAt, updated_at as updatedAt, pool_count as poolCount, starting_slots as startingSlots, qualifiers_per_pool as qualifiersPerPool, wildcard_metric as wildcardMetric, late_additions_enabled as lateAdditionsEnabled, late_additions_closed as lateAdditionsClosed, stage, pool_seed as poolSeed, bracket_seed as bracketSeed';
+
+function toTournament(row: Tournament): Tournament {
+  return {
+    ...row,
+    lateAdditionsEnabled: Boolean(row.lateAdditionsEnabled),
+    lateAdditionsClosed: Boolean(row.lateAdditionsClosed),
+  };
+}
 
 export function createTournament(
   name: string,
@@ -44,18 +58,139 @@ export function createTournament(
 export function getTournaments(): Tournament[] {
   const db = getDatabase();
   const rows = db.getAllSync<Tournament>(
-    'SELECT id, name, sport, type, status, created_at as createdAt, updated_at as updatedAt FROM tournaments ORDER BY created_at DESC'
+    `SELECT ${TOURNAMENT_COLUMNS} FROM tournaments ORDER BY created_at DESC`
   );
-  return rows;
+  return rows.map(toTournament);
 }
 
 export function getTournament(id: number): Tournament | null {
   const db = getDatabase();
   const row = db.getFirstSync<Tournament>(
-    'SELECT id, name, sport, type, status, created_at as createdAt, updated_at as updatedAt FROM tournaments WHERE id = ?',
+    `SELECT ${TOURNAMENT_COLUMNS} FROM tournaments WHERE id = ?`,
     id
   );
-  return row ?? null;
+  return row ? toTournament(row) : null;
+}
+
+interface TournamentPoolConfig {
+  poolCount: number;
+  startingSlots: number;
+  qualifiersPerPool: number;
+  wildcardMetric: WildcardMetric;
+  lateAdditionsEnabled: boolean;
+  poolSeed: number;
+}
+
+export function setTournamentPoolConfig(id: number, config: TournamentPoolConfig) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE tournaments SET pool_count = ?, starting_slots = ?, qualifiers_per_pool = ?, wildcard_metric = ?, late_additions_enabled = ?, pool_seed = ?, stage = ? WHERE id = ?',
+    config.poolCount,
+    config.startingSlots,
+    config.qualifiersPerPool,
+    config.wildcardMetric,
+    config.lateAdditionsEnabled ? 1 : 0,
+    config.poolSeed,
+    'pools',
+    id
+  );
+}
+
+export function setLateAdditionsEnabled(id: number, enabled: boolean) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE tournaments SET late_additions_enabled = ? WHERE id = ?',
+    enabled ? 1 : 0,
+    id
+  );
+}
+
+export function setPoolAdvancement(
+  id: number,
+  advancement: { startingSlots: number; qualifiersPerPool: number; wildcardMetric: WildcardMetric }
+) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE tournaments SET starting_slots = ?, qualifiers_per_pool = ?, wildcard_metric = ? WHERE id = ?',
+    advancement.startingSlots,
+    advancement.qualifiersPerPool,
+    advancement.wildcardMetric,
+    id
+  );
+}
+
+// Games are removed explicitly because the web emulator does not cascade deletes.
+export function deleteBadmintonFixtures(tournamentId: number) {
+  const db = getDatabase();
+  for (const match of getBadmintonMatches(tournamentId)) {
+    db.runSync('DELETE FROM badminton_match_games WHERE match_id = ?', match.id);
+  }
+  db.runSync('DELETE FROM badminton_matches WHERE tournament_id = ?', tournamentId);
+}
+
+export function closeLateAdditions(id: number) {
+  const db = getDatabase();
+  db.runSync('UPDATE tournaments SET late_additions_closed = ? WHERE id = ?', 1, id);
+}
+
+// Setting the knockout is one-way: it moves the stage on and closes late additions.
+export function markKnockoutSet(id: number, bracketSeed: number) {
+  const db = getDatabase();
+  db.runSync(
+    'UPDATE tournaments SET stage = ?, bracket_seed = ?, late_additions_closed = ? WHERE id = ?',
+    'knockout',
+    bracketSeed,
+    1,
+    id
+  );
+}
+
+// ─── Pools & Qualifiers ──────────────────────────────────────────────────────
+
+export function createPool(tournamentId: number, position: number, name: string): number {
+  const db = getDatabase();
+  const result = db.runSync(
+    'INSERT INTO pools (tournament_id, position, name) VALUES (?, ?, ?)',
+    tournamentId,
+    position,
+    name
+  );
+  return Number(result.lastInsertRowId);
+}
+
+export function getPools(tournamentId: number): Pool[] {
+  const db = getDatabase();
+  return db.getAllSync<Pool>(
+    'SELECT id, tournament_id as tournamentId, position, name FROM pools WHERE tournament_id = ? ORDER BY position',
+    tournamentId
+  );
+}
+
+export function setParticipantPool(participantId: number, poolId: number) {
+  const db = getDatabase();
+  db.runSync('UPDATE participants SET pool_id = ? WHERE id = ?', poolId, participantId);
+}
+
+export function insertQualifiers(tournamentId: number, records: QualifierRecord[]) {
+  const db = getDatabase();
+  for (const record of records) {
+    db.runSync(
+      'INSERT INTO qualifiers (tournament_id, participant_id, pool_id, pool_rank, source) VALUES (?, ?, ?, ?, ?)',
+      tournamentId,
+      record.participantId,
+      record.poolId,
+      record.poolRank,
+      record.source
+    );
+  }
+}
+
+export function getQualifiers(tournamentId: number): QualifierRecord[] {
+  const db = getDatabase();
+  return db.getAllSync<QualifierRecord>(
+    'SELECT participant_id as participantId, pool_id as poolId, pool_rank as poolRank, source FROM qualifiers WHERE tournament_id = ?',
+    tournamentId
+  );
 }
 
 export function updateTournamentStatus(id: number, status: Tournament['status']) {
@@ -79,6 +214,14 @@ export function updateTournamentName(id: number, name: string) {
 export function deleteTournament(id: number) {
   const db = getDatabase();
   db.runSync('DELETE FROM tournaments WHERE id = ?', id);
+}
+
+// Deletes every tournament. Participants, matches, pools and qualifiers go with
+// each one through the per-tournament cascade, which both platforms already handle.
+export function deleteAllTournaments() {
+  for (const tournament of getTournaments()) {
+    deleteTournament(tournament.id);
+  }
 }
 
 // ─── Participants ────────────────────────────────────────────────────────────
@@ -110,7 +253,7 @@ export function createParticipant(tournamentId: number, name: string): Participa
 export function getParticipants(tournamentId: number): Participant[] {
   const db = getDatabase();
   const rows = db.getAllSync<Participant>(
-    'SELECT id, tournament_id as tournamentId, name, created_at as createdAt FROM participants WHERE tournament_id = ? ORDER BY id',
+    'SELECT id, tournament_id as tournamentId, name, created_at as createdAt, pool_id as poolId FROM participants WHERE tournament_id = ? ORDER BY id',
     tournamentId
   );
   return rows;
@@ -159,11 +302,12 @@ export function updateParticipantName(id: number, name: string) {
 
 // ─── Badminton Matches ───────────────────────────────────────────────────────
 
-export interface BadmintonMatchCreateOptions {
+interface BadmintonMatchCreateOptions {
   round?: number;
   bracketPosition?: number;
   feedsIntoMatchId?: number | null;
   feedsIntoSlot?: 'A' | 'B' | null;
+  poolId?: number | null;
 }
 
 export function createBadmintonMatch(
@@ -180,13 +324,14 @@ export function createBadmintonMatch(
     bracketPosition = 1,
     feedsIntoMatchId = null,
     feedsIntoSlot = null,
+    poolId = null,
   } = options;
 
   const result = db.runSync(
     `INSERT INTO badminton_matches 
      (tournament_id, participant_a_id, participant_b_id, game_point, best_of_games, 
-      status, winner_id, round, bracket_position, feeds_into_match_id, feeds_into_slot) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      status, winner_id, round, bracket_position, feeds_into_match_id, feeds_into_slot, pool_id) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     tournamentId,
     participantAId,
     participantBId,
@@ -197,7 +342,8 @@ export function createBadmintonMatch(
     round,
     bracketPosition,
     feedsIntoMatchId,
-    feedsIntoSlot
+    feedsIntoSlot,
+    poolId
   );
 
   const matchId = Number(result.lastInsertRowId);
@@ -227,6 +373,7 @@ export function createBadmintonMatch(
     bracketPosition,
     feedsIntoMatchId,
     feedsIntoSlot,
+    poolId,
   };
 }
 
@@ -237,8 +384,9 @@ export function getBadmintonMatches(tournamentId: number): BadmintonMatch[] {
             participant_b_id as participantBId, game_point as gamePoint, best_of_games as bestOfGames,
             status, winner_id as winnerId, created_at as createdAt,
             round, bracket_position as bracketPosition,
-            feeds_into_match_id as feedsIntoMatchId, feeds_into_slot as feedsIntoSlot
-     FROM badminton_matches WHERE tournament_id = ? ORDER BY round, bracket_position`,
+            feeds_into_match_id as feedsIntoMatchId, feeds_into_slot as feedsIntoSlot,
+            pool_id as poolId
+     FROM badminton_matches WHERE tournament_id = ? ORDER BY round, bracket_position, id`,
     tournamentId
   );
   return rows;
@@ -286,7 +434,7 @@ export function updateBadmintonMatchStatus(
 
 // ─── Tennis Matches ──────────────────────────────────────────────────────────
 
-export interface TennisMatchCreateOptions {
+interface TennisMatchCreateOptions {
   round?: number;
   bracketPosition?: number;
   feedsIntoMatchId?: number | null;
@@ -414,7 +562,7 @@ export function updateTennisMatchStatus(
 
 // ─── Table Tennis Matches ────────────────────────────────────────────────────
 
-export interface TableTennisMatchCreateOptions {
+interface TableTennisMatchCreateOptions {
   round?: number;
   bracketPosition?: number;
   feedsIntoMatchId?: number | null;
@@ -702,7 +850,7 @@ export function updateTableTennisMatchBracketLink(
 
 // ─── Pickleball Matches ──────────────────────────────────────────────────────
 
-export interface PickleballMatchCreateOptions {
+interface PickleballMatchCreateOptions {
   round?: number;
   bracketPosition?: number;
   feedsIntoMatchId?: number | null;
@@ -927,7 +1075,7 @@ export function getTournamentMaxScore(tournamentId: number, sport: SportType): n
   }
 }
 
-export function resetTournamentScores(
+function resetTournamentScores(
   tournamentId: number,
   sport: SportType,
   tournamentType: TournamentType
@@ -971,6 +1119,14 @@ export function resetTournamentScores(
           const slotB = byeAdv?.slot === 'B' ? byeAdv.winnerId : null;
           updateBadmintonMatchParticipant(m.id, 'A', slotA);
           updateBadmintonMatchParticipant(m.id, 'B', slotB);
+        }
+      }
+    } else if (tournamentType === 'round_robin') {
+      // Pool knockouts keep round one; later rounds refill from results.
+      for (const m of matches) {
+        if ((m.round || 1) > 1) {
+          updateBadmintonMatchParticipant(m.id, 'A', null);
+          updateBadmintonMatchParticipant(m.id, 'B', null);
         }
       }
     }

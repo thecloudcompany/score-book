@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Spacing } from '@/constants/theme';
+import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   root: {
@@ -11,16 +11,16 @@ export const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
-    gap: 8,
+    gap: Spacing.sm,
   },
   notFoundTitle: {
     fontFamily: Font.bold,
-    fontSize: 18,
+    fontSize: Type.section,
     color: Colors.text,
   },
   notFoundHint: {
     fontFamily: Font.regular,
-    fontSize: 14,
+    fontSize: Type.body,
     color: Colors.textMuted,
     textAlign: 'center',
   },
@@ -31,12 +31,12 @@ export const s = StyleSheet.create({
   },
   backBtnText: {
     fontFamily: Font.semibold,
-    fontSize: 15,
+    fontSize: Type.body,
     color: Colors.primary,
   },
   shareError: {
     fontFamily: Font.semibold,
-    fontSize: 13,
+    fontSize: Type.meta,
     color: Colors.danger,
     textAlign: 'center',
     paddingVertical: Spacing.sm,
@@ -46,111 +46,86 @@ export const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.bgElevated,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   backText: {
     fontFamily: Font.semibold,
-    fontSize: 15,
+    fontSize: Type.body,
     color: Colors.primary,
-    minWidth: 48,
+    minWidth: 56,
   },
   headerTitle: {
     fontFamily: Font.bold,
-    fontSize: 17,
+    fontSize: Type.section,
     color: Colors.text,
     flex: 1,
     textAlign: 'center',
-    marginHorizontal: 6,
+    marginHorizontal: Spacing.sm,
   },
   headerAction: {
-    minWidth: 48,
+    minWidth: 56,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
   headerActionText: {
-    fontSize: 20,
+    fontFamily: Font.semibold,
+    fontSize: Type.body,
+    color: Colors.primary,
   },
-  tabBar: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
+  nextStepWrap: {
+    backgroundColor: Colors.bgElevated,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+  segmentWrap: {
+    backgroundColor: Colors.bgElevated,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+    paddingTop: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    backgroundColor: Colors.bgElevated,
   },
-  tab: {
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.sm,
+    padding: 3,
+    maxWidth: 720,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  segment: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 12,
-    position: 'relative',
+    paddingVertical: 9,
+    borderRadius: Radius.xs,
   },
-  tabText: {
+  segmentActive: {
+    backgroundColor: Colors.bgElevated,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  segmentText: {
     fontFamily: Font.semibold,
-    fontSize: 13,
+    fontSize: Type.meta,
     color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
   },
-  tabTextActive: {
+  segmentTextActive: {
     color: Colors.text,
   },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 24,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: Colors.primary,
+  fill: {
+    flex: 1,
   },
   content: {
     flex: 1,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-  },
-  wideRow: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  sideRail: {
-    width: 180,
-    borderRightWidth: 1,
-    borderRightColor: Colors.borderLight,
-    backgroundColor: Colors.bgElevated,
-    paddingVertical: Spacing.md,
-  },
-  railItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.xl,
-    position: 'relative',
-  },
-  railEmoji: {
-    fontSize: 18,
-  },
-  railLabel: {
-    fontFamily: Font.semibold,
-    fontSize: 14,
-    color: Colors.textMuted,
-  },
-  railLabelActive: {
-    color: Colors.text,
-  },
-  railIndicator: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    backgroundColor: Colors.primary,
-  },
-  contentWide: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.lg,
-    alignSelf: 'flex-start',
   },
 });

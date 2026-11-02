@@ -8,7 +8,7 @@ interface MatchWithUnits {
 
 // Only units up to and including the clincher count — scores saved after a
 // match was already decided are ignored instead of corrupting differentials.
-function truncateAfterClinch(
+export function truncateAfterClinch(
   units: { scoreA: number | null; scoreB: number | null }[],
   winsNeeded: number
 ): { scoreA: number | null; scoreB: number | null }[] {

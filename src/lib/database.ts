@@ -19,6 +19,20 @@ export function getDatabase(): DatabaseLike {
 
 const SPORT_CHECK = `CHECK(sport IN ('badminton', 'tennis', 'table_tennis', 'pickleball'))`;
 
+// Pool-stage settings on tournaments. Shared by the base schema and migration v5.
+const TOURNAMENT_POOL_COLUMN_DEFS: [string, string][] = [
+  ['pool_count', 'pool_count INTEGER'],
+  ['starting_slots', 'starting_slots INTEGER'],
+  ['qualifiers_per_pool', 'qualifiers_per_pool INTEGER'],
+  ['wildcard_metric', `wildcard_metric TEXT CHECK(wildcard_metric IN ('win_rate', 'point_diff_per_match'))`],
+  ['late_additions_enabled', 'late_additions_enabled INTEGER NOT NULL DEFAULT 0'],
+  ['late_additions_closed', 'late_additions_closed INTEGER NOT NULL DEFAULT 0'],
+  ['stage', `stage TEXT CHECK(stage IN ('pools', 'knockout'))`],
+  ['pool_seed', 'pool_seed INTEGER'],
+  ['bracket_seed', 'bracket_seed INTEGER'],
+];
+const TOURNAMENT_POOL_COLUMNS = TOURNAMENT_POOL_COLUMN_DEFS.map(([, def]) => def).join(',\n      ');
+
 function matchTableDef(table: string, extra: string): string {
   return `CREATE TABLE IF NOT EXISTS ${table} (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,17 +64,40 @@ function baseSchema(database: DatabaseLike) {
       type TEXT NOT NULL DEFAULT 'round_robin' CHECK(type IN ('round_robin', 'knockout')),
       status TEXT NOT NULL DEFAULT 'upcoming' CHECK(status IN ('upcoming', 'active', 'completed')),
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      ${TOURNAMENT_POOL_COLUMNS}
+    );`,
+    `CREATE TABLE IF NOT EXISTS pools (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tournament_id INTEGER NOT NULL,
+      position INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+      UNIQUE(tournament_id, position)
     );`,
     `CREATE TABLE IF NOT EXISTS participants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       tournament_id INTEGER NOT NULL,
       name TEXT NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      pool_id INTEGER REFERENCES pools(id) ON DELETE SET NULL,
       FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
       UNIQUE(tournament_id, name)
     );`,
-    matchTableDef('badminton_matches', 'game_point INTEGER NOT NULL DEFAULT 21,\n      best_of_games INTEGER NOT NULL DEFAULT 3'),
+    `CREATE TABLE IF NOT EXISTS qualifiers (
+      tournament_id INTEGER NOT NULL,
+      participant_id INTEGER NOT NULL,
+      pool_id INTEGER NOT NULL,
+      pool_rank INTEGER NOT NULL,
+      source TEXT NOT NULL CHECK(source IN ('direct', 'wildcard')),
+      PRIMARY KEY (tournament_id, participant_id),
+      FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+      FOREIGN KEY (participant_id) REFERENCES participants(id) ON DELETE CASCADE
+    );`,
+    matchTableDef(
+      'badminton_matches',
+      'game_point INTEGER NOT NULL DEFAULT 21,\n      best_of_games INTEGER NOT NULL DEFAULT 3,\n      pool_id INTEGER REFERENCES pools(id) ON DELETE SET NULL'
+    ),
     `CREATE TABLE IF NOT EXISTS badminton_match_games (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       match_id INTEGER NOT NULL,
@@ -234,6 +271,16 @@ function migrateNative(database: DatabaseLike) {
     }
     record(4);
   }
+
+  // v5: pool stage. New tables come from baseSchema; this adds the new columns.
+  if (!applied.has(5)) {
+    for (const [column, def] of TOURNAMENT_POOL_COLUMN_DEFS) {
+      ensureColumn(database, 'tournaments', column, def);
+    }
+    ensureColumn(database, 'participants', 'pool_id', 'pool_id INTEGER REFERENCES pools(id) ON DELETE SET NULL');
+    ensureColumn(database, 'badminton_matches', 'pool_id', 'pool_id INTEGER REFERENCES pools(id) ON DELETE SET NULL');
+    record(5);
+  }
 }
 
 export function initDatabase() {
@@ -257,4 +304,7 @@ export function initDatabase() {
   ] as const) {
     database.execSync(`CREATE INDEX IF NOT EXISTS ${name} ON ${table}(tournament_id, round, bracket_position);`);
   }
+  database.execSync(
+    'CREATE INDEX IF NOT EXISTS idx_badminton_matches_pool ON badminton_matches(tournament_id, pool_id);'
+  );
 }

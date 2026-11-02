@@ -5,13 +5,15 @@ import { getRoundName } from '@/lib/bracket-generator';
 import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
 import { Colors } from '@/constants/theme';
 import { s } from './matches-tab.styles';
-import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, SportType, TournamentType } from '@/types';
+import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, Pool, SportType, TournamentType } from '@/types';
 
 interface MatchesTabProps {
   tournamentType: TournamentType;
   matches: (BadmintonMatch | TennisMatch | TableTennisMatch | PickleballMatch)[];
   units: Record<number, BadmintonGame[] | TennisSet[] | TableTennisGame[] | PickleballGame[]>;
   sport: SportType;
+  pools: Pool[];
+  poolsLocked: boolean;
   getParticipantName: (id: number) => string;
   onMatchPress: (matchId: number) => void;
 }
@@ -21,6 +23,8 @@ export function MatchesTab({
   matches,
   units,
   sport,
+  pools,
+  poolsLocked,
   getParticipantName,
   onMatchPress,
 }: MatchesTabProps) {
@@ -40,7 +44,7 @@ export function MatchesTab({
         const b = isScoreSport ? u.scoreB : u.gamesB;
         return `${a}-${b}`;
       })
-      .join('  ·  ');
+      .join(', ');
   };
 
   // Build feeder map once: who feeds into each consumer match.
@@ -61,13 +65,12 @@ export function MatchesTab({
     (match: Match, slot: 'A' | 'B'): string => {
       const id = slot === 'A' ? match.participantAId : match.participantBId;
       if (id !== null && id !== undefined) return getParticipantName(id);
-      if (tournamentType !== 'knockout') return 'TBD';
       if (slot === 'B' && isByeMatch(match)) return 'BYE';
       const feeders = feederByConsumer.get(match.id) ?? [];
       if (feeders.length === 1) return `Winner of Match ${feeders[0].bracketPosition}`;
       return 'TBD';
     },
-    [tournamentType, getParticipantName, feederByConsumer]
+    [getParticipantName, feederByConsumer]
   );
 
   const [query, setQuery] = useState('');
@@ -111,39 +114,77 @@ export function MatchesTab({
     </View>
   );
 
-  if (tournamentType === 'knockout') {
+  // Round names come from the full bracket so filtering can't relabel rounds.
+  const totalRounds = Math.max(...matches.filter((m) => m.poolId == null).map((m) => m.round || 1), 1);
+
+  const renderKnockoutRounds = (list: typeof matches) => {
     const rounds = new Map<number, typeof matches>();
-    for (const match of filteredMatches) {
+    for (const match of list) {
       const round = match.round || 1;
       if (!rounds.has(round)) rounds.set(round, []);
       rounds.get(round)!.push(match);
     }
-    // Round names come from the full bracket so filtering can't relabel rounds.
-    const totalRounds = Math.max(...matches.map((m) => m.round || 1), 1);
+    return Array.from(rounds.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([round, roundMatches]) => (
+        <View key={round} style={s.section}>
+          <Text style={s.sectionTitle}>{getRoundName(round, totalRounds)}</Text>
+          {roundMatches.map((match) => (
+            <MatchRow
+              key={match.id}
+              match={match}
+              playerADisplay={getSlotLabel(match, 'A')}
+              playerBDisplay={getSlotLabel(match, 'B')}
+              isBye={isByeMatch(match)}
+              isLocked={!canEditMatch(match, matches)}
+              preview={getPreview(match.id)}
+              onPress={onMatchPress}
+            />
+          ))}
+        </View>
+      ));
+  };
 
+  if (tournamentType === 'knockout') {
     return (
       <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
         {searchBar}
         {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
-        {Array.from(rounds.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([round, roundMatches]) => (
-            <View key={round} style={s.section}>
-              <Text style={s.sectionTitle}>{getRoundName(round, totalRounds)}</Text>
-              {roundMatches.map((match) => (
+        {renderKnockoutRounds(filteredMatches)}
+      </ScrollView>
+    );
+  }
+
+  if (pools.length > 0) {
+    return (
+      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
+        {searchBar}
+        {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
+        {pools.map((pool) => {
+          const poolMatches = filteredMatches
+            .filter((m) => m.poolId === pool.id)
+            .sort((a, b) => a.id - b.id);
+          if (poolMatches.length === 0) return null;
+          return (
+            <View key={pool.id} style={s.section}>
+              <Text style={s.sectionTitle}>{pool.name}</Text>
+              {poolMatches.map((match) => (
                 <MatchRow
                   key={match.id}
                   match={match}
                   playerADisplay={getSlotLabel(match, 'A')}
                   playerBDisplay={getSlotLabel(match, 'B')}
-                  isBye={isByeMatch(match)}
-                  isLocked={!canEditMatch(match, matches)}
+                  isBye={false}
+                  isLocked={poolsLocked}
+                  lockedNote="Group results are final"
                   preview={getPreview(match.id)}
                   onPress={onMatchPress}
                 />
               ))}
             </View>
-          ))}
+          );
+        })}
+        {renderKnockoutRounds(filteredMatches.filter((m) => m.poolId == null))}
       </ScrollView>
     );
   }
@@ -156,7 +197,9 @@ export function MatchesTab({
     if (matchList.length === 0) return null;
     return (
       <View style={s.section}>
-        <Text style={s.sectionTitle}>{title}</Text>
+        <Text style={s.sectionTitle}>
+          {title} ({matchList.length})
+        </Text>
         {matchList.map((match) => (
           <MatchRow
             key={match.id}
@@ -178,8 +221,8 @@ export function MatchesTab({
       {searchBar}
       {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
       {renderSection('Live', inProgress)}
-      {renderSection('Upcoming', upcoming)}
-      {renderSection('Completed', completed)}
+      {renderSection('Up next', upcoming)}
+      {renderSection('Finished', completed)}
     </ScrollView>
   );
 }

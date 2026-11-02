@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
   getParticipants,
+  getQualifiers,
   getBadmintonMatches,
   getBadmintonGames,
   getTennisMatches,
@@ -11,10 +12,13 @@ import {
   getPickleballGames,
 } from '@/lib/db-operations';
 import { calculateBadmintonLeaderboard, calculateTennisLeaderboard, calculateTableTennisLeaderboard, calculatePickleballLeaderboard } from '@/lib/leaderboard';
-import type { LeaderboardEntry, SportType } from '@/types';
+import { getPoolViews, type PoolView } from '@/lib/pool-operations';
+import type { LeaderboardEntry, QualifierRecord, SportType } from '@/types';
 
 export function useStandings(tournamentId: number, sport: SportType) {
   const [standings, setStandings] = useState<LeaderboardEntry[]>([]);
+  const [poolViews, setPoolViews] = useState<PoolView[]>([]);
+  const [qualifiers, setQualifiers] = useState<QualifierRecord[]>([]);
 
   const refresh = useCallback(() => {
     const participants = getParticipants(tournamentId);
@@ -27,6 +31,8 @@ export function useStandings(tournamentId: number, sport: SportType) {
       }
       const result = calculateBadmintonLeaderboard(matches, allGames, participants);
       setStandings(result);
+      setPoolViews(getPoolViews(tournamentId));
+      setQualifiers(getQualifiers(tournamentId));
     } else if (sport === 'tennis') {
       const matches = getTennisMatches(tournamentId);
       const allSets: any[] = [];
@@ -54,5 +60,5 @@ export function useStandings(tournamentId: number, sport: SportType) {
     }
   }, [tournamentId, sport]);
 
-  return { standings, refresh };
+  return { standings, poolViews, qualifiers, refresh };
 }

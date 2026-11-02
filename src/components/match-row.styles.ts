@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing } from '@/constants/theme';
+import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   row: {
@@ -7,62 +7,48 @@ export const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
-    paddingVertical: 15,
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.borderLight,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 14,
+    marginBottom: Spacing.sm,
+    gap: Spacing.md,
   },
   rowBye: {
     opacity: 0.6,
-    backgroundColor: Colors.surface,
-  },
-  rowLocked: {
-    opacity: 0.55,
-  },
-  lockedNote: {
-    fontFamily: Font.medium,
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginBottom: 2,
-  },
-  left: {
-    flex: 1,
-    marginRight: 12,
   },
   players: {
+    flex: 1,
+    gap: 2,
+  },
+  name: {
     fontFamily: Font.semibold,
-    fontSize: 16,
+    fontSize: Type.body,
     color: Colors.text,
-    marginBottom: 2,
   },
-  vs: {
-    fontFamily: Font.medium,
-    fontSize: 13,
+  nameMuted: {
+    fontFamily: Font.regular,
     color: Colors.textMuted,
   },
-  byeText: {
-    fontFamily: Font.medium,
-    fontSize: 13,
+  note: {
+    fontFamily: Font.regular,
+    fontSize: Type.meta,
     color: Colors.textMuted,
-    fontStyle: 'italic',
+    marginTop: 2,
   },
-  tbdText: {
-    fontFamily: Font.medium,
-    fontSize: 13,
-    color: Colors.textMuted,
-    fontStyle: 'italic',
+  side: {
+    alignItems: 'flex-end',
+    gap: 4,
   },
-  preview: {
-    fontFamily: Font.medium,
-    fontSize: 13,
-    color: Colors.textSecondary,
+  score: {
+    fontFamily: Font.bold,
+    fontSize: Type.body,
+    color: Colors.text,
+    fontVariant: ['tabular-nums'],
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    flexShrink: 0,
+  status: {
+    fontFamily: Font.semibold,
+    fontSize: Type.meta,
   },
 });
