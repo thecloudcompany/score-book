@@ -3,17 +3,18 @@ import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   header: {
-    paddingTop: Spacing.md,
+    paddingTop: 0,
     paddingBottom: Spacing.xs,
   },
   nameRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
+    minHeight: 48,
     gap: Spacing.sm,
   },
   name: {
     fontFamily: Font.bold,
-    fontSize: 22,
+    fontSize: 17,
     color: Colors.text,
     flexShrink: 1,
   },
@@ -34,21 +35,41 @@ export const s = StyleSheet.create({
     fontSize: 14,
     color: Colors.primary,
   },
-  subtitle: {
-    fontFamily: Font.regular,
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
+  inlineAction: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
 
   section: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.md,
   },
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.xs,
+  },
+  accordionHead: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  chevron: {
+    fontFamily: Font.regular,
+    fontSize: 11,
+    color: Colors.textMuted,
+  },
+  addIconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primaryMuted,
+  },
+  addIconText: {
+    fontFamily: Font.bold,
+    fontSize: 20,
+    lineHeight: 22,
+    color: Colors.primary,
   },
   sectionValue: {
     flexDirection: 'row',
@@ -62,8 +83,7 @@ export const s = StyleSheet.create({
   },
   card: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
+    borderBottomWidth: 1,
     borderColor: Colors.borderLight,
     overflow: 'hidden',
   },
@@ -73,11 +93,12 @@ export const s = StyleSheet.create({
   },
 
   row: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
     paddingVertical: 12,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: 0,
   },
   rowIndent: {
     paddingLeft: Spacing.xl,
@@ -92,12 +113,6 @@ export const s = StyleSheet.create({
   },
   rowTitleIndent: {
     fontFamily: Font.regular,
-  },
-  rowSubtitle: {
-    fontFamily: Font.regular,
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginTop: 2,
   },
   rowValue: {
     fontFamily: Font.medium,
@@ -128,9 +143,7 @@ export const s = StyleSheet.create({
     height: 48,
     paddingHorizontal: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: Radius.sm,
-    outlineWidth: 0,
   },
   editorActions: {
     flexDirection: 'row',

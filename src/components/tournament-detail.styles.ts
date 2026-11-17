@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
+import { Font, Colors, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   root: {
@@ -41,59 +41,19 @@ export const s = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: Spacing.sm,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
-    backgroundColor: Colors.bgElevated,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  backText: {
-    fontFamily: Font.semibold,
-    fontSize: Type.body,
-    color: Colors.primary,
-    minWidth: 56,
-  },
-  headerTitle: {
-    fontFamily: Font.bold,
-    fontSize: Type.section,
-    color: Colors.text,
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: Spacing.sm,
-  },
-  headerAction: {
-    minWidth: 56,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  headerActionText: {
-    fontFamily: Font.semibold,
-    fontSize: Type.body,
-    color: Colors.primary,
-  },
   nextStepWrap: {
     backgroundColor: Colors.bgElevated,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
   segmentWrap: {
     backgroundColor: Colors.bgElevated,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-    paddingTop: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: 0,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   segmented: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.sm,
-    padding: 3,
     maxWidth: 720,
     width: '100%',
     alignSelf: 'center',
@@ -101,16 +61,13 @@ export const s = StyleSheet.create({
   segment: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 9,
-    borderRadius: Radius.xs,
+    paddingVertical: 12,
+    minHeight: 48,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   segmentActive: {
-    backgroundColor: Colors.bgElevated,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
+    borderBottomColor: Colors.primary,
   },
   segmentText: {
     fontFamily: Font.semibold,
@@ -118,14 +75,14 @@ export const s = StyleSheet.create({
     color: Colors.textMuted,
   },
   segmentTextActive: {
-    color: Colors.text,
+    color: Colors.primary,
   },
   fill: {
     flex: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
   },
 });

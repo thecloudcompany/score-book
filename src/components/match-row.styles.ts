@@ -7,24 +7,31 @@ export const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     marginBottom: Spacing.sm,
+    minHeight: 80,
     gap: Spacing.md,
   },
   rowBye: {
     opacity: 0.6,
   },
+  rowInProgress: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryMuted,
+  },
   players: {
     flex: 1,
-    gap: 2,
+    minWidth: 0,
+    gap: 4,
   },
   name: {
     fontFamily: Font.semibold,
     fontSize: Type.body,
+    lineHeight: 22,
     color: Colors.text,
   },
   nameMuted: {
@@ -39,16 +46,21 @@ export const s = StyleSheet.create({
   },
   side: {
     alignItems: 'flex-end',
+    maxWidth: '45%',
     gap: 4,
   },
   score: {
     fontFamily: Font.bold,
-    fontSize: Type.body,
+    fontSize: Type.section,
     color: Colors.text,
     fontVariant: ['tabular-nums'],
   },
   status: {
     fontFamily: Font.semibold,
     fontSize: Type.meta,
+    backgroundColor: Colors.primaryMuted,
+    borderRadius: Radius.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
 });

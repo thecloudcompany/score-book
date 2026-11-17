@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { AppInput } from '@/components/app-input';
 import { MatchRow } from './match-row';
 import { getRoundName } from '@/lib/bracket-generator';
 import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
@@ -74,6 +75,8 @@ export function MatchesTab({
   );
 
   const [query, setQuery] = useState('');
+  const [showGroups, setShowGroups] = useState(false);
+  const [showFinished, setShowFinished] = useState(false);
 
   // Every whitespace-separated token must appear in either side's name,
   // so "india aus" finds India vs Australia.
@@ -87,29 +90,55 @@ export function MatchesTab({
   }, [matches, query, getSlotLabel]);
 
   const showEmpty = query.trim() !== '' && filteredMatches.length === 0;
+  const searching = query.trim() !== '';
+  const visibleMatches = filteredMatches.filter((match) => match.status !== 'completed' || showFinished || searching);
+  const finishedCount = matches.filter((match) =>
+    match.status === 'completed' && !isByeMatch(match) && (!poolsLocked || match.poolId == null)
+  ).length;
+  const finishedToggle = finishedCount > 0 && !searching ? (
+    <TouchableOpacity
+      style={s.groupToggle}
+      onPress={() => setShowFinished((shown) => !shown)}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: showFinished }}
+      aria-expanded={showFinished}
+    >
+      <Text style={s.groupToggleText}>{showFinished ? 'Hide finished' : `Show finished (${finishedCount})`}</Text>
+    </TouchableOpacity>
+  ) : null;
 
   const searchBar = (
     <View style={s.searchWrap}>
-      <TextInput
-        style={s.searchInput}
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Search team or opponent"
-        placeholderTextColor={Colors.textMuted}
-        selectionColor={Colors.primary}
-        autoCapitalize="none"
-        autoCorrect={false}
-        accessibilityLabel="Search matches"
-      />
-      {query !== '' && (
-        <TouchableOpacity
-          style={s.searchClear}
-          onPress={() => setQuery('')}
-          accessibilityLabel="Clear search"
-          accessibilityRole="button"
-        >
-          <Text style={s.searchClearText}>✕</Text>
-        </TouchableOpacity>
+      <Text style={s.searchLabel}>Search matches</Text>
+      <View style={s.searchRow}>
+        <AppInput
+          style={s.searchInput}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Search by player name"
+          placeholderTextColor={Colors.textMuted}
+          selectionColor={Colors.primary}
+          autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
+          returnKeyType="search"
+          accessibilityLabel="Search matches"
+        />
+        {query !== '' && (
+          <TouchableOpacity
+            style={s.searchClear}
+            onPress={() => setQuery('')}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
+            <Text style={s.searchClearText}>Clear</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      {searching && (
+        <Text style={s.searchSummary} accessibilityLiveRegion="polite">
+          {filteredMatches.length} {filteredMatches.length === 1 ? 'match' : 'matches'} found
+        </Text>
       )}
     </View>
   );
@@ -125,11 +154,15 @@ export function MatchesTab({
       rounds.get(round)!.push(match);
     }
     return Array.from(rounds.entries())
-      .sort((a, b) => a[0] - b[0])
+      .sort((a, b) => {
+        const aDone = a[1].every((match) => match.status === 'completed');
+        const bDone = b[1].every((match) => match.status === 'completed');
+        return Number(aDone) - Number(bDone) || a[0] - b[0];
+      })
       .map(([round, roundMatches]) => (
         <View key={round} style={s.section}>
           <Text style={s.sectionTitle}>{getRoundName(round, totalRounds)}</Text>
-          {roundMatches.map((match) => (
+          {[...roundMatches].sort((a, b) => Number(a.status === 'completed') - Number(b.status === 'completed')).map((match) => (
             <MatchRow
               key={match.id}
               match={match}
@@ -147,23 +180,36 @@ export function MatchesTab({
 
   if (tournamentType === 'knockout') {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={s.listContent}>
         {searchBar}
         {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
-        {renderKnockoutRounds(filteredMatches)}
+        {renderKnockoutRounds(visibleMatches)}
+        {finishedToggle}
       </ScrollView>
     );
   }
 
   if (pools.length > 0) {
     return (
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={s.listContent}>
         {searchBar}
         {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
-        {pools.map((pool) => {
-          const poolMatches = filteredMatches
+        {poolsLocked && renderKnockoutRounds(visibleMatches.filter((m) => m.poolId == null))}
+        {poolsLocked && (
+          <TouchableOpacity
+            style={s.groupToggle}
+            onPress={() => setShowGroups((shown) => !shown)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showGroups }}
+            aria-expanded={showGroups}
+          >
+            <Text style={s.groupToggleText}>{showGroups ? 'Hide group results' : 'Group results'}</Text>
+          </TouchableOpacity>
+        )}
+        {(!poolsLocked || showGroups || query.trim() !== '') && pools.map((pool) => {
+          const poolMatches = (poolsLocked ? filteredMatches : visibleMatches)
             .filter((m) => m.poolId === pool.id)
-            .sort((a, b) => a.id - b.id);
+            .sort((a, b) => Number(a.status === 'completed') - Number(b.status === 'completed') || a.id - b.id);
           if (poolMatches.length === 0) return null;
           return (
             <View key={pool.id} style={s.section}>
@@ -184,14 +230,15 @@ export function MatchesTab({
             </View>
           );
         })}
-        {renderKnockoutRounds(filteredMatches.filter((m) => m.poolId == null))}
+        {!poolsLocked && renderKnockoutRounds(visibleMatches.filter((m) => m.poolId == null))}
+        {finishedToggle}
       </ScrollView>
     );
   }
 
-  const upcoming = filteredMatches.filter((m) => m.status === 'upcoming');
-  const inProgress = filteredMatches.filter((m) => m.status === 'in_progress');
-  const completed = filteredMatches.filter((m) => m.status === 'completed');
+  const upcoming = visibleMatches.filter((m) => m.status === 'upcoming');
+  const inProgress = visibleMatches.filter((m) => m.status === 'in_progress');
+  const completed = visibleMatches.filter((m) => m.status === 'completed');
 
   const renderSection = (title: string, matchList: typeof matches) => {
     if (matchList.length === 0) return null;
@@ -217,12 +264,13 @@ export function MatchesTab({
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]} contentContainerStyle={s.listContent}>
       {searchBar}
       {showEmpty && <Text style={s.emptyText}>No matches for “{query.trim()}”</Text>}
-      {renderSection('Live', inProgress)}
+      {renderSection('In progress', inProgress)}
       {renderSection('Up next', upcoming)}
-      {renderSection('Finished', completed)}
+      {renderSection('Results', completed)}
+      {finishedToggle}
     </ScrollView>
   );
 }

@@ -1,15 +1,22 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Modal,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Animated,
+  Easing,
+  StyleSheet,
+  useWindowDimensions,
+  type LayoutChangeEvent,
 } from 'react-native';
-import { Colors } from '@/constants/theme';
+import { useReducedMotionPreference } from '@/hooks/use-reduced-motion';
+import { AppInput } from '@/components/app-input';
+import { ModalSafeArea } from './modal-safe-area';
+import { Colors, Motion } from '@/constants/theme';
 import { useIsWideLayout, MODAL_MAX_WIDTH } from '@/hooks/use-layout';
 import { s } from './score-entry-modal.styles';
 import type { Sport, MatchFormat } from '@/types';
@@ -42,6 +49,62 @@ export default function ScoreEntryModal({
   onClose,
 }: ScoreEntryModalProps) {
   const isWide = useIsWideLayout();
+  const { width, height } = useWindowDimensions();
+  const reduceMotion = useReducedMotionPreference();
+  const [backdropOpacity] = useState(() => new Animated.Value(0));
+  const [panelOpacity] = useState(() => new Animated.Value(0));
+  const [translateY] = useState(() => new Animated.Value(0));
+  const entered = useRef(false);
+  const previousSize = useRef({ width, height });
+
+  useEffect(() => {
+    const backdrop = Animated.timing(backdropOpacity, {
+      toValue: 1,
+      duration: Motion.duration.modal,
+      easing: Easing.bezier(...Motion.easeOut),
+      useNativeDriver: Platform.OS !== 'web',
+    });
+    backdrop.start();
+    return () => {
+      backdrop.stop();
+      panelOpacity.stopAnimation();
+      translateY.stopAnimation();
+      panelOpacity.setValue(1);
+      translateY.setValue(0);
+    };
+  }, [backdropOpacity, panelOpacity, translateY]);
+
+  useEffect(() => {
+    if (reduceMotion || previousSize.current.width !== width || previousSize.current.height !== height) {
+      translateY.stopAnimation();
+      translateY.setValue(0);
+    }
+    previousSize.current = { width, height };
+  }, [reduceMotion, width, height, translateY]);
+
+  const revealPanel = (event: LayoutChangeEvent) => {
+    const height = event.nativeEvent.layout.height;
+    if (entered.current || height <= 0) return;
+    entered.current = true;
+    translateY.setValue(!reduceMotion && !isWide ? height : 0);
+    Animated.parallel([
+      Animated.timing(panelOpacity, {
+        toValue: 1,
+        duration: Motion.duration.modal,
+        easing: Easing.bezier(...Motion.easeOut),
+        useNativeDriver: Platform.OS !== 'web',
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: Motion.duration.modal,
+        easing: Easing.bezier(...Motion.drawer),
+        useNativeDriver: Platform.OS !== 'web',
+      }),
+    ], { stopTogether: false }).start();
+  };
+
+  const inputA = useRef<React.ComponentRef<typeof AppInput>>(null);
+  const inputB = useRef<React.ComponentRef<typeof AppInput>>(null);
   // Only units up to and including the clincher are playable — later units
   // would be ignored by the standings, so don't offer them.
   const decidedIndex = (() => {
@@ -72,6 +135,11 @@ export default function ScoreEntryModal({
   const currentUnit = editingUnitNumber != null
     ? units.find((u) => u.unitNumber === editingUnitNumber)
     : firstUnit;
+  const visibleUnits = playableUnits.filter((unit) =>
+    (unit.scoreA !== null && unit.scoreB !== null) ||
+    unit.unitNumber === firstUnit?.unitNumber ||
+    unit.unitNumber === editingUnitNumber
+  );
 
   const handleSelectUnit = useCallback((unit: ScoreUnit) => {
     setEditingUnitNumber(unit.unitNumber);
@@ -85,6 +153,8 @@ export default function ScoreEntryModal({
     // Strict integers within entry bounds — parseInt would accept "6x".
     if (!/^\d{1,2}$/.test(scoreA.trim()) || !/^\d{1,2}$/.test(scoreB.trim())) {
       setError('Enter valid scores (0–99)');
+      if (!/^\d{1,2}$/.test(scoreA.trim())) inputA.current?.focus();
+      else inputB.current?.focus();
       return;
     }
     const a = parseInt(scoreA.trim(), 10);
@@ -100,36 +170,28 @@ export default function ScoreEntryModal({
   }, [scoreA, scoreB, currentUnit, onSave, onClose, sport, format]);
 
   return (
-    <Modal visible={true} animationType={isWide ? 'fade' : 'slide'} transparent onRequestClose={onClose}>
+    <Modal visible={true} animationType="none" transparent onRequestClose={onClose} aria-label="Match score" accessibilityLabel="Match score">
+      <ModalSafeArea style={s.overlay}>
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: Colors.overlay, opacity: backdropOpacity }]} />
       <KeyboardAvoidingView
-        style={[s.overlay, isWide && { justifyContent: 'center', alignItems: 'center' }]}
+        style={[s.keyboard, isWide && { justifyContent: 'center', alignItems: 'center' }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[isWide ? s.dialog : s.sheet, isWide && { width: '100%', maxWidth: MODAL_MAX_WIDTH }]}>
+        <Animated.View onLayout={revealPanel} style={[isWide ? s.dialog : s.sheet, isWide && { width: '100%', maxWidth: MODAL_MAX_WIDTH }, { opacity: panelOpacity, transform: [{ translateY }] }]}>
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Header */}
             <View style={s.header}>
-              <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
+              <Text style={s.headerTitle}>Score</Text>
+              <TouchableOpacity style={s.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Close score entry">
                 <Text style={s.closeText}>Close</Text>
               </TouchableOpacity>
-              <Text style={s.headerTitle}>Score</Text>
-              <View style={{ width: 50 }} />
             </View>
 
-            {/* Players */}
-            <View style={s.playersRow}>
-              <Text style={s.playerName} numberOfLines={1}>{playerA}</Text>
-              <Text style={s.vsText}>vs</Text>
-              <Text style={s.playerName} numberOfLines={1}>{playerB}</Text>
-            </View>
-
-            {/* Units list — all games, tap to edit */}
-            {playableUnits.length > 0 && (
+            {visibleUnits.length > 1 && (
               <View style={s.completedBox}>
-                {playableUnits.map((u) => {
+                {visibleUnits.map((u) => {
                   const isEditing = currentUnit?.unitNumber === u.unitNumber;
                   const isFilled = u.scoreA !== null && u.scoreB !== null;
                   return (
@@ -142,6 +204,9 @@ export default function ScoreEntryModal({
                       ]}
                       onPress={() => handleSelectUnit(u)}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isEditing }}
+                      aria-pressed={isEditing}
                     >
                       <Text style={s.unitLabel}>
                         {unitLabel} {u.unitNumber}
@@ -157,54 +222,65 @@ export default function ScoreEntryModal({
               </View>
             )}
 
-            {/* Current unit input */}
             {currentUnit && (
               <View style={s.inputBox}>
-                <Text style={s.inputLabel}>
-                  {editingUnitNumber != null ? 'Edit' : 'Enter'} {unitLabel.toLowerCase()} {currentUnit.unitNumber}
-                </Text>
-                <View style={s.inputsRow}>
-                  <TextInput
-                    style={[s.scoreInput, error ? s.scoreInputError : null]}
-                    value={scoreA}
-                    onChangeText={setScoreA}
-                    placeholder="0"
-                    placeholderTextColor={Colors.textMuted}
-                    accessibilityLabel={`${playerA} score`}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    autoFocus
-                    selectionColor={Colors.primary}
-                  />
-                  <Text style={s.dashText}>-</Text>
-                  <TextInput
-                    style={[s.scoreInput, error ? s.scoreInputError : null]}
-                    value={scoreB}
-                    onChangeText={setScoreB}
-                    placeholder="0"
-                    placeholderTextColor={Colors.textMuted}
-                    accessibilityLabel={`${playerB} score`}
-                    keyboardType="number-pad"
-                    maxLength={2}
-                    selectionColor={Colors.primary}
-                  />
+                {units.length > 1 && <Text style={s.inputLabel}>{unitLabel} {currentUnit.unitNumber}</Text>}
+                <View style={s.playerNames}>
+                  <Text style={s.playerName} numberOfLines={2}>{playerA}</Text>
+                  <Text style={s.playerName} numberOfLines={2}>{playerB}</Text>
                 </View>
-                {error !== '' && <Text style={s.errorText}>{error}</Text>}
+                <View style={s.inputsRow}>
+                  <View style={s.playerColumn}>
+                    <AppInput
+                      ref={inputA}
+                      style={[s.scoreInput, error ? s.scoreInputError : null]}
+                      value={scoreA}
+                      onChangeText={(value) => { setScoreA(value); setError(''); }}
+                      placeholder="0"
+                      placeholderTextColor={Colors.textMuted}
+                      accessibilityLabel={`${playerA} score`}
+                      aria-invalid={error !== ''}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                      autoFocus
+                      selectionColor={Colors.primary}
+                      selectTextOnFocus
+                    />
+                  </View>
+                  <View style={s.playerColumn}>
+                    <AppInput
+                      ref={inputB}
+                      style={[s.scoreInput, error ? s.scoreInputError : null]}
+                      value={scoreB}
+                      onChangeText={(value) => { setScoreB(value); setError(''); }}
+                      placeholder="0"
+                      placeholderTextColor={Colors.textMuted}
+                      accessibilityLabel={`${playerB} score`}
+                      aria-invalid={error !== ''}
+                      keyboardType="number-pad"
+                      maxLength={2}
+                      selectionColor={Colors.primary}
+                      selectTextOnFocus
+                    />
+                  </View>
+                </View>
+                {error !== '' && <Text style={s.errorText} accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
                 <TouchableOpacity
-                  style={[s.saveBtn, !(scoreA && scoreB) && s.saveBtnDisabled]}
+                  style={s.saveBtn}
                   onPress={handleSave}
                   activeOpacity={0.8}
-                  disabled={!(scoreA && scoreB)}
+                  accessibilityRole="button"
                 >
                   <Text style={s.saveBtnText}>
-                    {editingUnitNumber != null ? 'Update Score' : 'Save Score'}
+                    Save score
                   </Text>
                 </TouchableOpacity>
               </View>
             )}
           </ScrollView>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
+      </ModalSafeArea>
     </Modal>
   );
 }

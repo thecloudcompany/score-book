@@ -1,9 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTournaments } from '@/hooks/use-tournaments';
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ContentContainer } from '@/components/content-container';
 import { Font, Colors, Radius, Spacing, Type, statusColor } from '@/constants/theme';
 import { SPORT_LABELS, playFormatLabel, statusLabel } from '@/lib/tournament-labels';
@@ -14,16 +13,14 @@ const LIST_MAX_WIDTH = 720;
 function TournamentCard({
   tournament,
   onPress,
-  onDelete,
 }: {
   tournament: Tournament;
   onPress: () => void;
-  onDelete: () => void;
 }) {
   const status = statusLabel(tournament.status);
   return (
-    <View style={styles.card}>
       <TouchableOpacity
+        style={styles.card}
         onPress={onPress}
         activeOpacity={0.8}
         accessibilityRole="button"
@@ -39,26 +36,12 @@ function TournamentCard({
           {SPORT_LABELS[tournament.sport]}, {playFormatLabel(tournament)}
         </Text>
       </TouchableOpacity>
-      <View style={styles.cardFooter}>
-        <TouchableOpacity
-          onPress={onDelete}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={`Delete ${tournament.name}`}
-          style={styles.cardDelete}
-        >
-          <Text style={styles.cardDeleteText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
   );
 }
 
 export default function TournamentListScreen() {
   const router = useRouter();
-  const { tournaments, refresh, deleteTournament, deleteAllTournaments } = useTournaments();
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
-  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const { tournaments, refresh } = useTournaments();
   const count = tournaments.length;
 
   useFocusEffect(
@@ -71,37 +54,17 @@ export default function TournamentListScreen() {
     router.push('/create');
   }, [router]);
 
-  const confirmDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    deleteTournament(deleteTarget.id);
-    setDeleteTarget(null);
-  }, [deleteTarget, deleteTournament]);
-
-  const confirmDeleteEvery = useCallback(() => {
-    deleteAllTournaments();
-    setConfirmDeleteAll(false);
-  }, [deleteAllTournaments]);
-
   return (
-    <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
       <View style={styles.headerWrap}>
         <ContentContainer maxWidth={LIST_MAX_WIDTH}>
           <View style={styles.headerRow}>
             <View style={styles.headerText}>
-              <Text style={styles.title}>Tournaments</Text>
-              <Text style={styles.subtitle}>
-                {count === 0 ? 'Nothing scheduled yet' : `${count} tournament${count === 1 ? '' : 's'}`}
-              </Text>
+              <Text style={styles.title}>Scorebook</Text>
             </View>
             {count > 0 && (
-              <TouchableOpacity
-                onPress={() => setConfirmDeleteAll(true)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Delete all tournaments"
-                style={styles.clearAll}
-              >
-                <Text style={styles.clearAllText}>Delete all</Text>
+              <TouchableOpacity style={[styles.primaryBtn, styles.newButton]} onPress={handleCreate} accessibilityRole="button">
+                <Text style={styles.newButtonText}>New tournament</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -113,10 +76,10 @@ export default function TournamentListScreen() {
           <ContentContainer maxWidth={LIST_MAX_WIDTH}>
             <Text style={styles.emptyTitle}>No tournaments yet</Text>
             <Text style={styles.emptyBody}>
-              Create one to start keeping score. You can choose how players play next.
+              Add players to get started.
             </Text>
-            <TouchableOpacity style={styles.primaryBtn} onPress={handleCreate} activeOpacity={0.85}>
-              <Text style={styles.primaryBtnText}>Create a tournament</Text>
+            <TouchableOpacity style={styles.primaryBtn} onPress={handleCreate} activeOpacity={0.85} accessibilityRole="button">
+               <Text style={styles.primaryBtnText}>New tournament</Text>
             </TouchableOpacity>
           </ContentContainer>
         </View>
@@ -127,49 +90,25 @@ export default function TournamentListScreen() {
           showsVerticalScrollIndicator={false}
         >
           <ContentContainer maxWidth={LIST_MAX_WIDTH}>
-            {tournaments.map((t) => (
-              <TournamentCard
-                key={t.id}
-                tournament={t}
-                onPress={() => router.push(`/tournament/${t.id}`)}
-                onDelete={() => setDeleteTarget({ id: t.id, name: t.name })}
-              />
+            {[
+              { title: 'In play', items: tournaments.filter((t) => t.status !== 'completed') },
+              { title: 'Finished', items: tournaments.filter((t) => t.status === 'completed') },
+            ].map(({ title, items }) => items.length > 0 && (
+              <View key={title}>
+                <Text style={styles.listHeading}>{title}</Text>
+                {items.map((t) => (
+                  <TournamentCard
+                    key={t.id}
+                    tournament={t}
+                    onPress={() => router.push(`/tournament/${t.id}`)}
+                  />
+                ))}
+              </View>
             ))}
           </ContentContainer>
         </ScrollView>
       )}
 
-      {count > 0 && (
-        <View style={styles.footer}>
-          <ContentContainer maxWidth={LIST_MAX_WIDTH}>
-            <TouchableOpacity style={styles.primaryBtn} onPress={handleCreate} activeOpacity={0.85}>
-              <Text style={styles.primaryBtnText}>New tournament</Text>
-            </TouchableOpacity>
-          </ContentContainer>
-        </View>
-      )}
-
-      <ConfirmDialog
-        visible={deleteTarget !== null}
-        title="Delete tournament"
-        message={deleteTarget ? `Permanently delete "${deleteTarget.name}"?` : ''}
-        confirmText="Delete"
-        cancelText="Cancel"
-        destructive
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-
-      <ConfirmDialog
-        visible={confirmDeleteAll}
-        title="Delete all tournaments?"
-        message={`Permanently delete all ${count} tournament${count === 1 ? '' : 's'}, including their players and scores?`}
-        confirmText="Delete all"
-        cancelText="Cancel"
-        destructive
-        onConfirm={confirmDeleteEvery}
-        onCancel={() => setConfirmDeleteAll(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -180,13 +119,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bg,
   },
   headerWrap: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.sm,
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.md,
   },
@@ -198,36 +137,26 @@ const styles = StyleSheet.create({
     fontSize: Type.title,
     color: Colors.text,
   },
-  subtitle: {
-    fontFamily: Font.regular,
-    fontSize: Type.meta,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-  clearAll: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 6,
-  },
-  clearAllText: {
+  listHeading: {
     fontFamily: Font.semibold,
     fontSize: Type.meta,
-    color: Colors.danger,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   list: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 120,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   card: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
-    borderWidth: 1,
+    borderBottomWidth: 1,
     borderColor: Colors.borderLight,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 16,
-    marginBottom: Spacing.md,
+    paddingHorizontal: 0,
+    paddingVertical: 10,
   },
   cardTop: {
     flexDirection: 'row',
@@ -249,27 +178,12 @@ const styles = StyleSheet.create({
     fontFamily: Font.regular,
     fontSize: Type.meta,
     color: Colors.textSecondary,
-    marginTop: 4,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: Spacing.sm,
-  },
-  cardDelete: {
-    paddingVertical: 6,
-    paddingHorizontal: Spacing.sm,
-  },
-  cardDeleteText: {
-    fontFamily: Font.semibold,
-    fontSize: Type.meta,
-    color: Colors.danger,
+    marginTop: 2,
   },
   empty: {
     flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 80,
+    paddingTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
   },
   emptyTitle: {
     fontFamily: Font.bold,
@@ -282,17 +196,13 @@ const styles = StyleSheet.create({
     fontSize: Type.body,
     color: Colors.textSecondary,
     lineHeight: 22,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
   },
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
-    backgroundColor: Colors.bg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
-  },
+  newButton: { paddingHorizontal: Spacing.md },
+  newButtonText: { fontFamily: Font.bold, fontSize: Type.meta, color: Colors.textInverse },
   primaryBtn: {
+    minHeight: 48,
+    justifyContent: 'center',
     backgroundColor: Colors.primary,
     borderRadius: Radius.sm,
     paddingVertical: 14,

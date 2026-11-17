@@ -20,6 +20,6 @@ export function statusLabel(status: TournamentStatus): string {
 }
 
 export function playFormatLabel(tournament: Pick<Tournament, 'type' | 'poolCount'>): string {
-  if (tournament.poolCount) return 'Groups, then knockout';
-  return tournament.type === 'knockout' ? 'Knockout' : 'Everyone plays everyone';
+  if (tournament.poolCount) return 'Groups + knockout';
+  return tournament.type === 'knockout' ? 'Knockout' : 'Round robin';
 }

@@ -11,7 +11,6 @@ import {
   getTournament,
   insertQualifiers,
   markKnockoutSet,
-  setLateAdditionsEnabled,
   setParticipantPool,
   setPoolAdvancement,
   setTournamentPoolConfig,
@@ -40,6 +39,7 @@ export interface PoolView {
 interface KnockoutPreview {
   picks: QualifierPick[];
   order: number[];
+  canShuffle: boolean;
 }
 
 interface Format {
@@ -102,11 +102,7 @@ export function startPools(tournamentId: number, settings: PoolAdvancement): voi
   const format = currentFormat(tournamentId);
   const poolSeed = randomSeed();
   deleteBadmintonFixtures(tournamentId);
-  setTournamentPoolConfig(tournamentId, {
-    ...settings,
-    lateAdditionsEnabled: Boolean(tournament.lateAdditionsEnabled),
-    poolSeed,
-  });
+  setTournamentPoolConfig(tournamentId, { ...settings, poolSeed });
   createPoolFixtures(
     tournamentId,
     participants.map((p) => p.id),
@@ -150,9 +146,9 @@ function poolStageFinished(tournamentId: number): boolean {
   return poolMatches.length > 0 && poolMatches.every((m) => m.status === 'completed');
 }
 
-// Late additions stay open until the knockout is set (pools) or the owner closes them (round robin).
-function lateAdditionsOpen(tournament: Tournament): boolean {
-  return Boolean(tournament.lateAdditionsEnabled) && !tournament.lateAdditionsClosed && tournament.stage !== 'knockout';
+// New players can join until the knockout is set.
+export function lateAdditionsOpen(tournament: Tournament): boolean {
+  return tournament.stage !== 'knockout';
 }
 
 // Pure preview: nothing is written until lockKnockout.
@@ -161,19 +157,39 @@ export function previewKnockout(tournamentId: number, bracketSeed: number): Knoc
   if (!tournament || tournament.stage !== 'pools') throw new Error('The knockout is already set');
   if (!poolStageFinished(tournamentId)) throw new Error('Finish every pool match first');
 
+  const views = getPoolViews(tournamentId);
   const picks = pickQualifiers(
-    getPoolViews(tournamentId).map((view) => ({ poolId: view.pool.id, ranked: view.rows })),
+    views.map((view) => ({ poolId: view.pool.id, ranked: view.rows })),
     tournament.startingSlots ?? 0,
     tournament.qualifiersPerPool ?? 1,
     tournament.wildcardMetric ?? 'win_rate'
   );
   if (picks.length !== tournament.startingSlots) throw new Error('Not enough players to fill the knockout');
 
-  const order = shuffle(
+  const crossover = fixedCrossoverOrder(picks, views.map((view) => view.pool.id));
+  const order = crossover ?? shuffle(
     picks.map((pick) => pick.participantId),
     createRng(bracketSeed)
   );
-  return { picks, order };
+  return { picks, order, canShuffle: crossover === null };
+}
+
+// [group position, finishing rank], in bracket order. Keep A1/B1 (and C1/D1)
+// in opposite halves so they cannot meet before the final.
+function fixedCrossoverOrder(picks: QualifierPick[], poolIds: number[]): number[] | null {
+  const layouts: Record<string, [number, number][]> = {
+    '2:2': [[0, 1], [1, 1]],
+    '2:4': [[0, 1], [1, 2], [1, 1], [0, 2]],
+    '2:8': [[0, 1], [1, 4], [1, 2], [0, 3], [1, 1], [0, 4], [0, 2], [1, 3]],
+    '4:8': [[0, 1], [1, 2], [2, 1], [3, 2], [1, 1], [0, 2], [3, 1], [2, 2]],
+  };
+  const layout = layouts[`${poolIds.length}:${picks.length}`];
+  if (!layout) return null;
+  const ordered = layout.map(([group, rank]) =>
+    picks.find((pick) => pick.poolId === poolIds[group] && pick.poolRank === rank)
+  );
+  if (ordered.some((pick) => pick === undefined)) return null;
+  return ordered.map((pick) => pick!.participantId);
 }
 
 export function lockKnockout(tournamentId: number, bracketSeed: number): void {
@@ -225,10 +241,3 @@ export function addLateParticipant(tournamentId: number, name: string): Particip
   return { ...participant, poolId };
 }
 
-export function toggleLateAdditions(tournamentId: number, enabled: boolean): void {
-  const tournament = getTournament(tournamentId);
-  if (!tournament || tournament.lateAdditionsClosed || tournament.stage === 'knockout') {
-    throw new Error('Late additions are closed');
-  }
-  setLateAdditionsEnabled(tournamentId, enabled);
-}

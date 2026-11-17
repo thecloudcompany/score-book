@@ -2,12 +2,12 @@
   "expo": {
     "name": "ScoreBook",
     "slug": "scorebook",
-    "version": "1.2.0",
+    "version": "1.2.2",
     "orientation": "default",
     "icon": "./assets/images/icon-1024.png",
     "scheme": "scorebook",
     "userInterfaceStyle": "light",
-    "description": "Keep score for badminton, tennis, table tennis and pickleball. Play everyone against everyone, a knockout, or groups followed by a knockout. See live standings and share the results. Works offline, no account needed.",
+    "description": "Keep score for badminton, tennis, table tennis and pickleball. Play everyone against everyone, a knockout, or groups followed by a knockout. Add players until the knockout starts. See live standings and share the results. Works offline, no account needed.",
     "ios": {
       "icon": "./assets/images/icon-1024.png",
       "bundleIdentifier": "com.moneshms.scorebook",
@@ -21,7 +21,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.moneshms.scorebook",
-      "versionCode": 9,
+      "versionCode": 11,
       "permissions": [],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW"

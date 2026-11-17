@@ -6,6 +6,7 @@ const numeric = { fontVariant: ['tabular-nums' as const] };
 export const s = StyleSheet.create({
   captureArea: {
     backgroundColor: Colors.bg,
+    padding: Spacing.md,
   },
   shareHeader: {
     marginBottom: Spacing.lg,
@@ -18,8 +19,8 @@ export const s = StyleSheet.create({
   shareSubtitle: {
     fontFamily: Font.regular,
     fontSize: Type.meta,
-    color: Colors.textMuted,
-    marginTop: 2,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   empty: {
     alignItems: 'center',
@@ -41,8 +42,8 @@ export const s = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 10,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 8,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -50,8 +51,8 @@ export const s = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
@@ -67,35 +68,35 @@ export const s = StyleSheet.create({
     ...numeric,
   },
   colRank: {
-    width: 40,
+    width: 24,
   },
   colPlayer: {
     flex: 1,
+    minWidth: 0,
     paddingRight: Spacing.sm,
   },
   colStat: {
-    width: 36,
+    width: 30,
     textAlign: 'right',
   },
   colDiff: {
-    width: 52,
-    textAlign: 'right',
-  },
-  colTag: {
-    width: 84,
+    width: 46,
     textAlign: 'right',
   },
   tagText: {
     fontFamily: Font.semibold,
     fontSize: Type.meta,
     color: Colors.textMuted,
-    textAlign: 'right',
+    marginTop: 2,
   },
   tagQualified: {
     color: Colors.primary,
   },
+  qualifiedRow: {
+    backgroundColor: Colors.primaryMuted,
+  },
   poolSection: {
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.md,
   },
   poolTitle: {
     fontFamily: Font.bold,
@@ -112,21 +113,55 @@ export const s = StyleSheet.create({
     color: Colors.text,
     marginBottom: Spacing.sm,
   },
-  knockoutParticipantCard: {
-    backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 12,
+  championCard: {
+    backgroundColor: Colors.primaryMuted,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    marginBottom: Spacing.xxl,
+  },
+  championLabel: {
+    fontFamily: Font.semibold,
+    fontSize: Type.meta,
+    color: Colors.primary,
     marginBottom: Spacing.sm,
   },
-  knockoutParticipantCardEliminated: {
-    opacity: 0.55,
+  championName: {
+    fontFamily: Font.extrabold,
+    fontSize: Type.title,
+    lineHeight: 32,
+    color: Colors.primary,
   },
-  knockoutParticipantName: {
+  runnerUp: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
+    gap: Spacing.xs,
+  },
+  runnerUpLabel: {
+    fontFamily: Font.medium,
+    fontSize: Type.meta,
+    color: Colors.textSecondary,
+  },
+  runnerUpName: {
     fontFamily: Font.semibold,
+    fontSize: Type.section,
+    color: Colors.text,
+    lineHeight: 24,
+  },
+  resultName: {
+    fontFamily: Font.medium,
     fontSize: Type.body,
     color: Colors.text,
+    lineHeight: 22,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+  },
+  knockoutParticipantName: {
+    fontFamily: Font.regular,
+    fontSize: Type.body,
+    lineHeight: 22,
+    color: Colors.textSecondary,
   },
 });

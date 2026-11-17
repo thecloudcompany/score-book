@@ -10,7 +10,7 @@ export const Font = {
 
 export const Colors = {
   // Surfaces
-  bg: '#F5F7F6',
+  bg: '#FFFFFF',
   bgElevated: '#FFFFFF',
   surface: '#EEF2F1',
 
@@ -75,3 +75,9 @@ export function statusColor(status: string): string {
       return Colors.textMuted;
   }
 }
+
+export const Motion = {
+  duration: { modal: 200, layout: 200, reveal: 200 },
+  easeOut: [0.23, 1, 0.32, 1] as const,
+  drawer: [0.32, 0.72, 0, 1] as const,
+};

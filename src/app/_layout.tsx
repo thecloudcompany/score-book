@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { View, StatusBar } from 'react-native';
+import { View, StatusBar, Platform } from 'react-native';
 import { useFonts } from 'expo-font';
 import {
   Figtree_400Regular,
@@ -49,12 +49,16 @@ export default function RootLayout() {
     return null;
   }
 
-  return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+  const content = (
+    <>
       <StatusBar barStyle="dark-content" />
       <View style={{ flex: 1, backgroundColor: Colors.bg }}>
         <Stack screenOptions={{ headerShown: false }} />
       </View>
-    </SafeAreaProvider>
+    </>
+  );
+  // Expo Router owns web context; CSS in +html handles browser safe areas.
+  return Platform.OS === 'web' ? content : (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>{content}</SafeAreaProvider>
   );
 }

@@ -2,17 +2,16 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { captureRef } from 'react-native-view-shot';
+import type { StandingsCaptureRef } from '@/components/standings-capture';
 import * as Sharing from 'expo-sharing';
 import ScoreEntryModal from '@/components/score-entry-modal';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { MatchesTab } from '@/components/matches-tab';
 import { StandingsTab } from '@/components/standings-tab';
-import { SettingsTab, type LateAdditionsState, type PoolSettingsActions } from '@/components/settings-tab';
+import { SettingsTab, type PoolSettingsActions } from '@/components/settings-tab';
 import { NextStepCard } from '@/components/next-step-card';
 import { nextStepFor } from '@/lib/next-step';
 import {
-  closeLateAdditions,
   getTournament,
   getParticipants,
   updateParticipantName,
@@ -24,16 +23,16 @@ import {
 } from '@/lib/db-operations';
 import {
   addLateParticipant,
+  lateAdditionsOpen,
   lockKnockout,
   previewKnockout,
-  startPools,
-  toggleLateAdditions,
   updatePoolAdvancement,
 } from '@/lib/pool-operations';
 import { randomSeed } from '@/lib/rng';
 import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
 import { ContentContainer } from '@/components/content-container';
+import { TournamentHeader } from '@/components/tournament-header';
 import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
@@ -41,12 +40,11 @@ import { pickleballSport } from '@/lib/sports/pickleball';
 import { s } from '@/components/tournament-detail.styles';
 import type { Tournament, Sport, MatchFormat } from '@/types';
 
-type TabType = 'matches' | 'standings' | 'settings';
+type TabType = 'matches' | 'standings';
 
 const TABS: { key: TabType; label: string }[] = [
   { key: 'matches', label: 'Matches' },
   { key: 'standings', label: 'Standings' },
-  { key: 'settings', label: 'Settings' },
 ];
 
 export default function TournamentDetailScreen() {
@@ -57,15 +55,18 @@ export default function TournamentDetailScreen() {
 
   const [tournament, setTournament] = useState<Tournament | null>(initialTournament);
   const [activeTab, setActiveTab] = useState<TabType>('matches');
+  const [managing, setManaging] = useState(false);
   const [scoreModalVisible, setScoreModalVisible] = useState(false);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [participantsVersion, setParticipantsVersion] = useState(0);
   const [settingsVersion, setSettingsVersion] = useState(0);
   const [shareError, setShareError] = useState('');
-  const standingsRef = useRef<React.ComponentRef<typeof View> | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const sharingRef = useRef(false);
+  const standingsRef = useRef<StandingsCaptureRef | null>(null);
 
-  const [drawPreview, setDrawPreview] = useState<{ seed: number; order: number[]; signature: string } | null>(null);
+  const [drawPreview, setDrawPreview] = useState<{ seed: number; order: number[]; canShuffle: boolean; signature: string } | null>(null);
   const [actionError, setActionError] = useState('');
 
   const { matches, units, participants, refresh: refreshMatches, updateScore } = useMatches(
@@ -136,7 +137,7 @@ export default function TournamentDetailScreen() {
     (seed: number) => {
       try {
         const preview = previewKnockout(tournamentId, seed);
-        setDrawPreview({ seed, order: preview.order, signature: poolSignature });
+        setDrawPreview({ seed, order: preview.order, canShuffle: preview.canShuffle, signature: poolSignature });
         setActionError('');
       } catch (e) {
         setActionError(e instanceof Error ? e.message : 'Could not draw the knockout');
@@ -157,19 +158,6 @@ export default function TournamentDetailScreen() {
     }
   }, [tournamentId, drawActive, refreshAll]);
 
-  const handleToggleLateAdditions = useCallback(
-    (enabled: boolean) => {
-      try {
-        toggleLateAdditions(tournamentId, enabled);
-        setActionError('');
-      } catch (e) {
-        setActionError(e instanceof Error ? e.message : 'Could not change late additions');
-      }
-      refreshAll();
-    },
-    [tournamentId, refreshAll]
-  );
-
   const handleAddLatePlayer = useCallback(
     (name: string): string | null => {
       try {
@@ -178,25 +166,6 @@ export default function TournamentDetailScreen() {
         return null;
       } catch (e) {
         return e instanceof Error ? e.message : 'Could not add player';
-      }
-    },
-    [tournamentId, refreshAll]
-  );
-
-  const handleEndLateAdditions = useCallback(() => {
-    closeLateAdditions(tournamentId);
-    refreshAll();
-  }, [tournamentId, refreshAll]);
-
-  const handleStartPools = useCallback(
-    (settings: Parameters<typeof startPools>[1]): string | null => {
-      try {
-        startPools(tournamentId, settings);
-        setActionError('');
-        refreshAll();
-        return null;
-      } catch (e) {
-        return e instanceof Error ? e.message : 'Could not start pools';
       }
     },
     [tournamentId, refreshAll]
@@ -216,19 +185,15 @@ export default function TournamentDetailScreen() {
   );
 
   const poolSettingsActions: PoolSettingsActions | null =
-    tournament && tournament.type === 'round_robin' && tournament.sport === 'badminton'
-      ? { onStartPools: handleStartPools, onUpdateAdvancement: handleUpdateAdvancement }
+    tournament && tournament.poolCount != null
+      ? { onUpdateAdvancement: handleUpdateAdvancement }
       : null;
 
-  const lateAdditions: LateAdditionsState | null =
-    tournament && tournament.type === 'round_robin' && tournament.sport === 'badminton'
-      ? {
-          enabled: Boolean(tournament.lateAdditionsEnabled),
-          closed: Boolean(tournament.lateAdditionsClosed) || tournament.stage === 'knockout',
-          closedNote: tournament.stage === 'knockout' ? 'Closed — the knockout is set' : 'Closed',
-          canClose: tournament.stage !== 'pools',
-        }
-      : null;
+  const canAddPlayers =
+    !!tournament &&
+    tournament.type === 'round_robin' &&
+    tournament.sport === 'badminton' &&
+    lateAdditionsOpen(tournament);
 
   const handleMatchPress = useCallback((matchId: number) => {
     setSelectedMatchId(matchId);
@@ -288,14 +253,17 @@ export default function TournamentDetailScreen() {
   const tournamentName = tournament?.name ?? 'tournament';
 
   const handleShare = useCallback(async () => {
-    if (!standingsRef.current) return;
+    const target = standingsRef.current;
+    if (!target || sharingRef.current) return;
+    sharingRef.current = true;
+    setSharing(true);
     setShareError('');
     try {
-      const uri = await captureRef(standingsRef, {
-        format: 'png',
-        quality: 1,
-        result: Platform.OS === 'web' ? 'data-uri' : 'tmpfile',
-      });
+      if (Platform.OS !== 'web' && !(await Sharing.isAvailableAsync())) {
+        setShareError('Sharing is unavailable in this app build.');
+        return;
+      }
+      const uri = await target.capture();
 
       if (Platform.OS === 'web') {
         const response = await fetch(uri);
@@ -313,14 +281,18 @@ export default function TournamentDetailScreen() {
           URL.revokeObjectURL(link.href);
         }
       } else {
-        await Sharing.shareAsync(uri, {
+        await Sharing.shareAsync(uri.startsWith('file://') ? uri : `file://${uri}`, {
           dialogTitle: `${tournamentName} Standings`,
           mimeType: 'image/png',
         });
       }
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return;
       console.error('Share failed:', err);
       setShareError('Could not share standings. Try again.');
+    } finally {
+      sharingRef.current = false;
+      setSharing(false);
     }
   }, [tournamentName]);
 
@@ -330,6 +302,7 @@ export default function TournamentDetailScreen() {
         stage: tournament.stage,
         matches,
         drawPairs,
+        canShuffleDraw: drawActive?.canShuffle ?? false,
         getName: getParticipantName,
         onDraw: () => drawKnockoutPreview(randomSeed()),
         onLock: handleLockKnockout,
@@ -337,7 +310,7 @@ export default function TournamentDetailScreen() {
     : null;
 
   const renderActiveTab = () => {
-    if (activeTab === 'matches') {
+    if (!managing && activeTab === 'matches') {
       return (
         <MatchesTab
           tournamentType={tournament!.type ?? 'round_robin'}
@@ -351,7 +324,7 @@ export default function TournamentDetailScreen() {
         />
       );
     }
-    if (activeTab === 'standings') {
+    if (!managing && activeTab === 'standings') {
       return (
         <StandingsTab
           tournamentType={tournament!.type ?? 'round_robin'}
@@ -373,7 +346,7 @@ export default function TournamentDetailScreen() {
         maxScore={maxScore}
         hasScores={hasScores}
         poolSettings={poolSettingsActions}
-        lateAdditions={lateAdditions}
+        canAddPlayers={canAddPlayers}
         pools={poolViews.map((view) => view.pool)}
         onRenameTournament={(name) => {
           updateTournamentName(tournament!.id, name);
@@ -381,9 +354,7 @@ export default function TournamentDetailScreen() {
         }}
         onRenameParticipant={handleRenameParticipant}
         onUpdateMaxScore={handleUpdateMaxScore}
-        onToggleLateAdditions={handleToggleLateAdditions}
         onAddLatePlayer={handleAddLatePlayer}
-        onEndLateAdditions={handleEndLateAdditions}
         onDeletePress={handleDeleteTournament}
       />
     );
@@ -395,7 +366,7 @@ export default function TournamentDetailScreen() {
         <View style={s.centered}>
           <Text style={s.notFoundTitle}>Tournament not found</Text>
           <Text style={s.notFoundHint}>It may have been deleted in another tab.</Text>
-          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={s.backBtn}>
+          <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/')} activeOpacity={0.7} style={s.backBtn}>
             <Text style={s.backBtnText}>← Back to tournaments</Text>
           </TouchableOpacity>
         </View>
@@ -405,24 +376,17 @@ export default function TournamentDetailScreen() {
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'left', 'right', 'bottom']}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-          <Text style={s.backText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={s.headerTitle} numberOfLines={1}>
-          {tournament.name}
-        </Text>
-        {activeTab === 'standings' && standings.length > 0 ? (
-          <TouchableOpacity onPress={handleShare} activeOpacity={0.7} style={s.headerAction} accessibilityLabel="Share standings" accessibilityRole="button">
-            <Text style={s.headerActionText}>Share</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={{ minWidth: 48 }} />
-        )}
-      </View>
+      <TournamentHeader
+        tournament={tournament}
+        managing={managing}
+        onBack={() => router.replace('/')}
+        onManage={() => setManaging((open) => !open)}
+        onShare={!managing && activeTab === 'standings' && (standings.length > 0 || poolViews.length > 0) ? handleShare : undefined}
+        sharing={sharing}
+      />
       {(shareError || actionError) !== '' && <Text style={s.shareError}>{shareError || actionError}</Text>}
 
-      {nextStep && (
+      {!managing && nextStep && (nextStep.primary || (activeTab === 'matches' && nextStep.winner)) && (
         <View style={s.nextStepWrap}>
           <ContentContainer>
             <NextStepCard {...nextStep} />
@@ -430,7 +394,7 @@ export default function TournamentDetailScreen() {
         </View>
       )}
 
-      <View style={s.segmentWrap}>
+      {!managing && <View style={s.segmentWrap}>
         <View style={s.segmented} accessibilityRole="tablist">
           {TABS.map((tab) => {
             const active = activeTab === tab.key;
@@ -442,13 +406,14 @@ export default function TournamentDetailScreen() {
                 activeOpacity={0.8}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
+                aria-selected={active}
               >
                 <Text style={[s.segmentText, active && s.segmentTextActive]}>{tab.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
-      </View>
+      </View>}
 
       <View style={s.content}>
         <ContentContainer style={s.fill}>

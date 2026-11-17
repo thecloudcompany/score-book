@@ -8,6 +8,7 @@ export interface NextStepAction {
 
 export interface NextStep {
   title: string;
+  winner?: { participantId: number; name: string };
   progress?: { done: number; total: number };
   pairs?: [string, string][] | null;
   primary?: NextStepAction;
@@ -26,6 +27,7 @@ interface NextStepInput {
   stage: PoolStage | null | undefined;
   matches: MatchLike[];
   drawPairs: [string, string][] | null;
+  canShuffleDraw?: boolean;
   getName: (id: number) => string;
   onDraw: () => void;
   onLock: () => void;
@@ -36,11 +38,17 @@ function progressOf(list: MatchLike[]): NextStep['progress'] {
   return { done, total: list.length };
 }
 
+function remainingLabel(list: MatchLike[]): string {
+  const left = list.filter((match) => match.status !== 'completed').length;
+  return `${left} match${left === 1 ? '' : 'es'} left`;
+}
+
 export function nextStepFor({
   tournamentType,
   stage,
   matches,
   drawPairs,
+  canShuffleDraw = true,
   getName,
   onDraw,
   onLock,
@@ -59,11 +67,12 @@ export function nextStepFor({
     if (final?.status === 'completed' && final.winnerId !== null) {
       return {
         title: `Winner: ${getName(final.winnerId)}`,
+        winner: { participantId: final.winnerId, name: getName(final.winnerId) },
         progress: progressOf(knockoutMatches),
       };
     }
     return {
-      title: 'Knockout in progress',
+      title: remainingLabel(knockoutMatches),
       progress: progressOf(knockoutMatches),
     };
   }
@@ -71,40 +80,40 @@ export function nextStepFor({
   if (stage === 'pools') {
     if (groupMatches.some((m) => m.status !== 'completed')) {
       return {
-        title: 'Play the group matches',
+        title: remainingLabel(groupMatches),
         progress: progressOf(groupMatches),
       };
     }
     if (drawPairs) {
       return {
-        title: 'Check the knockout draw',
+        title: 'Knockout draw',
         pairs: drawPairs,
         primary: {
-          label: 'Confirm draw',
+          label: 'Start knockout',
           onPress: onLock,
           confirm: {
-            title: 'Confirm the knockout draw?',
-            message: 'The group results will be locked. This cannot be undone.',
+            title: 'Start knockout?',
+            message: 'Group results will be locked.',
           },
         },
-        secondary: { label: 'Shuffle again', onPress: onDraw },
+        secondary: canShuffleDraw ? { label: 'Shuffle', onPress: onDraw } : undefined,
       };
     }
     return {
-      title: 'Groups are finished',
+      title: 'Groups complete',
       progress: progressOf(groupMatches),
-      primary: { label: 'Make the knockout', onPress: onDraw },
+      primary: { label: 'Review knockout', onPress: onDraw },
     };
   }
 
   if (matches.every((m) => m.status === 'completed')) {
     return {
-      title: 'All matches are finished',
+      title: 'Finished',
       progress: progressOf(matches),
     };
   }
   return {
-    title: 'Play the matches',
+    title: remainingLabel(matches),
     progress: progressOf(matches),
   };
 }

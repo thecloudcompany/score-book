@@ -1,35 +1,31 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing } from '@/constants/theme';
+import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   card: {
-    backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   title: {
     fontFamily: Font.bold,
-    fontSize: 17,
+    fontSize: Type.section,
+    lineHeight: 24,
     color: Colors.text,
   },
-  progressBlock: {
-    marginTop: Spacing.sm,
+  championLabel: {
+    fontFamily: Font.semibold,
+    fontSize: Type.meta,
+    color: Colors.textSecondary,
   },
-  progressTrack: {
-    height: 8,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surface,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 8,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.primary,
+  championName: {
+    fontFamily: Font.bold,
+    fontSize: Type.title,
+    lineHeight: 32,
+    color: Colors.primary,
+    marginTop: Spacing.xs,
   },
   pairs: {
+    maxHeight: 160,
     marginTop: Spacing.md,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
@@ -48,10 +44,12 @@ export const s = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.sm,
   },
   primaryBtn: {
     flex: 1,
+    minHeight: 48,
+    justifyContent: 'center',
     backgroundColor: Colors.primary,
     borderRadius: Radius.sm,
     paddingVertical: 14,
@@ -64,6 +62,8 @@ export const s = StyleSheet.create({
   },
   secondaryBtn: {
     flex: 1,
+    minHeight: 48,
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.sm,

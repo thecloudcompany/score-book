@@ -23,8 +23,6 @@ export interface Tournament {
   startingSlots?: number | null;
   qualifiersPerPool?: number | null;
   wildcardMetric?: WildcardMetric | null;
-  lateAdditionsEnabled?: boolean;
-  lateAdditionsClosed?: boolean;
   stage?: PoolStage | null;
   poolSeed?: number | null;
   bracketSeed?: number | null;

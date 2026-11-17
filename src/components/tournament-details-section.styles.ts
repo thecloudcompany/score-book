@@ -7,9 +7,9 @@ export const styles = StyleSheet.create({
   },
   label: {
     fontFamily: Font.semibold,
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: 6,
+    fontSize: 15,
+    color: Colors.text,
+    marginBottom: 8,
   },
   input: {
     fontFamily: Font.regular,
@@ -20,11 +20,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 13,
     borderWidth: 1,
-    borderColor: Colors.border,
-    outlineColor: Colors.primary,
-  },
-  inputError: {
-    borderColor: Colors.danger,
   },
   error: {
     fontFamily: Font.medium,
@@ -38,17 +33,17 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   sportBtn: {
-    flexBasis: '48%',
+    flexBasis: 'auto',
     flexGrow: 1,
-    minWidth: 120,
+    minHeight: 48,
     borderRadius: Radius.sm,
     paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.bgElevated,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'transparent',
     outlineColor: Colors.primary,
   },
   sportBtnActive: {
@@ -69,6 +64,7 @@ export const styles = StyleSheet.create({
     gap: 8,
   },
   formatBtn: {
+    minHeight: 48,
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 2,
@@ -92,21 +88,23 @@ export const styles = StyleSheet.create({
   formatBtnTextActive: {
     color: Colors.primary,
   },
-  advancedToggle: {
+  optionalRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginTop: Spacing.lg,
-    paddingVertical: 8,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.borderLight,
+    gap: Spacing.md,
+  },
+  optionalAction: {
+    flex: 1,
+    minHeight: 48,
+    justifyContent: 'center',
   },
   advancedText: {
     fontFamily: Font.semibold,
     fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  advancedArrow: {
-    fontSize: 12,
-    color: Colors.textMuted,
+    color: Colors.primary,
   },
   advancedRow: {
     flexDirection: 'row',
@@ -129,27 +127,46 @@ export const styles = StyleSheet.create({
     width: 80,
     textAlign: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
   },
-  optionList: {
+  optionRow: {
+    flexDirection: 'row',
     gap: 6,
   },
   optionCard: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 'auto',
+    minWidth: 80,
     borderRadius: Radius.sm,
-    paddingVertical: 11,
-    paddingHorizontal: 14,
+    minHeight: 48,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    alignItems: 'center',
     backgroundColor: Colors.bgElevated,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.borderLight,
+  },
+  optionCopy: { flex: 1 },
+  optionDescription: {
+    fontFamily: Font.regular,
+    fontSize: 12,
+    lineHeight: 19,
+    color: Colors.textSecondary,
+    marginTop: 3,
+  },
+  groupCount: {
+    marginTop: 10,
   },
   typeBtnActive: {
     backgroundColor: Colors.primaryMuted,
     borderColor: Colors.primary,
+    borderBottomWidth: 3,
   },
   typeText: {
     fontFamily: Font.semibold,
-    fontSize: 15,
-    color: Colors.textSecondary,
+    fontSize: 13,
+    textAlign: 'center',
+    color: Colors.text,
   },
   typeTextActive: {
     color: Colors.primary,

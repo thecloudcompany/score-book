@@ -3,28 +3,21 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   LayoutAnimation,
-  Switch,
+  Platform,
 } from 'react-native';
+import { AppInput } from '@/components/app-input';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { PoolSettingsSection } from '@/components/pool-settings-section';
+import { AddPlayersModal } from '@/components/add-players-modal';
 import { s } from './settings-tab.styles';
-import { Colors } from '@/constants/theme';
+import { Colors, Motion } from '@/constants/theme';
+import { useReducedMotionPreference } from '@/hooks/use-reduced-motion';
 import type { PoolAdvancement } from '@/lib/pool-rules';
-import { playFormatLabel, SPORT_LABELS } from '@/lib/tournament-labels';
 import type { Pool, Tournament, Participant } from '@/types';
 
-export interface LateAdditionsState {
-  enabled: boolean;
-  closed: boolean;
-  closedNote: string;
-  canClose: boolean;
-}
-
 export interface PoolSettingsActions {
-  onStartPools: (settings: PoolAdvancement) => string | null;
   onUpdateAdvancement: (patch: Omit<PoolAdvancement, 'poolCount'>) => string | null;
 }
 
@@ -34,28 +27,50 @@ interface SettingsTabProps {
   maxScore: number;
   hasScores: boolean;
   poolSettings: PoolSettingsActions | null;
-  lateAdditions: LateAdditionsState | null;
+  canAddPlayers: boolean;
   pools?: Pool[];
   onRenameTournament: (newName: string) => void;
   onRenameParticipant: (id: number, newName: string) => void;
   onUpdateMaxScore: (newScore: number, resetScores: boolean) => void;
-  onToggleLateAdditions: (enabled: boolean) => void;
   onAddLatePlayer: (name: string) => string | null;
-  onEndLateAdditions: () => void;
   onDeletePress: () => void;
 }
 
-const animate = () => LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
-function Section({ title, right, children }: { title: string; right?: ReactNode; children?: ReactNode }) {
+function Section({
+  title,
+  right,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  right?: ReactNode;
+  open?: boolean;
+  onToggle?: () => void;
+  children?: ReactNode;
+}) {
   const rows = Children.toArray(children).filter(Boolean);
+  const expanded = onToggle ? open : true;
   return (
     <View style={s.section}>
       <View style={s.sectionHead}>
-        <Text style={s.sectionTitle}>{title}</Text>
+        {onToggle ? (
+          <TouchableOpacity
+            style={s.accordionHead}
+            onPress={onToggle}
+            activeOpacity={0.6}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: !!open }}
+          >
+            <Text style={s.sectionTitle}>{title}</Text>
+            <Text style={s.chevron}>{open ? '▼' : '▶'}</Text>
+          </TouchableOpacity>
+        ) : (
+          <Text style={s.sectionTitle}>{title}</Text>
+        )}
         {right}
       </View>
-      {rows.length > 0 && (
+      {expanded && rows.length > 0 && (
         <View style={s.card}>
           {rows.map((child, index) => (
             <Fragment key={index}>
@@ -71,7 +86,6 @@ function Section({ title, right, children }: { title: string; right?: ReactNode;
 
 function Row({
   title,
-  subtitle,
   value,
   action,
   right,
@@ -79,7 +93,6 @@ function Row({
   indent,
 }: {
   title: string;
-  subtitle?: string;
   value?: string;
   action?: string;
   right?: ReactNode;
@@ -92,7 +105,6 @@ function Row({
         <Text style={[s.rowTitle, indent && s.rowTitleIndent]} numberOfLines={1}>
           {title}
         </Text>
-        {subtitle !== undefined && <Text style={s.rowSubtitle}>{subtitle}</Text>}
       </View>
       {value !== undefined && <Text style={s.rowValue}>{value}</Text>}
       {right ?? (action !== undefined && <Text style={s.rowAction}>{action}</Text>)}
@@ -117,27 +129,30 @@ export function SettingsTab({
   maxScore,
   hasScores,
   poolSettings,
-  lateAdditions,
+  canAddPlayers,
   pools,
   onRenameTournament,
   onRenameParticipant,
   onUpdateMaxScore,
-  onToggleLateAdditions,
   onAddLatePlayer,
-  onEndLateAdditions,
   onDeletePress,
 }: SettingsTabProps) {
+  const reduceMotion = useReducedMotionPreference();
+  const animate = useCallback(() => {
+    if (reduceMotion || Platform.OS === 'web') return;
+    LayoutAnimation.configureNext({
+      ...LayoutAnimation.Presets.easeInEaseOut,
+      duration: Motion.duration.layout,
+    });
+  }, [reduceMotion]);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(tournament.name);
   const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
   const [participantName, setParticipantName] = useState('');
   const [participantError, setParticipantError] = useState('');
   const [addingPlayer, setAddingPlayer] = useState(false);
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [newPlayerError, setNewPlayerError] = useState('');
-  const [confirmEndLate, setConfirmEndLate] = useState(false);
+  const [openPlayers, setOpenPlayers] = useState(true);
   const [openPoolIds, setOpenPoolIds] = useState<number[]>([]);
-  const [showGroups, setShowGroups] = useState(false);
 
   const [editingScore, setEditingScore] = useState(false);
   const [scoreInputValue, setScoreInputValue] = useState(String(maxScore));
@@ -157,22 +172,23 @@ export function SettingsTab({
   }
 
   const togglePool = useCallback((poolId: number) => {
+    animate();
     setOpenPoolIds((prev) => (prev.includes(poolId) ? prev.filter((id) => id !== poolId) : [...prev, poolId]));
-  }, []);
+  }, [animate]);
 
   const handleStartScoreEdit = useCallback(() => {
     animate();
     setScoreInputValue(String(maxScore));
     setScoreError('');
     setEditingScore(true);
-  }, [maxScore]);
+  }, [maxScore, animate]);
 
   const handleCancelScoreEdit = useCallback(() => {
     animate();
     setScoreInputValue(String(maxScore));
     setScoreError('');
     setEditingScore(false);
-  }, [maxScore]);
+  }, [maxScore, animate]);
 
   const handleSaveScore = useCallback(() => {
     const parsed = parseInt(scoreInputValue.trim(), 10);
@@ -195,7 +211,7 @@ export function SettingsTab({
       setEditingScore(false);
       setScoreError('');
     }
-  }, [scoreInputValue, maxScore, hasScores, onUpdateMaxScore]);
+  }, [scoreInputValue, maxScore, hasScores, onUpdateMaxScore, animate]);
 
   const handleConfirmReset = useCallback(() => {
     if (pendingScore !== null) {
@@ -206,7 +222,7 @@ export function SettingsTab({
     animate();
     setEditingScore(false);
     setScoreError('');
-  }, [pendingScore, onUpdateMaxScore]);
+  }, [pendingScore, onUpdateMaxScore, animate]);
 
   const handleCancelReset = useCallback(() => {
     setShowResetWarning(false);
@@ -217,7 +233,7 @@ export function SettingsTab({
     animate();
     setNameValue(tournament.name);
     setEditingName(true);
-  }, [tournament.name]);
+  }, [tournament.name, animate]);
 
   const commitName = useCallback(() => {
     if (nameValue.trim()) {
@@ -225,14 +241,14 @@ export function SettingsTab({
     }
     animate();
     setEditingName(false);
-  }, [nameValue, onRenameTournament]);
+  }, [nameValue, onRenameTournament, animate]);
 
   const startEditingParticipant = useCallback((id: number, name: string) => {
     animate();
     setEditingParticipant(id);
     setParticipantName(name);
     setParticipantError('');
-  }, []);
+  }, [animate]);
 
   const commitParticipantName = useCallback(() => {
     if (editingParticipant != null) {
@@ -255,29 +271,25 @@ export function SettingsTab({
     animate();
     setEditingParticipant(null);
     setParticipantError('');
-  }, [editingParticipant, participantName, onRenameParticipant, participants]);
+  }, [editingParticipant, participantName, onRenameParticipant, participants, animate]);
 
-  const submitNewPlayer = useCallback(() => {
-    const clean = newPlayerName.trim();
-    if (!clean) {
-      setNewPlayerError('Enter a name');
-      return;
-    }
-    const error = onAddLatePlayer(clean);
-    if (error) {
-      setNewPlayerError(error);
-      return;
-    }
-    animate();
-    setNewPlayerName('');
-    setNewPlayerError('');
-    setAddingPlayer(false);
-  }, [newPlayerName, onAddLatePlayer]);
+  const submitNewPlayers = useCallback(
+    (names: string[]): string | null => {
+      for (const name of names) {
+        const error = onAddLatePlayer(name);
+        if (error) return error;
+      }
+      animate();
+      setAddingPlayer(false);
+      return null;
+    },
+    [onAddLatePlayer, animate]
+  );
 
   const renderPlayer = (p: Participant, indent: boolean) =>
     editingParticipant === p.id ? (
       <View key={p.id} style={s.editor}>
-        <TextInput
+        <AppInput
           style={s.editorInput}
           value={participantName}
           onChangeText={setParticipantName}
@@ -313,10 +325,10 @@ export function SettingsTab({
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 8 }}>
       <View style={s.header}>
         {editingName ? (
-          <TextInput
+          <AppInput
             style={s.nameInput}
             value={nameValue}
             onChangeText={setNameValue}
@@ -330,14 +342,11 @@ export function SettingsTab({
         ) : (
           <View style={s.nameRow}>
             <Text style={s.name} numberOfLines={1}>{tournament.name}</Text>
-            <TouchableOpacity onPress={startEditingName} activeOpacity={0.7} hitSlop={8} accessibilityRole="button" accessibilityLabel="Change name">
+            <TouchableOpacity style={s.inlineAction} onPress={startEditingName} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Change name">
               <Text style={s.rename}>Change</Text>
             </TouchableOpacity>
           </View>
         )}
-        <Text style={s.subtitle}>
-          {SPORT_LABELS[tournament.sport]}, {playFormatLabel(tournament)}
-        </Text>
       </View>
 
       <Section
@@ -346,7 +355,7 @@ export function SettingsTab({
           editingScore ? null : (
             <View style={s.sectionValue}>
               <Text style={s.rowValue}>{maxScore} {isTennis ? 'games' : 'points'}</Text>
-              <TouchableOpacity onPress={handleStartScoreEdit} activeOpacity={0.6} hitSlop={8} accessibilityRole="button">
+              <TouchableOpacity style={s.inlineAction} onPress={handleStartScoreEdit} activeOpacity={0.6} accessibilityRole="button" accessibilityLabel="Change scoring">
                 <Text style={s.rowAction}>Change</Text>
               </TouchableOpacity>
             </View>
@@ -358,7 +367,7 @@ export function SettingsTab({
             <Text style={s.editorLabel}>
               {isTennis ? 'Games needed to win a set' : 'Points needed to win a game'}
             </Text>
-            <TextInput
+            <AppInput
               style={s.editorInput}
               value={scoreInputValue}
               onChangeText={(text) => {
@@ -387,123 +396,61 @@ export function SettingsTab({
         )}
       </Section>
 
-      <Section title={`Players (${participants.length})`}>
-        {renderRoster()}
-        {addingPlayer && (
-          <View style={s.editor}>
-            <TextInput
-              style={s.editorInput}
-              value={newPlayerName}
-              onChangeText={(text) => {
-                setNewPlayerName(text);
-                setNewPlayerError('');
-              }}
-              placeholder="Player name"
-              placeholderTextColor={Colors.textMuted}
-              autoFocus
-              onSubmitEditing={submitNewPlayer}
-              returnKeyType="done"
-              selectionColor={Colors.primary}
-              accessibilityLabel="New player name"
-            />
-            {newPlayerError !== '' && <Text style={s.error}>{newPlayerError}</Text>}
-            <View style={s.editorActions}>
-              <TouchableOpacity
-                style={s.ghostBtn}
-                onPress={() => {
-                  setAddingPlayer(false);
-                  setNewPlayerName('');
-                  setNewPlayerError('');
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={s.ghostText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.primaryBtn} onPress={submitNewPlayer} activeOpacity={0.85}>
-                <Text style={s.primaryText}>Add</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </Section>
-
-      {poolSettings && (
-        <Section title="Groups and knockout">
-          <Row
-            title={poolsStarted ? 'Knockout' : 'Groups'}
-            value={poolsStarted ? `${tournament.startingSlots ?? 0} go through` : 'Not split yet'}
-            action={showGroups ? 'Hide' : 'Open'}
-            onPress={() => {
-              animate();
-              setShowGroups((open) => !open);
-            }}
-          />
-          {showGroups && (
+      {poolSettings && poolsStarted && (
+        <Section title="Knockout">
             <PoolSettingsSection
               tournament={tournament}
               playerCount={participants.length}
-              hasScores={hasScores}
-              onStartPools={poolSettings.onStartPools}
               onUpdateAdvancement={poolSettings.onUpdateAdvancement}
             />
-          )}
         </Section>
       )}
 
-      {lateAdditions && (
-        <Section title="Add players later">
-          <Row
-            title="Let new players join"
-            subtitle={lateAdditions.closed ? lateAdditions.closedNote : undefined}
-            right={
-              <Switch
-                value={lateAdditions.enabled}
-                onValueChange={onToggleLateAdditions}
-                disabled={lateAdditions.closed}
-                trackColor={{ true: Colors.primary }}
-                accessibilityLabel="Let new players join"
-              />
-            }
-          />
-          {lateAdditions.enabled && !lateAdditions.closed && !addingPlayer && (
-            <Row title="Add a player" action="Add" onPress={() => setAddingPlayer(true)} />
-          )}
-          {lateAdditions.canClose && lateAdditions.enabled && !lateAdditions.closed && !addingPlayer && (
-            <Row
-              title="Stop adding players"
-              action="Stop"
-              onPress={() => setConfirmEndLate(true)}
-            />
-          )}
-        </Section>
+      <Section
+        title={`Players (${participants.length})`}
+        open={openPlayers}
+        onToggle={() => {
+          animate();
+          setOpenPlayers((open) => !open);
+        }}
+        right={
+          canAddPlayers ? (
+            <TouchableOpacity
+              style={s.addIconBtn}
+              onPress={() => setAddingPlayer(true)}
+              activeOpacity={0.7}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Add players"
+            >
+              <Text style={s.addIconText}>+</Text>
+            </TouchableOpacity>
+          ) : null
+        }
+      >
+        {renderRoster()}
+      </Section>
+      {addingPlayer && (
+        <AddPlayersModal
+          existingNames={participants.map((p) => p.name)}
+          onSubmit={submitNewPlayers}
+          onClose={() => setAddingPlayer(false)}
+        />
       )}
 
-      <TouchableOpacity style={s.deleteBtn} onPress={onDeletePress} activeOpacity={0.7}>
+      <TouchableOpacity style={s.deleteBtn} onPress={onDeletePress} activeOpacity={0.7} accessibilityRole="button">
         <Text style={s.deleteText}>Delete tournament</Text>
       </TouchableOpacity>
 
       <ConfirmDialog
         visible={showResetWarning}
         title="Reset scores?"
-        message="Scores have already been entered for this tournament. Changing the points will reset all match scores and standings. This cannot be undone. Do you want to continue?"
+        message="Changing scoring clears all results. This cannot be undone."
         confirmText="Reset and update"
         cancelText="Cancel"
         destructive
         onConfirm={handleConfirmReset}
         onCancel={handleCancelReset}
-      />
-      <ConfirmDialog
-        visible={confirmEndLate}
-        title="Stop adding players?"
-        message="No new players can join this tournament after this."
-        confirmText="Stop"
-        cancelText="Cancel"
-        destructive
-        onConfirm={() => {
-          setConfirmEndLate(false);
-          onEndLateAdditions();
-        }}
-        onCancel={() => setConfirmEndLate(false)}
       />
     </ScrollView>
   );

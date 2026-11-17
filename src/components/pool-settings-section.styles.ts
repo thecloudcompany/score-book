@@ -2,18 +2,12 @@ import { StyleSheet } from 'react-native';
 import { Font, Colors, Radius, Spacing } from '@/constants/theme';
 
 export const s = StyleSheet.create({
-  intro: {
-    fontFamily: Font.regular,
-    fontSize: 14,
-    lineHeight: 20,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
-  },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    minHeight: 48,
+    gap: Spacing.md,
   },
   summaryLabel: {
     fontFamily: Font.regular,
@@ -29,12 +23,6 @@ export const s = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   field: {
-    marginBottom: Spacing.lg,
-  },
-  label: {
-    fontFamily: Font.semibold,
-    fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
   },
   row: {
@@ -66,8 +54,8 @@ export const s = StyleSheet.create({
     gap: Spacing.sm,
   },
   stepBtn: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -93,6 +81,10 @@ export const s = StyleSheet.create({
     gap: Spacing.sm,
   },
   chip: {
+    minHeight: 48,
+    minWidth: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: Radius.sm,
@@ -113,19 +105,13 @@ export const s = StyleSheet.create({
     fontFamily: Font.semibold,
     color: Colors.primary,
   },
-  primaryBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.sm,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  primaryText: {
-    fontFamily: Font.bold,
-    fontSize: 15,
-    color: Colors.textInverse,
-  },
   disabled: {
     opacity: 0.4,
+  },
+  path: {
+    fontFamily: Font.medium,
+    fontSize: 13,
+    lineHeight: 20,
+    color: Colors.primary,
   },
 });

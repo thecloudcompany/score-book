@@ -20,15 +20,7 @@ import type {
 // ─── Tournaments ─────────────────────────────────────────────────────────────
 
 const TOURNAMENT_COLUMNS =
-  'id, name, sport, type, status, created_at as createdAt, updated_at as updatedAt, pool_count as poolCount, starting_slots as startingSlots, qualifiers_per_pool as qualifiersPerPool, wildcard_metric as wildcardMetric, late_additions_enabled as lateAdditionsEnabled, late_additions_closed as lateAdditionsClosed, stage, pool_seed as poolSeed, bracket_seed as bracketSeed';
-
-function toTournament(row: Tournament): Tournament {
-  return {
-    ...row,
-    lateAdditionsEnabled: Boolean(row.lateAdditionsEnabled),
-    lateAdditionsClosed: Boolean(row.lateAdditionsClosed),
-  };
-}
+  'id, name, sport, type, status, created_at as createdAt, updated_at as updatedAt, pool_count as poolCount, starting_slots as startingSlots, qualifiers_per_pool as qualifiersPerPool, wildcard_metric as wildcardMetric, stage, pool_seed as poolSeed, bracket_seed as bracketSeed';
 
 export function createTournament(
   name: string,
@@ -60,7 +52,7 @@ export function getTournaments(): Tournament[] {
   const rows = db.getAllSync<Tournament>(
     `SELECT ${TOURNAMENT_COLUMNS} FROM tournaments ORDER BY created_at DESC`
   );
-  return rows.map(toTournament);
+  return rows;
 }
 
 export function getTournament(id: number): Tournament | null {
@@ -69,7 +61,7 @@ export function getTournament(id: number): Tournament | null {
     `SELECT ${TOURNAMENT_COLUMNS} FROM tournaments WHERE id = ?`,
     id
   );
-  return row ? toTournament(row) : null;
+  return row ?? null;
 }
 
 interface TournamentPoolConfig {
@@ -77,30 +69,19 @@ interface TournamentPoolConfig {
   startingSlots: number;
   qualifiersPerPool: number;
   wildcardMetric: WildcardMetric;
-  lateAdditionsEnabled: boolean;
   poolSeed: number;
 }
 
 export function setTournamentPoolConfig(id: number, config: TournamentPoolConfig) {
   const db = getDatabase();
   db.runSync(
-    'UPDATE tournaments SET pool_count = ?, starting_slots = ?, qualifiers_per_pool = ?, wildcard_metric = ?, late_additions_enabled = ?, pool_seed = ?, stage = ? WHERE id = ?',
+    'UPDATE tournaments SET pool_count = ?, starting_slots = ?, qualifiers_per_pool = ?, wildcard_metric = ?, pool_seed = ?, stage = ? WHERE id = ?',
     config.poolCount,
     config.startingSlots,
     config.qualifiersPerPool,
     config.wildcardMetric,
-    config.lateAdditionsEnabled ? 1 : 0,
     config.poolSeed,
     'pools',
-    id
-  );
-}
-
-export function setLateAdditionsEnabled(id: number, enabled: boolean) {
-  const db = getDatabase();
-  db.runSync(
-    'UPDATE tournaments SET late_additions_enabled = ? WHERE id = ?',
-    enabled ? 1 : 0,
     id
   );
 }
@@ -128,19 +109,13 @@ export function deleteBadmintonFixtures(tournamentId: number) {
   db.runSync('DELETE FROM badminton_matches WHERE tournament_id = ?', tournamentId);
 }
 
-export function closeLateAdditions(id: number) {
-  const db = getDatabase();
-  db.runSync('UPDATE tournaments SET late_additions_closed = ? WHERE id = ?', 1, id);
-}
-
-// Setting the knockout is one-way: it moves the stage on and closes late additions.
+// Setting the knockout is one-way: it moves the stage on, which also closes late additions.
 export function markKnockoutSet(id: number, bracketSeed: number) {
   const db = getDatabase();
   db.runSync(
-    'UPDATE tournaments SET stage = ?, bracket_seed = ?, late_additions_closed = ? WHERE id = ?',
+    'UPDATE tournaments SET stage = ?, bracket_seed = ? WHERE id = ?',
     'knockout',
     bracketSeed,
-    1,
     id
   );
 }

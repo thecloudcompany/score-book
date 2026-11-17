@@ -1,3 +1,4 @@
+import { useEffect, useEffectEvent, useState } from 'react';
 import {
   View,
   Text,
@@ -5,8 +6,12 @@ import {
   Modal,
   StyleSheet,
   Platform,
+  Animated,
+  Easing,
 } from 'react-native';
-import { Font, Colors, Radius, Spacing } from '@/constants/theme';
+import { Font, Colors, Radius, Spacing, Motion } from '@/constants/theme';
+import { useReducedMotionPreference } from '@/hooks/use-reduced-motion';
+import { ModalSafeArea } from './modal-safe-area';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -29,35 +34,73 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const reduceMotion = useReducedMotionPreference();
+  const [opacity] = useState(() => new Animated.Value(0));
+  const [scale] = useState(() => new Animated.Value(1));
+
+  const reducedAtEntry = useEffectEvent(() => reduceMotion);
+
+  // Preference changes settle scale below rather than replaying the entrance.
+  useEffect(() => {
+    opacity.setValue(0);
+    scale.setValue(reducedAtEntry() ? 1 : 0.97);
+    if (!visible) return;
+    const animation = Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: Motion.duration.modal,
+        easing: Easing.bezier(...Motion.easeOut),
+        useNativeDriver: Platform.OS !== 'web',
+      }),
+      Animated.timing(scale, {
+        toValue: 1,
+        duration: Motion.duration.modal,
+        easing: Easing.bezier(...Motion.easeOut),
+        useNativeDriver: Platform.OS !== 'web',
+      }),
+    ], { stopTogether: false });
+    animation.start();
+    return () => animation.stop();
+  }, [visible, opacity, scale]);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      scale.stopAnimation();
+      scale.setValue(1);
+    }
+  }, [reduceMotion, scale]);
+
   if (Platform.OS === 'web') {
     if (!visible) return null;
     return (
-      <View style={s.webOverlay}>
-        <View style={s.webDialog} accessibilityRole="alert" accessibilityLabel={title} accessibilityViewIsModal>
-          <Text style={s.title} accessibilityRole="header">{title}</Text>
-          <Text style={s.message}>{message}</Text>
-          <View style={s.actions}>
-            <TouchableOpacity
-              style={[s.btn, s.btnCancel]}
-              onPress={onCancel}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={cancelText}
-            >
-              <Text style={s.btnCancelText}>{cancelText}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.btn, destructive ? s.btnDestructive : s.btnPrimary]}
-              onPress={onConfirm}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel={confirmText}
-            >
-              <Text style={s.btnPrimaryText}>{confirmText}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <Modal visible transparent animationType="none" onRequestClose={onCancel} accessibilityLabel={title}>
+        <Animated.View style={[s.webOverlay, { opacity }]}>
+          <Animated.View style={[s.webDialog, { transform: [{ scale }] }]} accessibilityRole="alert" accessibilityLabel={title} accessibilityViewIsModal>
+            <Text style={s.title} accessibilityRole="header">{title}</Text>
+            <Text style={s.message}>{message}</Text>
+            <View style={s.actions}>
+              <TouchableOpacity
+                style={[s.btn, s.btnCancel]}
+                onPress={onCancel}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={cancelText}
+              >
+                <Text style={s.btnCancelText}>{cancelText}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.btn, destructive ? s.btnDestructive : s.btnPrimary]}
+                onPress={onConfirm}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={confirmText}
+              >
+                <Text style={s.btnPrimaryText}>{confirmText}</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
     );
   }
 
@@ -65,31 +108,35 @@ export function ConfirmDialog({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onCancel}
+      accessibilityLabel={title}
     >
-      <View style={s.overlay}>
-        <View style={s.dialog}>
-          <Text style={s.title}>{title}</Text>
-          <Text style={s.message}>{message}</Text>
-          <View style={s.actions}>
-            <TouchableOpacity
-              style={[s.btn, s.btnCancel]}
-              onPress={onCancel}
-              activeOpacity={0.7}
-            >
-              <Text style={s.btnCancelText}>{cancelText}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.btn, destructive ? s.btnDestructive : s.btnPrimary]}
-              onPress={onConfirm}
-              activeOpacity={0.8}
-            >
-              <Text style={s.btnPrimaryText}>{confirmText}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <ModalSafeArea style={s.modalRoot}>
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: Colors.overlay, opacity }]} />
+        <Animated.View style={[s.overlay, { opacity }]}>
+          <Animated.View style={[s.dialog, { transform: [{ scale }] }]}>
+            <Text style={s.title}>{title}</Text>
+            <Text style={s.message}>{message}</Text>
+            <View style={s.actions}>
+              <TouchableOpacity
+                style={[s.btn, s.btnCancel]}
+                onPress={onCancel}
+                activeOpacity={0.7}
+              >
+                <Text style={s.btnCancelText}>{cancelText}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.btn, destructive ? s.btnDestructive : s.btnPrimary]}
+                onPress={onConfirm}
+                activeOpacity={0.8}
+              >
+                <Text style={s.btnPrimaryText}>{confirmText}</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </ModalSafeArea>
     </Modal>
   );
 }
@@ -119,9 +166,9 @@ const s = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
   },
+  modalRoot: { flex: 1 },
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
