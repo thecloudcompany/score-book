@@ -2,13 +2,15 @@ import { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { ChevronLeft, ChevronDown, Sparkles } from 'lucide-react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { PrimaryButton } from '@/components/ui/primary-button';
 import { useTournaments } from '@/hooks/use-tournaments';
 import { ParticipantsSection } from '@/components/participants-section';
 import { ByeSection } from '@/components/bye-section';
@@ -20,7 +22,7 @@ import { badmintonSport } from '@/lib/sports/badminton';
 import { tennisSport } from '@/lib/sports/tennis';
 import { tableTennisSport } from '@/lib/sports/table-tennis';
 import { pickleballSport } from '@/lib/sports/pickleball';
-import { Spacing } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { SPORT_LABELS } from '@/lib/tournament-labels';
 import { styles } from '@/components/create-tournament.styles';
 import type { SportType, ByeConfig } from '@/types';
@@ -174,11 +176,11 @@ export default function CreateTournamentScreen() {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
       <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={[styles.header, { paddingHorizontal: horizontalPad }]}>
-          <TouchableOpacity style={styles.headerAction} accessibilityRole="button" onPress={() => router.canGoBack() ? router.back() : router.replace('/')} activeOpacity={0.7}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
+          <PressableScale style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>
+            <ChevronLeft size={22} color={Colors.text} strokeWidth={2.4} />
+          </PressableScale>
           <Text style={styles.headerTitle}>New tournament</Text>
-          <View style={{ width: 60 }} />
+          <View style={{ width: 42 }} />
         </View>
 
         <ScrollView
@@ -188,6 +190,7 @@ export default function CreateTournamentScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <ContentContainer>
+            <Text style={styles.lead}>Pick a sport and add players. Scorebook sets up every fixture.</Text>
             <TournamentDetailsSection
               name={name}
               sport={sport}
@@ -214,16 +217,19 @@ export default function CreateTournamentScreen() {
             </TournamentDetailsSection>
 
             {tournamentType === 'knockout' && byesNeeded > 0 && (
-              <TouchableOpacity
+              <PressableScale
                 style={styles.drawToggle}
                 onPress={() => setShowDrawOptions((shown) => !shown)}
                 accessibilityRole="button"
                 aria-expanded={showDrawOptions}
                 accessibilityState={{ expanded: showDrawOptions }}
               >
-                <Text style={styles.backText}>Draw options</Text>
-                <Text style={styles.hint}>{showDrawOptions ? 'Hide' : 'Random draw'}</Text>
-              </TouchableOpacity>
+                <Text style={styles.toggleText}>Draw options</Text>
+                <View style={styles.toggleRight}>
+                  <Text style={styles.hint}>{showDrawOptions ? 'Hide' : 'Random draw'}</Text>
+                  <ChevronDown size={16} color={Colors.textSecondary} style={showDrawOptions ? { transform: [{ rotate: '180deg' }] } : undefined} />
+                </View>
+              </PressableScale>
             )}
             {tournamentType === 'knockout' && byesNeeded > 0 && showDrawOptions && (
               <ByeSection
@@ -241,9 +247,7 @@ export default function CreateTournamentScreen() {
             {errors.form && <Text style={styles.formError}>{errors.form}</Text>}
 
             <View style={styles.footer}>
-              <TouchableOpacity style={styles.createBtn} onPress={handleCreate} activeOpacity={0.85} accessibilityRole="button">
-                <Text style={styles.createBtnText}>Create tournament</Text>
-              </TouchableOpacity>
+              <PrimaryButton label="Create tournament" onPress={handleCreate} icon={<Sparkles size={18} color="#fff" strokeWidth={2.4} />} />
             </View>
           </ContentContainer>
         </ScrollView>

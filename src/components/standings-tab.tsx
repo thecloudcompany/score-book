@@ -1,4 +1,7 @@
 import { View, Text } from 'react-native';
+import { CourtLines } from './ui/court-lines';
+import { Crown } from 'lucide-react-native';
+import { Colors } from '@/constants/theme';
 import { calculateKnockoutStandings } from '@/lib/knockout-standings';
 import { getRoundName } from '@/lib/bracket-generator';
 import type { PoolView } from '@/lib/pool-operations';
@@ -48,7 +51,11 @@ export function StandingsTab({
       <>
         {knockoutStandings.champion !== null && (
           <View style={s.championCard}>
-            <Text style={s.championLabel}>Champion</Text>
+            <CourtLines opacity={0.08} />
+            <View style={s.championHead}>
+              <View style={s.crown}><Crown size={22} color={Colors.gold} strokeWidth={2.2} /></View>
+              <Text style={s.championLabel}>Champion</Text>
+            </View>
             <Text style={s.championName}>{getParticipantName(knockoutStandings.champion)}</Text>
             {runnerUp && (
               <View style={s.runnerUp}>

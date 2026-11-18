@@ -14,9 +14,13 @@ import {
   type LayoutChangeEvent,
 } from 'react-native';
 import { useReducedMotionPreference } from '@/hooks/use-reduced-motion';
+import { X, Check } from 'lucide-react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { PrimaryButton } from '@/components/ui/primary-button';
 import { AppInput } from '@/components/app-input';
 import { ModalSafeArea } from './modal-safe-area';
 import { Colors, Motion } from '@/constants/theme';
+import { useWebKeyboardInset } from '@/hooks/use-web-keyboard-inset';
 import { useIsWideLayout, MODAL_MAX_WIDTH } from '@/hooks/use-layout';
 import { s } from './score-entry-modal.styles';
 import type { Sport, MatchFormat } from '@/types';
@@ -49,6 +53,7 @@ export default function ScoreEntryModal({
   onClose,
 }: ScoreEntryModalProps) {
   const isWide = useIsWideLayout();
+  const webKeyboardInset = useWebKeyboardInset();
   const { width, height } = useWindowDimensions();
   const reduceMotion = useReducedMotionPreference();
   const [backdropOpacity] = useState(() => new Animated.Value(0));
@@ -174,8 +179,8 @@ export default function ScoreEntryModal({
       <ModalSafeArea style={s.overlay}>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: Colors.overlay, opacity: backdropOpacity }]} />
       <KeyboardAvoidingView
-        style={[s.keyboard, isWide && { justifyContent: 'center', alignItems: 'center' }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[s.keyboard, isWide && { justifyContent: 'center', alignItems: 'center' }, webKeyboardInset > 0 && { paddingBottom: webKeyboardInset }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <Animated.View onLayout={revealPanel} style={[isWide ? s.dialog : s.sheet, isWide && { width: '100%', maxWidth: MODAL_MAX_WIDTH }, { opacity: panelOpacity, transform: [{ translateY }] }]}>
           <ScrollView
@@ -184,9 +189,9 @@ export default function ScoreEntryModal({
           >
             <View style={s.header}>
               <Text style={s.headerTitle}>Score</Text>
-              <TouchableOpacity style={s.closeButton} onPress={onClose} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Close score entry">
-                <Text style={s.closeText}>Close</Text>
-              </TouchableOpacity>
+              <PressableScale style={s.closeButton} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close score entry">
+                <X size={18} color={Colors.textSecondary} strokeWidth={2.6} />
+              </PressableScale>
             </View>
 
             {visibleUnits.length > 1 && (
@@ -265,16 +270,7 @@ export default function ScoreEntryModal({
                   </View>
                 </View>
                 {error !== '' && <Text style={s.errorText} accessibilityRole="alert" accessibilityLiveRegion="polite">{error}</Text>}
-                <TouchableOpacity
-                  style={s.saveBtn}
-                  onPress={handleSave}
-                  activeOpacity={0.8}
-                  accessibilityRole="button"
-                >
-                  <Text style={s.saveBtnText}>
-                    Save score
-                  </Text>
-                </TouchableOpacity>
+                <PrimaryButton label="Save score" onPress={handleSave} icon={<Check size={18} color="#fff" strokeWidth={3} />} />
               </View>
             )}
           </ScrollView>

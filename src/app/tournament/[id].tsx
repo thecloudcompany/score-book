@@ -31,6 +31,8 @@ import {
 import { randomSeed } from '@/lib/rng';
 import { useMatches } from '@/hooks/use-matches';
 import { useStandings } from '@/hooks/use-standings';
+import { SegmentedTabs } from '@/components/ui/segmented-tabs';
+import { Swords, ListOrdered } from 'lucide-react-native';
 import { ContentContainer } from '@/components/content-container';
 import { TournamentHeader } from '@/components/tournament-header';
 import { badmintonSport } from '@/lib/sports/badminton';
@@ -42,9 +44,9 @@ import type { Tournament, Sport, MatchFormat } from '@/types';
 
 type TabType = 'matches' | 'standings';
 
-const TABS: { key: TabType; label: string }[] = [
-  { key: 'matches', label: 'Matches' },
-  { key: 'standings', label: 'Standings' },
+const TABS = [
+  { key: 'matches' as TabType, label: 'Matches', Icon: Swords },
+  { key: 'standings' as TabType, label: 'Standings', Icon: ListOrdered },
 ];
 
 export default function TournamentDetailScreen() {
@@ -395,24 +397,7 @@ export default function TournamentDetailScreen() {
       )}
 
       {!managing && <View style={s.segmentWrap}>
-        <View style={s.segmented} accessibilityRole="tablist">
-          {TABS.map((tab) => {
-            const active = activeTab === tab.key;
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={[s.segment, active && s.segmentActive]}
-                onPress={() => setActiveTab(tab.key)}
-                activeOpacity={0.8}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                aria-selected={active}
-              >
-                <Text style={[s.segmentText, active && s.segmentTextActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <SegmentedTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
       </View>}
 
       <View style={s.content}>

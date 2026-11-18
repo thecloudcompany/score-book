@@ -1,6 +1,18 @@
 import { View, Text } from 'react-native';
 import { s } from './standings-tab.styles';
 
+const MEDAL = ['#E3B341', '#A8B3B0', '#C98A5B'];
+
+function RankBadge({ rank }: { rank: number | string }) {
+  const n = typeof rank === 'number' ? rank : NaN;
+  const color = n >= 1 && n <= 3 ? MEDAL[n - 1] : null;
+  return (
+    <View style={[s.colRank, s.rankBadge, color && { backgroundColor: color + '33' }]} role="cell">
+      <Text style={[s.rankText, color && { color: n === 1 ? '#9A7410' : n === 2 ? '#56615E' : '#8A5A33' }]}>{rank}</Text>
+    </View>
+  );
+}
+
 interface StandingRow {
   participantId: number;
   rank: number | string;
@@ -15,7 +27,7 @@ export function StandingsTable({ label, rows }: { label: string; rows: StandingR
   return (
     <View style={s.tableCard} role="table" aria-label={label}>
       <View style={s.tableHeader} role="row">
-        <Text style={[s.th, s.colRank]} role="columnheader" aria-label="Rank">#</Text>
+        <Text style={[s.th, s.colRank, s.rankHead]} role="columnheader" aria-label="Rank">#</Text>
         <Text style={[s.th, s.colPlayer]} role="columnheader">Player</Text>
         <Text style={[s.th, s.colStat]} role="columnheader" aria-label="Wins">W</Text>
         <Text style={[s.th, s.colStat]} role="columnheader" aria-label="Losses">L</Text>
@@ -23,7 +35,7 @@ export function StandingsTable({ label, rows }: { label: string; rows: StandingR
       </View>
       {rows.map((row) => (
         <View key={row.participantId} style={[s.tableRow, row.qualified && s.qualifiedRow]} role="row">
-          <Text style={[s.td, s.colRank]} role="cell">{row.rank}</Text>
+          <RankBadge rank={row.rank} />
           <View style={s.colPlayer} role="cell">
             <Text style={s.td} accessibilityLabel={row.name}>{row.name}</Text>
             {row.qualified !== undefined && (

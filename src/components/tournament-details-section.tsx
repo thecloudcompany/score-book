@@ -1,5 +1,10 @@
 import { useState, useCallback, type ReactNode } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { RefreshCw, Swords, Layers, Pencil, SlidersHorizontal, Check, type LucideIcon } from 'lucide-react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { SportIcon } from '@/components/ui/sport-icon';
+import { enterRise } from '@/components/ui/motion';
 import { AppInput } from '@/components/app-input';
 import { Colors } from '@/constants/theme';
 import { GroupFormatFields } from '@/components/group-format-fields';
@@ -9,10 +14,10 @@ import type { SportType } from '@/types';
 
 export type PlayMode = 'round_robin' | 'knockout' | 'groups';
 
-const PLAY_MODES: { value: PlayMode; title: string; badmintonOnly?: boolean }[] = [
-  { value: 'round_robin', title: 'Round robin' },
-  { value: 'knockout', title: 'Knockout' },
-  { value: 'groups', title: 'Groups + knockout', badmintonOnly: true },
+const PLAY_MODES: { value: PlayMode; title: string; Icon: LucideIcon; badmintonOnly?: boolean }[] = [
+  { value: 'round_robin', title: 'Round robin', Icon: RefreshCw },
+  { value: 'knockout', title: 'Knockout', Icon: Swords },
+  { value: 'groups', title: 'Groups + knockout', Icon: Layers, badmintonOnly: true },
 ];
 
 function NumberInput({
@@ -114,19 +119,20 @@ export function TournamentDetailsSection({
         <Text style={styles.label}>Sport</Text>
         <View style={styles.sportRow} accessibilityRole="radiogroup" accessibilityLabel="Sport">
           {(Object.keys(SPORT_LABELS) as SportType[]).map((value) => (
-            <TouchableOpacity
+            <PressableScale
               key={value}
               style={[styles.sportBtn, sport === value && styles.sportBtnActive]}
               onPress={() => onSportChange(value)}
-              activeOpacity={0.8}
               accessibilityRole="radio"
               accessibilityState={{ checked: sport === value }}
               aria-checked={sport === value}
             >
+              <SportIcon sport={value} size={36} />
               <Text style={[styles.sportText, sport === value && styles.sportTextActive]} numberOfLines={1}>
                 {SPORT_LABELS[value]}
               </Text>
-            </TouchableOpacity>
+              {sport === value && <Animated.View entering={enterRise(0)} style={styles.tick}><Check size={11} color="#fff" strokeWidth={3.5} /></Animated.View>}
+            </PressableScale>
           ))}
         </View>
       </View>
@@ -139,19 +145,19 @@ export function TournamentDetailsSection({
           {visibleModes.map((mode) => {
             const active = playMode === mode.value;
             return (
-              <TouchableOpacity
+              <PressableScale
                 key={mode.value}
                 style={[styles.optionCard, active && styles.typeBtnActive]}
                 onPress={() => onPlayModeChange(mode.value)}
-                activeOpacity={0.8}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: active }}
                 aria-checked={active}
               >
+                <mode.Icon size={20} color={active ? Colors.primary : Colors.textMuted} strokeWidth={2.2} />
                 <View style={styles.optionCopy}>
                   <Text style={[styles.typeText, active && styles.typeTextActive]}>{mode.title}</Text>
                 </View>
-              </TouchableOpacity>
+              </PressableScale>
             );
           })}
         </View>
@@ -170,30 +176,30 @@ export function TournamentDetailsSection({
       </View>
 
       <View style={styles.optionalRow}>
-        <TouchableOpacity
-          style={styles.optionalAction}
+        <PressableScale
+          style={[styles.optionalAction, showName && styles.optionalOn]}
           onPress={() => { setShowName((shown) => !shown); setShowAdvanced(false); }}
           accessibilityRole="button"
           accessibilityState={{ expanded: showName }}
           aria-expanded={showName}
         >
-          <Text style={styles.advancedText}>Name</Text>
+          <View style={styles.optionalHead}><Pencil size={14} color={Colors.primary} /><Text style={styles.advancedText}>Name</Text></View>
           <Text style={styles.optionDescription} numberOfLines={1}>{name.trim() || 'Optional'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.optionalAction}
+        </PressableScale>
+        <PressableScale
+          style={[styles.optionalAction, showAdvanced && styles.optionalOn]}
           onPress={() => { setShowAdvanced((shown) => !shown); setShowName(false); }}
           accessibilityRole="button"
           accessibilityState={{ expanded: showAdvanced }}
           aria-expanded={showAdvanced}
         >
-          <Text style={styles.advancedText}>Scoring</Text>
+          <View style={styles.optionalHead}><SlidersHorizontal size={14} color={Colors.primary} /><Text style={styles.advancedText}>Scoring</Text></View>
           <Text style={styles.optionDescription} numberOfLines={1}>
             {sport === 'tennis'
               ? `Best of ${currentFormat} · ${format.gamesToWinPerSet ?? 6} games/set`
               : `${format.gamePoint ?? 21} points · ${currentFormat === 1 ? 'One game' : `Best of ${currentFormat}`}`}
           </Text>
-        </TouchableOpacity>
+        </PressableScale>
       </View>
       {showName && (
         <AppInput
@@ -211,11 +217,10 @@ export function TournamentDetailsSection({
           <Text style={styles.label}>{sport === 'tennis' ? 'Sets in a match' : 'Games in a match'}</Text>
           <View style={styles.formatRow} accessibilityRole="radiogroup" accessibilityLabel="Match length">
             {formatOptions.map((num) => (
-              <TouchableOpacity
+              <PressableScale
                 key={num}
                 style={[styles.formatBtn, currentFormat === num && styles.formatBtnActive]}
                 onPress={() => onFormatChange({ ...format, [formatKey]: num })}
-                activeOpacity={0.8}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: currentFormat === num }}
                 aria-checked={currentFormat === num}
@@ -228,7 +233,7 @@ export function TournamentDetailsSection({
                 >
                   {formatLabel(num)}
                 </Text>
-              </TouchableOpacity>
+              </PressableScale>
             ))}
           </View>
         </View>

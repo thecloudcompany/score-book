@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
+import { Font, Colors, Radius, Shadow, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   overlay: {
@@ -9,20 +9,22 @@ export const s = StyleSheet.create({
   keyboard: { flex: 1, width: '100%', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: Colors.bgElevated,
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.sm,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.lg,
+    ...Shadow.lift,
     maxHeight: '88%',
   },
   dialog: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.sm,
+    borderRadius: 20,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
     maxHeight: '80%',
+    ...Shadow.lift,
   },
   header: {
     flexDirection: 'row',
@@ -30,15 +32,15 @@ export const s = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: Spacing.sm,
   },
-  closeButton: { minHeight: 48, justifyContent: 'center', paddingLeft: Spacing.lg },
+  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surface, alignItems: 'center', justifyContent: 'center' },
   closeText: {
     fontFamily: Font.semibold,
     fontSize: Type.body,
     color: Colors.primary,
   },
   headerTitle: {
-    fontFamily: Font.bold,
-    fontSize: Type.section,
+    fontFamily: Font.extrabold,
+    fontSize: 20,
     color: Colors.text,
   },
   playerColumn: { flex: 1, minWidth: 0 },
@@ -111,13 +113,13 @@ export const s = StyleSheet.create({
     fontFamily: Font.extrabold,
     fontSize: 36,
     color: Colors.text,
-    backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
+    backgroundColor: Colors.bg,
+    borderRadius: Radius.lg,
     width: '100%',
-    minHeight: 80,
+    minHeight: 88,
     paddingVertical: Spacing.md,
     textAlign: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     fontVariant: ['tabular-nums'],
   },
   scoreInputError: {

@@ -9,7 +9,8 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import { Font, Colors, Radius, Spacing, Motion } from '@/constants/theme';
+import { AlertTriangle, HelpCircle } from 'lucide-react-native';
+import { Font, Colors, Radius, Shadow, Spacing, Motion } from '@/constants/theme';
 import { useReducedMotionPreference } from '@/hooks/use-reduced-motion';
 import { ModalSafeArea } from './modal-safe-area';
 
@@ -76,6 +77,9 @@ export function ConfirmDialog({
       <Modal visible transparent animationType="none" onRequestClose={onCancel} accessibilityLabel={title}>
         <Animated.View style={[s.webOverlay, { opacity }]}>
           <Animated.View style={[s.webDialog, { transform: [{ scale }] }]} accessibilityRole="alert" accessibilityLabel={title} accessibilityViewIsModal>
+            <View style={[s.iconWrap, destructive && s.iconWrapDanger]}>
+              {destructive ? <AlertTriangle size={22} color={Colors.danger} /> : <HelpCircle size={22} color={Colors.primary} />}
+            </View>
             <Text style={s.title} accessibilityRole="header">{title}</Text>
             <Text style={s.message}>{message}</Text>
             <View style={s.actions}>
@@ -116,6 +120,9 @@ export function ConfirmDialog({
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: Colors.overlay, opacity }]} />
         <Animated.View style={[s.overlay, { opacity }]}>
           <Animated.View style={[s.dialog, { transform: [{ scale }] }]}>
+            <View style={[s.iconWrap, destructive && s.iconWrapDanger]}>
+              {destructive ? <AlertTriangle size={22} color={Colors.danger} /> : <HelpCircle size={22} color={Colors.primary} />}
+            </View>
             <Text style={s.title}>{title}</Text>
             <Text style={s.message}>{message}</Text>
             <View style={s.actions}>
@@ -155,16 +162,11 @@ const s = StyleSheet.create({
   },
   webDialog: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
-    padding: Spacing.xl,
-    width: 320,
+    borderRadius: 20,
+    padding: Spacing.xxl,
+    width: 340,
     maxWidth: '90%',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    ...Shadow.lift,
   },
   modalRoot: { flex: 1 },
   overlay: {
@@ -175,16 +177,17 @@ const s = StyleSheet.create({
   },
   dialog: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
-    padding: Spacing.xl,
+    borderRadius: 20,
+    padding: Spacing.xxl,
     width: '100%',
     maxWidth: 400,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    ...Shadow.lift,
   },
+  iconWrap: { width: 48, height: 48, borderRadius: 16, backgroundColor: Colors.primaryMuted, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.lg },
+  iconWrapDanger: { backgroundColor: 'rgba(180,35,24,0.10)' },
   title: {
     fontFamily: Font.bold,
-    fontSize: 17,
+    fontSize: 20,
     color: Colors.text,
     marginBottom: Spacing.sm,
   },
@@ -201,11 +204,11 @@ const s = StyleSheet.create({
     gap: Spacing.sm,
   },
   btn: {
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: Radius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    minWidth: 80,
+    minWidth: 90,
     alignItems: 'center',
   },
   btnCancel: {

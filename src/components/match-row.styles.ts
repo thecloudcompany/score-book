@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
+import { Font, Colors, Radius, Shadow, Spacing, Type } from '@/constants/theme';
 
 export const s = StyleSheet.create({
   row: {
@@ -7,60 +7,31 @@ export const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.bgElevated,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.lg,
+    paddingRight: Spacing.lg,
     paddingVertical: Spacing.md,
     marginBottom: Spacing.sm,
-    minHeight: 80,
+    minHeight: 84,
     gap: Spacing.md,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    ...Shadow.card,
   },
-  rowBye: {
-    opacity: 0.6,
-  },
-  rowInProgress: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryMuted,
-  },
-  players: {
-    flex: 1,
-    minWidth: 0,
-    gap: 4,
-  },
-  name: {
-    fontFamily: Font.semibold,
-    fontSize: Type.body,
-    lineHeight: 22,
-    color: Colors.text,
-  },
-  nameMuted: {
-    fontFamily: Font.regular,
-    color: Colors.textMuted,
-  },
-  note: {
-    fontFamily: Font.regular,
-    fontSize: Type.meta,
-    color: Colors.textMuted,
-    marginTop: 2,
-  },
-  side: {
-    alignItems: 'flex-end',
-    maxWidth: '45%',
-    gap: 4,
-  },
-  score: {
-    fontFamily: Font.bold,
-    fontSize: Type.section,
-    color: Colors.text,
-    fontVariant: ['tabular-nums'],
-  },
-  status: {
-    fontFamily: Font.semibold,
-    fontSize: Type.meta,
-    backgroundColor: Colors.primaryMuted,
-    borderRadius: Radius.xs,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
+  rowBye: { opacity: 0.55 },
+  rowInProgress: { borderColor: Colors.primary },
+  bar: { alignSelf: 'stretch', width: 4, backgroundColor: Colors.border, marginRight: Spacing.xs },
+  barLive: { backgroundColor: Colors.primary },
+  barDone: { backgroundColor: Colors.success },
+  players: { flex: 1, minWidth: 0 },
+  name: { fontFamily: Font.bold, fontSize: Type.body, lineHeight: 22, color: Colors.text },
+  nameMuted: { fontFamily: Font.regular, color: Colors.textMuted },
+  divider: { height: 1, backgroundColor: Colors.borderLight, marginVertical: 6 },
+  noteRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
+  note: { fontFamily: Font.regular, fontSize: Type.meta, color: Colors.textMuted },
+  side: { alignItems: 'flex-end', maxWidth: '45%', gap: 6 },
+  score: { fontFamily: Font.extrabold, fontSize: Type.section, color: Colors.text, fontVariant: ['tabular-nums'], letterSpacing: -0.2 },
+  cta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  liveDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: Colors.live },
+  ctaText: { fontFamily: Font.bold, fontSize: Type.meta, color: Colors.primary },
 });

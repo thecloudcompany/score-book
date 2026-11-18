@@ -42,47 +42,19 @@ export const s = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   nextStepWrap: {
-    backgroundColor: Colors.bgElevated,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
   },
   segmentWrap: {
-    backgroundColor: Colors.bgElevated,
-    paddingHorizontal: Spacing.md,
-    paddingBottom: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  segmented: {
-    flexDirection: 'row',
-    maxWidth: 720,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  segment: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    minHeight: 48,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  segmentActive: {
-    borderBottomColor: Colors.primary,
-  },
-  segmentText: {
-    fontFamily: Font.semibold,
-    fontSize: Type.meta,
-    color: Colors.textMuted,
-  },
-  segmentTextActive: {
-    color: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
   },
   fill: {
     flex: 1,
   },
   content: {
     flex: 1,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.xs,
   },
 });

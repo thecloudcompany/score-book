@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Font, Colors, Radius, Spacing, Type } from '@/constants/theme';
+import { Font, Colors, Radius, Shadow, Spacing, Type } from '@/constants/theme';
 
 const numeric = { fontVariant: ['tabular-nums' as const] };
 
@@ -34,16 +34,17 @@ export const s = StyleSheet.create({
   },
   tableCard: {
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.borderLight,
+    ...Shadow.card,
   },
   tableHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
@@ -51,8 +52,8 @@ export const s = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
@@ -68,8 +69,11 @@ export const s = StyleSheet.create({
     ...numeric,
   },
   colRank: {
-    width: 24,
+    width: 28,
   },
+  rankHead: { textAlign: 'center' },
+  rankBadge: { height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginRight: 8 },
+  rankText: { fontFamily: Font.bold, fontSize: Type.meta, color: Colors.textSecondary, fontVariant: ['tabular-nums' as const] },
   colPlayer: {
     flex: 1,
     minWidth: 0,
@@ -100,8 +104,8 @@ export const s = StyleSheet.create({
   },
   poolTitle: {
     fontFamily: Font.bold,
-    fontSize: Type.section,
-    color: Colors.text,
+    fontSize: Type.meta + 1,
+    color: Colors.textSecondary,
     marginBottom: Spacing.md,
   },
   knockoutSection: {
@@ -109,31 +113,36 @@ export const s = StyleSheet.create({
   },
   knockoutSectionTitle: {
     fontFamily: Font.bold,
-    fontSize: Type.section,
-    color: Colors.text,
+    fontSize: Type.meta + 1,
+    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
   },
   championCard: {
-    backgroundColor: Colors.primaryMuted,
+    backgroundColor: Colors.primaryDark,
     borderRadius: Radius.lg,
+    borderTopWidth: 3,
+    borderTopColor: Colors.gold,
     padding: Spacing.xl,
     marginBottom: Spacing.xxl,
+    overflow: 'hidden',
   },
+  championHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: Spacing.sm },
+  crown: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(227,179,65,0.2)' },
   championLabel: {
-    fontFamily: Font.semibold,
-    fontSize: Type.meta,
-    color: Colors.primary,
-    marginBottom: Spacing.sm,
+    fontFamily: Font.bold,
+    fontSize: Type.meta + 1,
+    color: Colors.gold,
   },
   championName: {
     fontFamily: Font.extrabold,
-    fontSize: Type.title,
-    lineHeight: 32,
-    color: Colors.primary,
+    fontSize: 28,
+    lineHeight: 34,
+    color: '#FFFFFF',
+    letterSpacing: -0.4,
   },
   runnerUp: {
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: 'rgba(255,255,255,0.16)',
     marginTop: Spacing.xl,
     paddingTop: Spacing.lg,
     gap: Spacing.xs,
@@ -141,12 +150,12 @@ export const s = StyleSheet.create({
   runnerUpLabel: {
     fontFamily: Font.medium,
     fontSize: Type.meta,
-    color: Colors.textSecondary,
+    color: 'rgba(255,255,255,0.65)',
   },
   runnerUpName: {
     fontFamily: Font.semibold,
     fontSize: Type.section,
-    color: Colors.text,
+    color: '#FFFFFF',
     lineHeight: 24,
   },
   resultName: {

@@ -4,6 +4,7 @@ import { AppInput } from '@/components/app-input';
 import { MatchRow } from './match-row';
 import { getRoundName } from '@/lib/bracket-generator';
 import { canEditMatch, isByeMatch } from '@/lib/knockout-standings';
+import { Search, X, ChevronDown } from 'lucide-react-native';
 import { Colors } from '@/constants/theme';
 import { s } from './matches-tab.styles';
 import type { Match, BadmintonMatch, TennisSet, BadmintonGame, TennisMatch, TableTennisMatch, TableTennisGame, PickleballMatch, PickleballGame, Pool, SportType, TournamentType } from '@/types';
@@ -104,13 +105,14 @@ export function MatchesTab({
       aria-expanded={showFinished}
     >
       <Text style={s.groupToggleText}>{showFinished ? 'Hide finished' : `Show finished (${finishedCount})`}</Text>
+      <ChevronDown size={16} color={Colors.primary} style={showFinished ? { transform: [{ rotate: '180deg' }] } : undefined} />
     </TouchableOpacity>
   ) : null;
 
   const searchBar = (
     <View style={s.searchWrap}>
-      <Text style={s.searchLabel}>Search matches</Text>
       <View style={s.searchRow}>
+        <Search size={18} color={Colors.textMuted} style={s.searchIcon} />
         <AppInput
           style={s.searchInput}
           value={query}
@@ -131,7 +133,7 @@ export function MatchesTab({
             accessibilityLabel="Clear search"
             accessibilityRole="button"
           >
-            <Text style={s.searchClearText}>Clear</Text>
+            <X size={16} color={Colors.textSecondary} strokeWidth={2.6} />
           </TouchableOpacity>
         )}
       </View>
@@ -204,6 +206,7 @@ export function MatchesTab({
             aria-expanded={showGroups}
           >
             <Text style={s.groupToggleText}>{showGroups ? 'Hide group results' : 'Group results'}</Text>
+            <ChevronDown size={16} color={Colors.primary} style={showGroups ? { transform: [{ rotate: '180deg' }] } : undefined} />
           </TouchableOpacity>
         )}
         {(!poolsLocked || showGroups || query.trim() !== '') && pools.map((pool) => {

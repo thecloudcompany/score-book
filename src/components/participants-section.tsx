@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Pencil, Plus, Minus, CornerDownLeft } from 'lucide-react-native';
 import { AppInput } from '@/components/app-input';
 import { ModalSafeArea } from './modal-safe-area';
 import { getAllParticipantNames } from '@/lib/db-operations';
@@ -62,7 +63,7 @@ export function ParticipantsSection({
         <Text style={styles.label}>Players{names.length > 0 ? ` (${names.length})` : ''}</Text>
         {names.length > 0 && (
           <TouchableOpacity style={styles.summaryAction} onPress={() => setEditing(true)} accessibilityRole="button" accessibilityLabel="Edit players">
-            <Text style={styles.addBtnText}>Edit</Text>
+            <Pencil size={14} color={Colors.primary} /><Text style={styles.addBtnText}>Edit</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -70,7 +71,7 @@ export function ParticipantsSection({
         <Text style={styles.summaryNames} numberOfLines={2}>{names.join(', ')}</Text>
       ) : (
         <TouchableOpacity style={styles.emptyAdd} onPress={() => setEditing(true)} accessibilityRole="button">
-          <Text style={styles.addBtnText}>+ Add players</Text>
+          <Plus size={16} color={Colors.primary} strokeWidth={2.6} /><Text style={styles.addBtnText}>Add players</Text>
         </TouchableOpacity>
       )}
       {errors.participants && <Text style={styles.error}>{errors.participants}</Text>}
@@ -106,7 +107,7 @@ export function ParticipantsSection({
                       />
                       {participants.length > 2 && (
                         <TouchableOpacity style={styles.removeBtn} onPress={() => onRemove(index)} accessibilityRole="button" accessibilityLabel={`Remove player ${index + 1}`}>
-                          <Text style={styles.removeText}>−</Text>
+                          <Minus size={16} color={Colors.danger} strokeWidth={2.6} />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -123,7 +124,7 @@ export function ParticipantsSection({
                             activeOpacity={0.7}
                             accessibilityRole="button"
                           >
-                            <Text style={styles.suggestionArrow}>↩</Text>
+                            <CornerDownLeft size={14} color={Colors.textMuted} />
                             <Text style={styles.suggestionName}>{s.name}</Text>
                           </TouchableOpacity>
                         ))}
@@ -133,7 +134,7 @@ export function ParticipantsSection({
                 );
               })}
               <TouchableOpacity style={styles.addBtn} onPress={onAdd} activeOpacity={0.7} accessibilityRole="button">
-                <Text style={styles.addBtnText}>+ Add player</Text>
+                <Plus size={16} color={Colors.primary} strokeWidth={2.6} /><Text style={styles.addBtnText}>Add player</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -150,8 +151,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: Font.semibold,
-    fontSize: 15,
-    color: Colors.text,
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
   error: {
     fontFamily: Font.medium,
@@ -171,10 +172,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     backgroundColor: Colors.bgElevated,
-    borderRadius: Radius.sm,
-    paddingHorizontal: 14,
+    borderRadius: Radius.md,
+    paddingHorizontal: 16,
     paddingVertical: 13,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   removeBtn: {
     width: 48,
@@ -193,6 +194,9 @@ const styles = StyleSheet.create({
   addBtn: {
     marginTop: 2,
     paddingVertical: 12,
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'center',
     alignItems: 'center',
     minHeight: 48,
   },
@@ -230,20 +234,24 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   summaryHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 32 },
-  summaryAction: { minHeight: 48, justifyContent: 'center', paddingHorizontal: Spacing.sm },
+  summaryAction: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center', paddingHorizontal: Spacing.md, borderRadius: Radius.full, backgroundColor: Colors.primaryMuted },
   summaryNames: { fontFamily: Font.regular, fontSize: 14, lineHeight: 20, color: Colors.textSecondary },
   emptyAdd: {
     minHeight: 48,
+    flexDirection: 'row',
+    gap: 6,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Radius.sm,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: Colors.primary,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.primaryMuted,
     marginTop: Spacing.xs,
   },
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.overlay, padding: Spacing.lg },
   keyboard: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
-  sheet: { width: '100%', maxWidth: 480, maxHeight: '100%', paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm, backgroundColor: Colors.bg, borderRadius: Radius.md },
+  sheet: { width: '100%', maxWidth: 480, maxHeight: '100%', paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm, backgroundColor: Colors.bg, borderRadius: 20 },
   editorHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Spacing.sm },
   editorTitle: { fontFamily: Font.bold, fontSize: 17, color: Colors.text },
 });

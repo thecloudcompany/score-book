@@ -1,5 +1,9 @@
 import { useState, useRef, useEffect, useEffectEvent } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Animated, Easing, Platform } from 'react-native';
+import { View, Text, ScrollView, Animated, Easing, Platform } from 'react-native';
+import { CourtLines } from '@/components/ui/court-lines';
+import { Crown, Sparkles } from 'lucide-react-native';
+import { PressableScale } from '@/components/ui/pressable-scale';
+import { Colors } from '@/constants/theme';
 import { Motion } from '@/constants/theme';
 import { useReducedMotionPreference } from '@/hooks/use-reduced-motion';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -62,13 +66,22 @@ export function NextStepCard({ title, winner, pairs, primary, secondary }: NextS
   };
 
   return (
-    <View style={s.card}>
+    <View style={[s.card, winner && s.cardWin]}>
+      {winner && <CourtLines opacity={0.08} />}
       {winner ? (
         <Animated.View style={{ opacity, transform: [{ scale }] }}>
-          <Text style={s.championLabel}>Champion</Text>
+          <View style={s.champHead}>
+            <View style={s.crown}><Crown size={20} color={Colors.gold} strokeWidth={2.2} /></View>
+            <Text style={s.championLabel}>Champion</Text>
+          </View>
           <Text style={s.championName}>{winner.name}</Text>
         </Animated.View>
-      ) : <Text style={s.title}>{title}</Text>}
+      ) : (
+        <View style={s.titleRow}>
+          <View style={s.stepIcon}><Sparkles size={16} color={Colors.primary} /></View>
+          <Text style={s.title}>{title}</Text>
+        </View>
+      )}
 
       {pairs && pairs.length > 0 && (
         <ScrollView style={s.pairs} showsVerticalScrollIndicator>
@@ -85,14 +98,14 @@ export function NextStepCard({ title, winner, pairs, primary, secondary }: NextS
       {(primary || secondary) && (
         <View style={s.actions}>
           {secondary && (
-            <TouchableOpacity style={s.secondaryBtn} onPress={() => runAction(secondary)} activeOpacity={0.7} accessibilityRole="button">
+            <PressableScale style={s.secondaryBtn} onPress={() => runAction(secondary)} accessibilityRole="button">
               <Text style={s.secondaryText}>{secondary.label}</Text>
-            </TouchableOpacity>
+            </PressableScale>
           )}
           {primary && (
-            <TouchableOpacity style={s.primaryBtn} onPress={() => runAction(primary)} activeOpacity={0.85} accessibilityRole="button">
+            <PressableScale style={s.primaryBtn} onPress={() => runAction(primary)} accessibilityRole="button">
               <Text style={s.primaryText}>{primary.label}</Text>
-            </TouchableOpacity>
+            </PressableScale>
           )}
         </View>
       )}
